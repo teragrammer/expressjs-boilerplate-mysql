@@ -38,7 +38,7 @@ environment configuration to help you kickstart your API development with best p
 - Clone the repository
 
 ```
-$ git clone https://github.com/teragrammer/expressjs-boilerplate.git
+$ git clone https://github.com/teragrammer/expressjs-boilerplate-mysql.git
 $ cd expressjs-boilerplate
 ```
 
@@ -104,7 +104,7 @@ If you like this project and need help with development, customization, or integ
 
 I’m available for freelance work, consulting, and collaboration.
 
-Thank you for checking out ExpressJS Boilerplate API!
+Thank you for checking out ExpressJS Boilerplate API for MySQL!
 Feel free to contribute or open issues.
 ```
 
