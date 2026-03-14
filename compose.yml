@@ -1,8 +1,8 @@
 services:
   web:
     build: .
-    image: express-boilerplate/backend:latest
-    container_name: express-boilerplate-backend
+    image: express-boilerplate-mysql/backend:latest
+    container_name: express-boilerplate-mysql-backend
     stdin_open: true # docker run -i
     tty: true        # docker run -t
     volumes:

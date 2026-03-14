@@ -1,1 +1,1 @@
-docker container stop express-boilerplate-backend
+docker container stop express-boilerplate-mysql-backend

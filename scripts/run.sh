@@ -1,2 +1,2 @@
-docker container start express-boilerplate-backend
-docker exec -it express-boilerplate-backend /bin/bash
+docker container start express-boilerplate-mysql-backend
+docker exec -it express-boilerplate-mysql-backend /bin/bash
