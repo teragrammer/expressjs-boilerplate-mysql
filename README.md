@@ -1,4 +1,9 @@
-# ExpressJS Boilerplate API
+# ExpressJS Boilerplate API (MysQL)
+
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)
+![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=flat&logo=express&logoColor=%2361DAFB)
+![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=flat&logo=mysql&logoColor=white)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=flat&logo=redis&logoColor=white)
 
 ```
 A minimal and clean Express.js boilerplate for building RESTful APIs quickly. 
