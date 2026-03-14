@@ -13,7 +13,7 @@ environment configuration to help you kickstart your API development with best p
 
 ### Features
 
-- Database Connection (MySQL and CockroachDB compatible)
+- Database Connection (MySQL)
 - Redis Connection (cache application settings and roles guard)
 - Registration and Login (JWT Token)
 - User Roles (Can be manage by admin)
