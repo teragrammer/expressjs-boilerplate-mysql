@@ -68,7 +68,7 @@ class Controller {
             middle_name: Joi.string().min(1).max(100).allow(null, ""),
             last_name: Joi.string().min(1).max(100).required(),
 
-            role_id: Joi.number().integer().required().external(ExtendJoiUtil().exists("users")),
+            role_id: Joi.number().integer().required().external(ExtendJoiUtil().exists("roles")),
             phone: Joi.string().min(10).max(16).allow(null, "").external(ExtendJoiUtil().phone).external(ExtendJoiUtil().unique("users", "phone")),
             email: Joi.string().email().max(180).allow(null, "").external(ExtendJoiUtil().unique("users", "email")),
             username: Joi.string().min(2).max(16).pattern(/^[a-zA-Z0-9_]+$/).allow(null, "").external(ExtendJoiUtil().unique("users", "username")),
@@ -123,7 +123,7 @@ class Controller {
             middle_name: Joi.string().min(1).max(100).allow(null, ""),
             last_name: Joi.string().min(1).max(100).required(),
 
-            role_id: Joi.number().integer().required().external(ExtendJoiUtil().exists("users")),
+            role_id: Joi.number().integer().required().external(ExtendJoiUtil().exists("roles")),
             phone: Joi.string().min(10).max(16).allow(null, "").external(ExtendJoiUtil().phone).external(ExtendJoiUtil().unique("users", "phone", ID)),
             email: Joi.string().email().max(180).allow(null, "").external(ExtendJoiUtil().unique("users", "email", ID)),
             username: Joi.string().min(2).max(16).pattern(/^[a-zA-Z0-9_]+$/).allow(null, "").external(ExtendJoiUtil().unique("users", "username", ID)),
