@@ -3,7 +3,7 @@ import request from "supertest";
 import {assert} from "chai";
 import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
-import {RoleInterface} from "../../src/interfaces/role.interface";
+import {Role} from "../../src/interfaces/role";
 import {DBKnex} from "../../src/configurations/knex";
 import {RoleModel} from "../../src/models/role.model";
 
@@ -43,7 +43,7 @@ describe("HTTP Account", async () => {
             .set("Content-Type", "application/json")
             .set("Authorization", `Bearer ${credential.token}`)
             .then(async (response: any) => {
-                const role: RoleInterface = await RoleModel().table().where("id", id).first();
+                const role: Role = await RoleModel().table().where("id", id).first();
 
                 assert.equal(response.status, 200);
                 assert.equal(role.name, newName);
