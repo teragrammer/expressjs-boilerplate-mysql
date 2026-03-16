@@ -3,7 +3,7 @@ import request from "supertest";
 import {assert} from "chai";
 import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
-import {UserInterface} from "../../src/interfaces/user.interface";
+import {User} from "../../src/interfaces/user";
 import {SecurityUtil} from "../../src/utilities/security.util";
 import {DBKnex} from "../../src/configurations/knex";
 import {UserModel} from "../../src/models/user.model";
@@ -11,7 +11,7 @@ import {PasswordRecoveryModel} from "../../src/models/password-recovery.model";
 
 describe("HTTP Password Recovery", async () => {
     let credential: Credentials;
-    let user: UserInterface;
+    let user: User;
 
     it("generate credential", async () => {
         credential = await mockCredential({role: "admin", username: "test_admin"});
