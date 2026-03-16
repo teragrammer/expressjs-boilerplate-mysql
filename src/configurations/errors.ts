@@ -1,15 +1,24 @@
-const ERRORS = {
+const ERRORS: any = {
     VALIDATION_FAILED: {code: "VALIDATION_FAILED", message: "Validation errors were encountered during the process"},
     DUPLICATE_DATA: {code: "DUPLICATE_DATA", message: "The data you've selected is already assigned"},
     DATA_NOT_FOUND: {code: "DATA_NOT_FOUND", message: "The information you are looking for is not available"},
     SERVER_ERROR: {code: "SERVER_ERROR", message: "Whoops something went wrong"},
-    INVALID_AUTH_TOKEN: {code: "INVALID_AUTH_TOKEN", message: "The provided authentication token is invalid or missing"},
+    INVALID_AUTH_TOKEN: {
+        code: "INVALID_AUTH_TOKEN",
+        message: "The provided authentication token is invalid or missing",
+    },
     EXPIRED_AUTH_TOKEN: {code: "EXPIRED_AUTH_TOKEN", message: "The token used for authentication is no longer valid"},
     INACTIVE_ACCOUNT: {code: "INACTIVE_ACCOUNT", message: "The account status is inactive and requires activation"},
     INCORRECT_PASS_SETUP: {code: "INCORRECT_PASS_SETUP", message: "Password creation failed due to incorrect setup"},
     TOO_MANY_ATTEMPT: {code: "TOO_MANY_ATTEMPT", message: "The system has detected too many incorrect login attempts"},
-    LOCKED_ACCOUNT: {code: "LOCKED_ACCOUNT", message: "Your account has been temporarily locked due to multiple login attempts"},
-    CREDENTIAL_DO_NOT_MATCH: {code: "CREDENTIAL_DO_NOT_MATCH", message: "The credentials provided do not match our records"},
+    LOCKED_ACCOUNT: {
+        code: "LOCKED_ACCOUNT",
+        message: "Your account has been temporarily locked due to multiple login attempts",
+    },
+    CREDENTIAL_DO_NOT_MATCH: {
+        code: "CREDENTIAL_DO_NOT_MATCH",
+        message: "The credentials provided do not match our records",
+    },
     CONTENT_READ_ONLY: {code: "CONTENT_READ_ONLY", message: "The content is read-only and cannot be altered"},
     NO_PERMISSION: {code: "NO_PERMISSION", message: "You do not have the required permissions to access this content"},
     INCOMPLETE_OTP: {code: "INCOMPLETE_OTP", message: "You must complete OTP verification to access this section"},
@@ -17,14 +26,20 @@ const ERRORS = {
     UN_CONFIGURED_EMAIL: {code: "UN_CONFIGURED_EMAIL", message: "There is an issue with your email configuration"},
     UNABLE_TO_SEND_EMAIL: {code: "UNABLE_TO_SEND_EMAIL", message: "There was an issue sending the email"},
     OTP_NOT_NEEDED: {code: "OTP_NOT_NEEDED", message: "No OTP is necessary for this process"},
-    UN_CONFIGURED_EXPIRATION: {code: "UN_CONFIGURED_EXPIRATION", message: "There is an issue with the expiration configuration"},
+    UN_CONFIGURED_EXPIRATION: {
+        code: "UN_CONFIGURED_EXPIRATION",
+        message: "There is an issue with the expiration configuration",
+    },
     RESOURCE_EXPIRED: {code: "RESOURCE_EXPIRED", message: "The data is no longer valid due to expiration"},
     OTP_NO_MATCH: {code: "OTP_NO_MATCH", message: "The OTP provided does not match our records"},
     TRY_RESEND: {code: "TRY_RESEND", message: "Please try to resend again later"},
     EXCEED_RECOVERY: {code: "EXCEED_RECOVERY", message: "Recovery tries exceeded maximum limit"},
     RECOVERY_CODE_INVALID: {code: "RECOVERY_CODE_INVALID", message: "The provided recovery code is invalid"},
     UPDATE_FAILED: {code: "UPDATE_FAILED", message: "Unable to save changes. Please try again later"},
-    DELETE_FAILED: {code: "DELETE_FAILED", message: "Unable to delete the requested resource at this time. Please try again shortly"},
-}
+    DELETE_FAILED: {
+        code: "DELETE_FAILED",
+        message: "Unable to delete the requested resource at this time. Please try again shortly",
+    },
+};
 
 export default Object.freeze(ERRORS);
