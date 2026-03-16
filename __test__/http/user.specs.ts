@@ -3,15 +3,15 @@ import request from "supertest";
 import {assert} from "chai";
 import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
-import {UserInterface} from "../../src/interfaces/user.interface";
-import {RoleInterface} from "../../src/interfaces/role.interface";
+import {User} from "../../src/interfaces/user";
+import {Role} from "../../src/interfaces/role";
 import {RoleModel} from "../../src/models/role.model";
 import {UserModel} from "../../src/models/user.model";
 
 describe("HTTP Account", async () => {
     let credential: Credentials;
     let id: any;
-    let role: RoleInterface;
+    let role: Role;
     const phone = "+639281214573";
 
     it("generate credential", async () => {
@@ -66,7 +66,7 @@ describe("HTTP Account", async () => {
             .set("Content-Type", "application/json")
             .set("Authorization", `Bearer ${credential.token}`)
             .then(async (response: any) => {
-                const user: UserInterface = await UserModel().table().where("id", id).first();
+                const user: User = await UserModel().table().where("id", id).first();
 
                 assert.equal(response.status, 200);
                 assert.equal(user.first_name, newName);
