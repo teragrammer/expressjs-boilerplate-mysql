@@ -3,7 +3,7 @@ import request from "supertest";
 import {assert} from "chai";
 import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
-import {SettingInterface} from "../../src/interfaces/setting.interface";
+import {Setting} from "../../src/interfaces/setting";
 import {DBKnex} from "../../src/configurations/knex";
 import {SettingModel} from "../../src/models/setting.model";
 
@@ -51,7 +51,7 @@ describe("HTTP Account", async () => {
             .set("Content-Type", "application/json")
             .set("Authorization", `Bearer ${credential.token}`)
             .then(async (response: any) => {
-                const setting: SettingInterface = await SettingModel().table().where("id", id).first();
+                const setting: Setting = await SettingModel().table().where("id", id).first();
 
                 assert.equal(response.status, 200);
                 assert.equal(setting.name, newName);
