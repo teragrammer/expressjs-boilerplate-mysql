@@ -3,7 +3,7 @@ import request from "supertest";
 import {assert} from "chai";
 import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
-import {UserInterface} from "../../src/interfaces/user.interface";
+import {User} from "../../src/interfaces/user";
 import {UserModel} from "../../src/models/user.model";
 import {TFA_CONTINUE} from "../../src/models/two-factor-authentication.model";
 
@@ -31,7 +31,7 @@ describe("HTTP Account", async () => {
             .set("Content-Type", "application/json")
             .set("Authorization", `Bearer ${credential.token}`)
             .then(async (response: any) => {
-                const user: UserInterface = await UserModel().table().where("username", username).first();
+                const user: User = await UserModel().table().where("username", username).first();
 
                 assert.equal(response.status, 200);
                 assert.equal(user.first_name, "User");
@@ -50,7 +50,7 @@ describe("HTTP Account", async () => {
             .set("Content-Type", "application/json")
             .set("Authorization", `Bearer ${credential.token}`)
             .then(async (response: any) => {
-                const user: UserInterface = await UserModel().table().where("username", new_username).first();
+                const user: User = await UserModel().table().where("username", new_username).first();
 
                 assert.equal(response.status, 200);
                 assert.equal(user.username, new_username);
@@ -68,7 +68,7 @@ describe("HTTP Account", async () => {
             .set("Content-Type", "application/json")
             .set("Authorization", `Bearer ${credential.token}`)
             .then(async (response: any) => {
-                const user: UserInterface = await UserModel().table().where("username", new_username).first();
+                const user: User = await UserModel().table().where("username", new_username).first();
 
                 assert.equal(response.status, 200);
                 assert.equal(user.username, new_username);
