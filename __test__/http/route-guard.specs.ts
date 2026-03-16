@@ -3,14 +3,14 @@ import request from "supertest";
 import {assert} from "chai";
 import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
-import {RoleInterface} from "../../src/interfaces/role.interface";
+import {Role} from "../../src/interfaces/role";
 import {DBKnex} from "../../src/configurations/knex";
 import {RoleModel} from "../../src/models/role.model";
 
 describe("HTTP Route Guard", async () => {
     let credential: Credentials;
     let id: any;
-    let role: RoleInterface;
+    let role: Role;
 
     it("generate credential", async () => credential = await mockCredential({role: "admin", username: "test_admin"}));
 
