@@ -19,6 +19,7 @@ import SettingService from "./services/setting.service";
 import RouteGuardService from "./services/route-guard.service";
 import RedisSubscriberService from "./services/redis-subscriber.service";
 import RedisEventService from "./services/redis-event.service";
+import RESPONSE_MIDDLEWARE from "./http/middlewares/response.middleware";
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.use((req: any, res: any, next: any) => {
 
 // custom middlewares
 app.use(REQUEST_MIDDLEWARE);
+app.use(RESPONSE_MIDDLEWARE);
 
 // cache application settings and route guards
 SettingService.boot().then(() => logger.info("Setting Cached"));
