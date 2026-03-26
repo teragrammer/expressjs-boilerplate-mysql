@@ -3,9 +3,9 @@ import Joi from "joi";
 import {ExtendJoiUtil} from "../../utilities/extend-joi.util";
 import {PasswordRecoveryModel, RECOVERY_EMAIL, RECOVERY_PHONE, TYPES} from "../../models/password-recovery.model";
 import {UserModel} from "../../models/user.model";
-import {UserInterface} from "../../interfaces/user.interface";
+import {User, UserRole} from "../../interfaces/user";
 import errors from "../../configurations/errors";
-import {PasswordRecoveryInterface} from "../../interfaces/password-recovery.interface";
+import {PasswordRecovery} from "../../interfaces/password.recovery";
 import {DateUtil} from "../../utilities/date.util";
 import {SecurityUtil} from "../../utilities/security.util";
 import AuthenticationTokenService from "../../services/authentication-token.service";
@@ -32,7 +32,7 @@ class Controller {
         const SEND_TO = await PasswordRecoveryService.validateSender(DATA);
         if (!SEND_TO.status || !SEND_TO.name || !SEND_TO.value) return;
 
-        const USER: UserInterface = await UserModel().table().where(SEND_TO.name, SEND_TO.value).first();
+        const USER: User = await UserModel().table().where(SEND_TO.name, SEND_TO.value).first();
         if (!USER) return res.status(404).json({
             code: errors.DATA_NOT_FOUND.code,
             message: errors.DATA_NOT_FOUND.message,
@@ -42,7 +42,7 @@ class Controller {
             }],
         });
 
-        const RECOVERY: PasswordRecoveryInterface = await PasswordRecoveryModel().table().where("send_to", SEND_TO.value).first();
+        const RECOVERY: PasswordRecovery = await PasswordRecoveryModel().table().where("send_to", SEND_TO.value).first();
         if (RECOVERY && RECOVERY.next_resend_at && DateUtil().unix(new Date(RECOVERY.next_resend_at)) > DateUtil().unix()) {
             return res.status(400).json({
                 code: errors.TRY_RESEND.code,
@@ -78,7 +78,7 @@ class Controller {
         const SEND_TO = await PasswordRecoveryService.validateSender(DATA);
         if (!SEND_TO.status || !SEND_TO.name || !SEND_TO.value) return;
 
-        const RECOVERY: PasswordRecoveryInterface = await PasswordRecoveryModel().table().where("send_to", SEND_TO.value).first();
+        const RECOVERY: PasswordRecovery = await PasswordRecoveryModel().table().where("send_to", SEND_TO.value).first();
         if (!RECOVERY) return res.status(404).json({
             code: errors.DATA_NOT_FOUND.code,
             message: errors.DATA_NOT_FOUND.message,
@@ -125,7 +125,7 @@ class Controller {
         await PasswordRecoveryModel().table().where("send_to", SEND_TO.value).delete();
 
         // set user authentication token
-        const USER: UserInterface | null = await UserRepository.byContact(SEND_TO.name, RECOVERY.send_to);
+        const USER: UserRole | null = await UserRepository.byContact(SEND_TO.name, RECOVERY.send_to);
         if (!USER) return res.status(404).json({
             code: errors.DATA_NOT_FOUND.code,
             message: errors.DATA_NOT_FOUND.message,

@@ -5,7 +5,7 @@ import {logger} from "../../configurations/logger";
 import {DATA_TYPES, SET_CACHE_SETTINGS, SettingModel} from "../../models/setting.model";
 import {DateUtil} from "../../utilities/date.util";
 import {ExtendJoiUtil} from "../../utilities/extend-joi.util";
-import {SettingInterface} from "../../interfaces/setting.interface";
+import {Setting} from "../../interfaces/setting";
 import RedisPublisherService from "../../services/redis-publisher.service";
 import SettingService from "../../services/setting.service";
 import catchAsync from "../../utilities/catch-async";
@@ -34,7 +34,7 @@ class Controller {
         }
 
         const PAGINATE = req.app.get("paginate");
-        const SETTINGS: SettingInterface[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
+        const SETTINGS: Setting[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
 
         res.status(200).json(SETTINGS);
     });
@@ -45,7 +45,7 @@ class Controller {
 
     view = catchAsync(async (req: Request, res: Response): Promise<any> => {
         const ID = req.params.id;
-        const SETTING: SettingInterface = await SettingModel().table()
+        const SETTING: Setting = await SettingModel().table()
             .where("id", ID)
             .first();
 

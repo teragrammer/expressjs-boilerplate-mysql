@@ -5,7 +5,7 @@ import {logger} from "../../configurations/logger";
 import {DateUtil} from "../../utilities/date.util";
 import {RoleModel} from "../../models/role.model";
 import {ExtendJoiUtil} from "../../utilities/extend-joi.util";
-import {RoleInterface} from "../../interfaces/role.interface";
+import {Role} from "../../interfaces/role";
 import catchAsync from "../../utilities/catch-async";
 
 class Controller {
@@ -25,14 +25,14 @@ class Controller {
         }
 
         const PAGINATE = req.app.get("paginate");
-        const ROLES: RoleInterface[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
+        const ROLES: Role[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
 
         res.status(200).json(ROLES);
     });
 
     view = catchAsync(async (req: Request, res: Response): Promise<any> => {
         const ID = req.params.id;
-        const ROLE: RoleInterface = await RoleModel().table()
+        const ROLE: Role = await RoleModel().table()
             .where("id", ID)
             .first();
 

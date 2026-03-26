@@ -1,13 +1,13 @@
 import {Request, Response} from "express";
 import Joi from "joi";
 import errors from "../../configurations/errors";
-import {UserInterface} from "../../interfaces/user.interface";
+import {User, UserRole} from "../../interfaces/user";
 import {UserModel} from "../../models/user.model";
 import {DateUtil} from "../../utilities/date.util";
 import {SecurityUtil} from "../../utilities/security.util";
 import {AuthenticationTokenModel} from "../../models/authentication-token.model";
 import {ExtendJoiUtil} from "../../utilities/extend-joi.util";
-import {SettingKeyValueInterface} from "../../interfaces/setting-key-value.interface";
+import {SettingKeyValue} from "../../interfaces/setting-key.value";
 import AuthenticationTokenService from "../../services/authentication-token.service";
 import UserRepository from "../../repositories/user.repository";
 import SettingService from "../../services/setting.service";
@@ -21,7 +21,7 @@ class Controller {
             password: Joi.string().required(),
         }), DATA, res)) return;
 
-        const USER: UserInterface = await UserRepository.byUsername(DATA.username);
+        const USER: UserRole = await UserRepository.byUsername(DATA.username);
         if (!USER) return res.status(404).json({
             code: errors.DATA_NOT_FOUND.code,
             message: errors.DATA_NOT_FOUND.message,
@@ -56,7 +56,7 @@ class Controller {
             await UserModel().table().where("id", USER.id).increment("login_tries");
 
             // application settings
-            const SETTINGS: SettingKeyValueInterface = (await SettingService.getCache()).pri;
+            const SETTINGS: SettingKeyValue = (await SettingService.getCache()).pri;
 
             // update login tries
             const TOTAL_LOGIN_TRIES = (typeof Number(USER.login_tries) + 1 != undefined) ? Number(USER.login_tries) + 1 : 0;

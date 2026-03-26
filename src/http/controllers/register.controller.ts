@@ -6,8 +6,8 @@ import errors from "../../configurations/errors";
 import {logger} from "../../configurations/logger";
 import {SecurityUtil} from "../../utilities/security.util";
 import {DateUtil} from "../../utilities/date.util";
-import {UserInterface} from "../../interfaces/user.interface";
-import {RoleInterface} from "../../interfaces/role.interface";
+import {User, UserRole} from "../../interfaces/user";
+import {Role} from "../../interfaces/role";
 import AuthenticationTokenService from "../../services/authentication-token.service";
 import {RoleModel} from "../../models/role.model";
 import UserRepository from "../../repositories/user.repository";
@@ -37,7 +37,7 @@ class Controller {
         }), DATA, res)) return;
 
         // check if role is valid
-        const ROLE: RoleInterface = await RoleModel().table().where("slug", "customer").first();
+        const ROLE: Role = await RoleModel().table().where("slug", "customer").first();
         if (!ROLE) return res.status(404).json({
             code: errors.DATA_NOT_FOUND.code,
             message: errors.DATA_NOT_FOUND.message,
@@ -51,7 +51,7 @@ class Controller {
             const [ID] = await UserModel().table().returning("id").insert(DATA);
 
             // get the full details
-            const CUSTOMER: UserInterface = await UserRepository.byId(ID);
+            const CUSTOMER: UserRole = await UserRepository.byId(ID);
             if (!CUSTOMER) return res.status(404).json({
                 code: errors.DATA_NOT_FOUND.code,
                 message: errors.DATA_NOT_FOUND.message,

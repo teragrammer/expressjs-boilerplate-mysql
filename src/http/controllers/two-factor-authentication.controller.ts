@@ -4,11 +4,11 @@ import Joi from "joi";
 import errors from "../../configurations/errors";
 import {DateUtil} from "../../utilities/date.util";
 import {SecurityUtil} from "../../utilities/security.util";
-import {TwoFactorAuthenticationInterface} from "../../interfaces/two-factor-authentication.interface";
+import {TwoFactorAuthentication} from "../../interfaces/two-factor.authentication";
 import {TFA_CONTINUE, TwoFactorAuthenticationModel} from "../../models/two-factor-authentication.model";
 import {__ENV} from "../../configurations/environment";
 import {logger} from "../../configurations/logger";
-import {SettingKeyValueInterface} from "../../interfaces/setting-key-value.interface";
+import {SettingKeyValue} from "../../interfaces/setting-key.value";
 import {ExtendJoiUtil} from "../../utilities/extend-joi.util";
 import AuthenticationTokenService from "../../services/authentication-token.service";
 import SettingService from "../../services/setting.service";
@@ -31,7 +31,7 @@ class Controller {
         });
 
         // find for existing tfa
-        const TFA: TwoFactorAuthenticationInterface = await TwoFactorAuthenticationModel().table()
+        const TFA: TwoFactorAuthentication = await TwoFactorAuthenticationModel().table()
             .where("token_id", req.credentials.jwt.tid)
             .first();
 
@@ -72,7 +72,7 @@ class Controller {
 
             // send the code to email
             if (__ENV.NODE_ENV === "production") {
-                const SETTINGS: SettingKeyValueInterface = (await SettingService.getCache()).pri;
+                const SETTINGS: SettingKeyValue = (await SettingService.getCache()).pri;
 
                 try {
                     await sgMail.send({
@@ -118,7 +118,7 @@ class Controller {
         });
 
         // find for existing tfa
-        const TFA: TwoFactorAuthenticationInterface = await TwoFactorAuthenticationModel().table()
+        const TFA: TwoFactorAuthentication = await TwoFactorAuthenticationModel().table()
             .where("token_id", CREDENTIALS.jwt.tid)
             .first();
         if (!TFA) return res.status(404).json({

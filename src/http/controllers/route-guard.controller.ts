@@ -3,7 +3,7 @@ import Joi from "joi";
 import errors from "../../configurations/errors";
 import {logger} from "../../configurations/logger";
 import {ExtendJoiUtil} from "../../utilities/extend-joi.util";
-import {RouteGuardInterface} from "../../interfaces/route-guard.interface";
+import {RouteGuard} from "../../interfaces/route.guard";
 import {RouteGuardModel, SET_CACHE_GUARDS} from "../../models/route-guard.model";
 import RedisPublisherService from "../../services/redis-publisher.service";
 import RouteGuardService from "../../services/route-guard.service";
@@ -17,14 +17,14 @@ class Controller {
         if (ROLE_ID !== null) Q.where("role_id", ROLE_ID);
 
         const PAGINATE = req.app.get("paginate");
-        const ROUTE_GUARDS: RouteGuardInterface[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
+        const ROUTE_GUARDS: RouteGuard[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
 
         res.status(200).json(ROUTE_GUARDS);
     });
 
     view = catchAsync(async (req: Request, res: Response): Promise<any> => {
         const ID = req.params.id;
-        const ROUTE_GUARD: RouteGuardInterface = await RouteGuardModel().table()
+        const ROUTE_GUARD: RouteGuard = await RouteGuardModel().table()
             .where("id", ID)
             .first();
 

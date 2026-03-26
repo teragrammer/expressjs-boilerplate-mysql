@@ -6,7 +6,7 @@ import {UserModel} from "../../models/user.model";
 import {SecurityUtil} from "../../utilities/security.util";
 import {ExtendJoiUtil} from "../../utilities/extend-joi.util";
 import {DateUtil} from "../../utilities/date.util";
-import {UserInterface} from "../../interfaces/user.interface";
+import {User, UserRole} from "../../interfaces/user";
 import AuthenticationTokenService from "../../services/authentication-token.service";
 import catchAsync from "../../utilities/catch-async";
 
@@ -80,7 +80,7 @@ class Controller {
         }), DATA, res)) return;
 
         // verify the current password
-        const ACCOUNT: UserInterface = await req.credentials.user();
+        const ACCOUNT: UserRole = await req.credentials.user();
         if (!ACCOUNT.password || !await SecurityUtil().compare(ACCOUNT.password, DATA.current_password)) {
             return res.status(403).json({
                 code: errors.CREDENTIAL_DO_NOT_MATCH.code,
