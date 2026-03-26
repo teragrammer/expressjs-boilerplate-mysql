@@ -1,16 +1,16 @@
 import {NextFunction, Request, Response} from "express";
 import errors from "../../configurations/errors";
-import {AuthenticationTokenInterface} from "../../interfaces/authentication-token.interface";
+import {AuthenticationToken} from "../../interfaces/authentication.token";
 import {AuthenticationTokenModel, JwtExtendedPayload} from "../../models/authentication-token.model";
-import {UserInterface} from "../../interfaces/user.interface";
+import {User} from "../../interfaces/user";
 import AuthenticationTokenService from "../../services/authentication-token.service";
 import UserRepository from "../../repositories/user.repository";
 
 export function AuthenticationMiddleware(isHalt = true): any {
-    const USER = async (payload: JwtExtendedPayload): Promise<UserInterface> =>
+    const USER = async (payload: JwtExtendedPayload): Promise<User> =>
         UserRepository.byId(payload.uid);
 
-    const AUTHENTICATION = (payload: JwtExtendedPayload): Promise<AuthenticationTokenInterface> =>
+    const AUTHENTICATION = (payload: JwtExtendedPayload): Promise<AuthenticationToken> =>
         AuthenticationTokenModel().table().where("id", payload.tid).first();
 
     return async function (req: Request, res: Response, next: NextFunction) {
