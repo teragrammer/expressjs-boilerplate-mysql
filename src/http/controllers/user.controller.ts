@@ -4,7 +4,7 @@ import errors from "../../configurations/errors";
 import {STATUSES, UserModel} from "../../models/user.model";
 import {logger} from "../../configurations/logger";
 import {SecurityUtil} from "../../utilities/security.util";
-import {UserInterface} from "../../interfaces/user.interface";
+import {User} from "../../interfaces/user";
 import {DateUtil} from "../../utilities/date.util";
 import {ExtendJoiUtil} from "../../utilities/extend-joi.util";
 import catchAsync from "../../utilities/catch-async";
@@ -32,7 +32,7 @@ class Controller {
         }
 
         const PAGINATE = res.app.get("paginate");
-        const USERS: UserInterface[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
+        const USERS: User[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
 
         // remove sensitive data
         for (let i = 0; i < USERS.length; i++) UserModel().hidden(USERS[i]);
@@ -42,7 +42,7 @@ class Controller {
 
     view = catchAsync(async (req: Request, res: Response): Promise<any> => {
         const ID = req.params.id;
-        const USER: UserInterface = await UserModel().table()
+        const USER: User = await UserModel().table()
             .where("id", ID)
             .first();
 
@@ -52,7 +52,7 @@ class Controller {
         });
 
         // remove sensitive data
-        delete USER.password;
+        UserModel().hidden(USER);
 
         return res.status(200).json(USER);
     });
