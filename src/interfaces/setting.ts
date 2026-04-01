@@ -1,4 +1,4 @@
-export interface SettingInterface {
+export interface Setting {
     id: number;
     name: string;
     slug: string;
