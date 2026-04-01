@@ -1,4 +1,4 @@
-export interface PasswordRecoveryInterface {
+export interface PasswordRecovery {
     id: number;
     type: string;
     send_to: string;
