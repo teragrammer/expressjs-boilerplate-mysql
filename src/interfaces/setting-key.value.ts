@@ -1,4 +1,4 @@
-export interface SettingKeyValueInterface {
+export interface SettingKeyValue {
     mx_log_try: number;         // Max Login Tries
     lck_prd: number;            // Failed Login Tries Lockout Period
     tkn_exp: number;            // Authentication Token Expiration
