@@ -1,4 +1,4 @@
-export interface TwoFactorAuthenticationInterface {
+export interface TwoFactorAuthentication {
     id: number;
     token_id: number;
     code: string;
