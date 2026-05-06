@@ -1,5 +1,5 @@
 import {Knex} from "knex";
-import {UserInterface} from "../interfaces/user.interface";
+import {User} from "../interfaces/user";
 import {DBKnex} from "../configurations/knex";
 
 export const USER_TABLE = "users";
@@ -11,7 +11,7 @@ export function UserModel(knex?: Knex) {
     return {
         table: () => (knex ? knex : DBKnex).table(USER_TABLE),
 
-        hidden(user: UserInterface) {
+        hidden(user: User) {
             delete user.password;
             delete user.failed_login_expired_at;
             delete user.login_tries;
