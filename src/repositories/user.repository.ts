@@ -1,9 +1,9 @@
 import {UserModel} from "../models/user.model";
-import {UserInterface} from "../interfaces/user.interface";
+import {UserRole} from "../interfaces/user";
 
 class UserRepository {
     private static instance: UserRepository;
-    private readonly _PROFILE_COLUMN_COMPLETE = ["users.*", "roles.slug AS role_slug", "roles.is_public AS role_is_public", "roles.is_bypass_authorization AS role_is_bypass_authorization"];
+    private readonly _PROFILE_COLUMN_COMPLETE = ["users.*", "roles.slug", "roles.is_public", "roles.is_bypass_authorization"];
 
     constructor() {
     }
@@ -13,37 +13,37 @@ class UserRepository {
         return UserRepository.instance;
     }
 
-    completeQueryBuilder() {
+    joinRole() {
         return UserModel().table()
             .select(this._PROFILE_COLUMN_COMPLETE)
             .leftJoin("roles", "users.role_id", "=", "roles.id");
     }
 
-    byId(id: number): Promise<UserInterface> {
-        return this.completeQueryBuilder()
+    byId(id: number): Promise<UserRole> {
+        return this.joinRole()
             .where("users.id", id)
             .first();
     }
 
-    byUsername(username: string): Promise<UserInterface> {
-        return this.completeQueryBuilder()
+    byUsername(username: string): Promise<UserRole> {
+        return this.joinRole()
             .where("users.username", username)
             .first();
     }
 
-    byEmail(email: string): Promise<UserInterface> {
-        return this.completeQueryBuilder()
+    byEmail(email: string): Promise<UserRole> {
+        return this.joinRole()
             .where("users.email", email)
             .first();
     }
 
-    byPhone(phone: string): Promise<UserInterface> {
-        return this.completeQueryBuilder()
+    byPhone(phone: string): Promise<UserRole> {
+        return this.joinRole()
             .where("users.phone", phone)
             .first();
     }
 
-    byContact(type: string, to: string): Promise<UserInterface> | null {
+    byContact(type: string, to: string): Promise<UserRole> | null {
         if (type === "email") return this.byEmail(to);
         if (type === "phone") return this.byPhone(to);
 
