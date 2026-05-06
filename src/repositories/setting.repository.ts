@@ -1,5 +1,5 @@
 import {SettingModel} from "../models/setting.model";
-import {SettingInterface} from "../interfaces/setting.interface";
+import {Setting} from "../interfaces/setting";
 
 class SettingRepository {
     private static instance: SettingRepository;
@@ -12,7 +12,7 @@ class SettingRepository {
         return SettingRepository.instance;
     }
 
-    getBySlug(slug: string [] = [], is_public?: number): Promise<SettingInterface[]> {
+    getBySlug(slug: string [] = [], is_public?: number): Promise<Setting[]> {
         const Q = SettingModel().table()
             .where("is_disabled", 0);
 
