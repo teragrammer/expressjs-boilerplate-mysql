@@ -1,4 +1,4 @@
-import {UserInterface} from "../interfaces/user.interface";
+import {UserRole} from "../interfaces/user";
 import AuthenticationTokenRepository from "../repositories/authentication-token.repository";
 import jwt from "jsonwebtoken";
 import {JwtExtendedPayload} from "../models/authentication-token.model";
@@ -27,7 +27,7 @@ class AuthenticationTokenService {
         return AuthenticationTokenService.instance;
     }
 
-    async generate(user: UserInterface, metadata?: AuthenticationMetaData): Promise<string> {
+    async generate(user: UserRole, metadata?: AuthenticationMetaData): Promise<string> {
         // delete expired tokens
         await this.clean(user.id);
 
@@ -40,7 +40,7 @@ class AuthenticationTokenService {
         return AuthenticationTokenRepository.deleteAllByUserId(userId);
     }
 
-    async token(user: UserInterface, tfa?: string, metadata?: AuthenticationMetaData): Promise<string> {
+    async token(user: UserRole, tfa?: string, metadata?: AuthenticationMetaData): Promise<string> {
         const EXPIRED_AT = DateUtil().expiredAt(JWT_EXPIRATION_DAYS / 86400, "days");
         const [ID] = await AuthenticationTokenRepository.insert({
             user_id: user.id,
@@ -56,11 +56,11 @@ class AuthenticationTokenService {
             fnm: user.first_name,
             mnm: user.middle_name,
             lnm: user.last_name,
-            rol: user.role_slug,
+            rol: user.slug,
             unm: user.username,
             eml: user.email,
             phn: user.phone,
-            bpa: user.role_is_bypass_authorization,
+            bpa: user.is_bypass_authorization,
             tid: ID,
             tfa: tfa && [TFA_HOLD, TFA_CONTINUE].includes(tfa) ? tfa : (JWT_TFA ? TFA_HOLD : TFA_CONTINUE),
         };
