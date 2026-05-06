@@ -1,6 +1,6 @@
-import {RoleInterface} from "../interfaces/role.interface";
+import {Role} from "../interfaces/role";
 import {RoleModel} from "../models/role.model";
-import {RouteGuardInterface} from "../interfaces/route-guard.interface";
+import {RouteGuard} from "../interfaces/route.guard";
 import {RouteGuardModel} from "../models/route-guard.model";
 import RedisPublisherService from "./redis-publisher.service";
 import {__ENV} from "../configurations/environment";
@@ -21,9 +21,9 @@ class RouteGuardService {
     async initializer(): Promise<Record<string, string[]>> {
         const GUARDS: Record<string, string[]> = {};
 
-        const ROLES: RoleInterface[] = await RoleModel().table().select(["id", "slug"]);
+        const ROLES: Role[] = await RoleModel().table().select(["id", "slug"]);
         for (const role of ROLES) {
-            const ROUTE_GUARDS: RouteGuardInterface[] = await RouteGuardModel().table().select("route").where("role_id", role.id);
+            const ROUTE_GUARDS: RouteGuard[] = await RouteGuardModel().table().select("route").where("role_id", role.id);
             for (const routeGuard of ROUTE_GUARDS) {
                 if (typeof GUARDS[role.slug] === "undefined") GUARDS[role.slug] = [];
                 GUARDS[role.slug].push(routeGuard.route);

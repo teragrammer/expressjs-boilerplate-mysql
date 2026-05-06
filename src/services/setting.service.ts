@@ -1,6 +1,6 @@
-import {SettingKeyValueInterface} from "../interfaces/setting-key-value.interface";
+import {SettingKeyValue} from "../interfaces/setting-key.value";
 import {InitializerSettingInterface} from "../models/setting.model";
-import {SettingInterface} from "../interfaces/setting.interface";
+import {Setting} from "../interfaces/setting";
 import {__ENV} from "../configurations/environment";
 import RedisPublisherService from "./redis-publisher.service";
 import SettingRepository from "../repositories/setting.repository";
@@ -19,8 +19,8 @@ class SettingService {
     }
 
     async initializer(): Promise<InitializerSettingInterface> {
-        const _PRIVATE: SettingKeyValueInterface = await this.value();
-        const _PUBLIC: SettingKeyValueInterface = await this.value([], 1);
+        const _PRIVATE: SettingKeyValue = await this.value();
+        const _PUBLIC: SettingKeyValue = await this.value([], 1);
 
         return {
             pri: _PRIVATE,
@@ -28,14 +28,14 @@ class SettingService {
         };
     }
 
-    async value(slug: string[] = [], is_public?: number): Promise<SettingKeyValueInterface> {
-        let settings: SettingInterface[] | undefined = await SettingRepository.getBySlug(slug, is_public);
+    async value(slug: string[] = [], is_public?: number): Promise<SettingKeyValue> {
+        let settings: Setting[] | undefined = await SettingRepository.getBySlug(slug, is_public);
 
         // values
         return this.parser(settings);
     }
 
-    parser(settings: SettingInterface[] | undefined): SettingKeyValueInterface {
+    parser(settings: Setting[] | undefined): SettingKeyValue {
         const OBJ_KEY: any = {};
 
         // values

@@ -3,7 +3,7 @@ import Joi from "joi";
 import {RECOVERY_EMAIL, RECOVERY_PHONE} from "../models/password-recovery.model";
 import {__ENV} from "../configurations/environment";
 import sgMail from "@sendgrid/mail";
-import {SettingKeyValueInterface} from "../interfaces/setting-key-value.interface";
+import {SettingKeyValue} from "../interfaces/setting-key.value";
 import SettingService from "./setting.service";
 
 class PasswordRecoveryService {
@@ -50,7 +50,7 @@ class PasswordRecoveryService {
 
     async email(to: string, code: string) {
         // application settings
-        const SETTINGS: SettingKeyValueInterface = (await SettingService.getCache()).pri;
+        const SETTINGS: SettingKeyValue = (await SettingService.getCache()).pri;
 
         await sgMail.send({
             to,
