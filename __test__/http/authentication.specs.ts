@@ -3,7 +3,7 @@ import request from "supertest";
 import {assert} from "chai";
 import app from "../../src";
 import {DBKnex} from "../../src/config/knex";
-import {UserModel} from "../../src/models/user.model";
+import {UserModel} from "../../src/modules/users/user.model";
 
 describe("HTTP Authentication", () => {
     let token: string;

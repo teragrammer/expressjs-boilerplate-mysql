@@ -3,10 +3,10 @@ import request from "supertest";
 import {assert} from "chai";
 import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
-import {User} from "../../src/interfaces/user";
+import {User} from "../../src/modules/users/user";
 import {Role} from "../../src/interfaces/role";
 import {RoleModel} from "../../src/models/role.model";
-import {UserModel} from "../../src/models/user.model";
+import {UserModel} from "../../src/modules/users/user.model";
 
 describe("HTTP Account", async () => {
     let credential: Credentials;

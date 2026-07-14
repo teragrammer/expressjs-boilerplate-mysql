@@ -1,10 +1,10 @@
 import {NextFunction, Request, Response} from "express";
 import errors from "../errors/messages";
-import {AuthenticationToken} from "../../interfaces/authentication.token";
-import {AuthenticationTokenModel, JwtExtendedPayload} from "../../models/authentication-token.model";
-import {User} from "../../interfaces/user";
-import AuthenticationTokenService from "../../services/authentication-token.service";
-import UserRepository from "../../repositories/user.repository";
+import {AuthenticationToken} from "../../modules/auth/interfaces/authentication.token";
+import {AuthenticationTokenModel, JwtExtendedPayload} from "../../modules/auth/models/authentication-token.model";
+import {User} from "../../modules/users/user";
+import AuthenticationTokenService from "../../modules/auth/services/authentication-token.service";
+import UserRepository from "../../modules/users/user.repository";
 
 export function AuthenticationMiddleware(isHalt = true): any {
     const USER = async (payload: JwtExtendedPayload): Promise<User> =>

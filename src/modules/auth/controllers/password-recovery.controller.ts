@@ -1,17 +1,17 @@
 import {Request, Response} from "express";
 import Joi from "joi";
-import {ExtendJoiUtil} from "../../common/utils/extend-joi.util";
-import {PasswordRecoveryModel, RECOVERY_EMAIL, RECOVERY_PHONE, TYPES} from "../../models/password-recovery.model";
-import {UserModel} from "../../models/user.model";
-import {User, UserRole} from "../../interfaces/user";
-import errors from "../../common/errors/messages";
-import {PasswordRecovery} from "../../interfaces/password.recovery";
-import {DateUtil} from "../../common/utils/date.util";
-import {SecurityUtil} from "../../common/utils/security.util";
-import AuthenticationTokenService from "../../services/authentication-token.service";
-import PasswordRecoveryService from "../../services/password-recovery.service";
-import UserRepository from "../../repositories/user.repository";
-import catchAsync from "../../common/utils/catch-async";
+import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
+import {PasswordRecoveryModel, RECOVERY_EMAIL, RECOVERY_PHONE, TYPES} from "../models/password-recovery.model";
+import {UserModel} from "../../users/user.model";
+import {User, UserRole} from "../../users/user";
+import errors from "../../../common/errors/messages";
+import {PasswordRecovery} from "../interfaces/password.recovery";
+import {DateUtil} from "../../../common/utils/date.util";
+import {SecurityUtil} from "../../../common/utils/security.util";
+import AuthenticationTokenService from "../services/authentication-token.service";
+import PasswordRecoveryService from "../services/password-recovery.service";
+import UserRepository from "../../users/user.repository";
+import catchAsync from "../../../common/utils/catch-async";
 
 const CODE_LENGTH = 6;
 

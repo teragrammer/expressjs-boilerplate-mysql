@@ -1,5 +1,5 @@
-import {AuthenticationTokenModel} from "../models/authentication-token.model";
-import {DateUtil} from "../common/utils/date.util";
+import {AuthenticationTokenModel} from "./models/authentication-token.model";
+import {DateUtil} from "../../common/utils/date.util";
 
 class AuthenticationTokenRepository {
     private static instance: AuthenticationTokenRepository;

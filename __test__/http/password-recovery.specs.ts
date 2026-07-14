@@ -3,11 +3,11 @@ import request from "supertest";
 import {assert} from "chai";
 import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
-import {User} from "../../src/interfaces/user";
+import {User} from "../../src/modules/users/user";
 import {SecurityUtil} from "../../src/common/utils/security.util";
 import {DBKnex} from "../../src/config/knex";
-import {UserModel} from "../../src/models/user.model";
-import {PasswordRecoveryModel} from "../../src/models/password-recovery.model";
+import {UserModel} from "../../src/modules/users/user.model";
+import {PasswordRecoveryModel} from "../../src/modules/auth/models/password-recovery.model";
 
 describe("HTTP Password Recovery", async () => {
     let credential: Credentials;

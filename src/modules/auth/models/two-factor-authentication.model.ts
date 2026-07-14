@@ -1,5 +1,5 @@
 import {Knex} from "knex";
-import {DBKnex} from "../config/knex";
+import {DBKnex} from "../../../config/knex";
 
 export const TWO_FACTOR_AUTHENTICATION_TABLE = "two_factor_authentications";
 

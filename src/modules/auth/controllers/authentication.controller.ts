@@ -1,17 +1,17 @@
 import {Request, Response} from "express";
 import Joi from "joi";
-import errors from "../../common/errors/messages";
-import {User, UserRole} from "../../interfaces/user";
-import {UserModel} from "../../models/user.model";
-import {DateUtil} from "../../common/utils/date.util";
-import {SecurityUtil} from "../../common/utils/security.util";
-import {AuthenticationTokenModel} from "../../models/authentication-token.model";
-import {ExtendJoiUtil} from "../../common/utils/extend-joi.util";
-import {SettingKeyValue} from "../../interfaces/setting-key.value";
-import AuthenticationTokenService from "../../services/authentication-token.service";
-import UserRepository from "../../repositories/user.repository";
-import SettingService from "../../services/setting.service";
-import catchAsync from "../../common/utils/catch-async";
+import errors from "../../../common/errors/messages";
+import {User, UserRole} from "../../users/user";
+import {UserModel} from "../../users/user.model";
+import {DateUtil} from "../../../common/utils/date.util";
+import {SecurityUtil} from "../../../common/utils/security.util";
+import {AuthenticationTokenModel} from "../models/authentication-token.model";
+import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
+import {SettingKeyValue} from "../../../interfaces/setting-key.value";
+import AuthenticationTokenService from "../services/authentication-token.service";
+import UserRepository from "../../users/user.repository";
+import SettingService from "../../../services/setting.service";
+import catchAsync from "../../../common/utils/catch-async";
 
 class Controller {
     login = catchAsync(async (req: Request, res: Response) => {

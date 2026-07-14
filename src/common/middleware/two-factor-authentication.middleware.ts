@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response} from "express";
 import errors from "../errors/messages";
-import {TFA_HOLD} from "../../models/two-factor-authentication.model";
+import {TFA_HOLD} from "../../modules/auth/models/two-factor-authentication.model";
 
 export function TwoFactorAuthenticationMiddleware(isHalt = true): any {
     return async function (req: Request, res: Response, next: NextFunction) {

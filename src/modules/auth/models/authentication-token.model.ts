@@ -1,6 +1,6 @@
 import {Knex} from "knex";
 import {JwtPayload} from "jsonwebtoken";
-import {DBKnex} from "../config/knex";
+import {DBKnex} from "../../../config/knex";
 
 export const AUTHENTICATION_TOKEN_TABLE = "authentication_tokens";
 

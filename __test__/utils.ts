@@ -1,11 +1,11 @@
 import {Role} from "../src/interfaces/role";
-import {User, UserRole} from "../src/interfaces/user";
-import UserRepository from "../src/repositories/user.repository";
-import AuthenticationTokenService from "../src/services/authentication-token.service";
-import {UserModel} from "../src/models/user.model";
+import {User, UserRole} from "../src/modules/users/user";
+import UserRepository from "../src/modules/users/user.repository";
+import AuthenticationTokenService from "../src/modules/auth/services/authentication-token.service";
+import {UserModel} from "../src/modules/users/user.model";
 import {RoleModel} from "../src/models/role.model";
 import {SecurityUtil} from "../src/common/utils/security.util";
-import {TFA_HOLD} from "../src/models/two-factor-authentication.model";
+import {TFA_HOLD} from "../src/modules/auth/models/two-factor-authentication.model";
 import {__ENV} from "../src/config/environment";
 
 export interface Options {

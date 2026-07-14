@@ -1,9 +1,9 @@
-import {UserRole} from "../interfaces/user";
-import AuthenticationTokenRepository from "../repositories/authentication-token.repository";
+import {UserRole} from "../../users/user";
+import AuthenticationTokenRepository from "../authentication-token.repository";
 import jwt from "jsonwebtoken";
 import {JwtExtendedPayload} from "../models/authentication-token.model";
-import {__ENV} from "../config/environment";
-import {DateUtil} from "../common/utils/date.util";
+import {__ENV} from "../../../config/environment";
+import {DateUtil} from "../../../common/utils/date.util";
 import {TFA_CONTINUE, TFA_HOLD} from "../models/two-factor-authentication.model";
 
 const JWT_TFA = __ENV.JWT_TFA;

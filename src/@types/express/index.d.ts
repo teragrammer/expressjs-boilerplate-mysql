@@ -1,6 +1,6 @@
-import {JwtExtendedPayload} from "../../models/authentication-token.model";
-import {UserRole} from "../../interfaces/user";
-import {AuthenticationToken} from "../../interfaces/authentication.token";
+import {JwtExtendedPayload} from "../../modules/auth/models/authentication-token.model";
+import {UserRole} from "../../modules/users/user";
+import {AuthenticationToken} from "../../modules/auth/interfaces/authentication.token";
 
 export interface RequestCredentials {
     jwt: JwtExtendedPayload;

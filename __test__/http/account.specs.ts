@@ -3,9 +3,9 @@ import request from "supertest";
 import {assert} from "chai";
 import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
-import {User} from "../../src/interfaces/user";
-import {UserModel} from "../../src/models/user.model";
-import {TFA_CONTINUE} from "../../src/models/two-factor-authentication.model";
+import {User} from "../../src/modules/users/user";
+import {UserModel} from "../../src/modules/users/user.model";
+import {TFA_CONTINUE} from "../../src/modules/auth/models/two-factor-authentication.model";
 
 describe("HTTP Account", async () => {
     let credential: Credentials;

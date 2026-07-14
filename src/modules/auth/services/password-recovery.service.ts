@@ -1,10 +1,10 @@
-import {ExtendJoiUtil} from "../common/utils/extend-joi.util";
+import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
 import Joi from "joi";
 import {RECOVERY_EMAIL, RECOVERY_PHONE} from "../models/password-recovery.model";
-import {__ENV} from "../config/environment";
+import {__ENV} from "../../../config/environment";
 import sgMail from "@sendgrid/mail";
-import {SettingKeyValue} from "../interfaces/setting-key.value";
-import SettingService from "./setting.service";
+import {SettingKeyValue} from "../../../interfaces/setting-key.value";
+import SettingService from "../../../services/setting.service";
 
 class PasswordRecoveryService {
     private static instance: PasswordRecoveryService;

@@ -1,5 +1,5 @@
 import type {Knex} from "knex";
-import {TYPES} from "../../src/models/password-recovery.model";
+import {TYPES} from "../../src/modules/auth/models/password-recovery.model";
 
 export async function up(knex: Knex): Promise<void> {
     return knex.schema.createTable('password_recoveries', table => {

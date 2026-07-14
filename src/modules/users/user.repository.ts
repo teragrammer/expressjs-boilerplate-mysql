@@ -1,5 +1,5 @@
-import {UserModel} from "../models/user.model";
-import {UserRole} from "../interfaces/user";
+import {UserModel} from "./user.model";
+import {UserRole} from "./user";
 
 class UserRepository {
     private static instance: UserRepository;

@@ -1,5 +1,5 @@
 import {Knex} from "knex";
-import {DBKnex} from "../config/knex";
+import {DBKnex} from "../../../config/knex";
 
 export const PASSWORD_RECOVERY_TABLE = "password_recoveries";
 
