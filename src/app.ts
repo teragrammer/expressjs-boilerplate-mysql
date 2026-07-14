@@ -6,9 +6,9 @@ import compression from "compression";
 import {express as useragent} from "express-useragent";
 
 import v1 from "./http/routes/v1";
-import {logger} from "./configurations/logger";
-import {__ENV} from "./configurations/environment";
-import errors from "./configurations/errors";
+import {logger} from "./config/logger";
+import {__ENV} from "./config/environment";
+import errors from "./config/errors";
 
 import {SET_CACHE_SETTINGS} from "./models/setting.model";
 import {SET_CACHE_GUARDS} from "./models/route-guard.model";

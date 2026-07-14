@@ -6,7 +6,7 @@ import {UserModel} from "../src/models/user.model";
 import {RoleModel} from "../src/models/role.model";
 import {SecurityUtil} from "../src/utilities/security.util";
 import {TFA_HOLD} from "../src/models/two-factor-authentication.model";
-import {__ENV} from "../src/configurations/environment";
+import {__ENV} from "../src/config/environment";
 
 export interface Options {
     role: string;

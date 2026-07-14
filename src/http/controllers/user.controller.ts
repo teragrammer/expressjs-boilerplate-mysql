@@ -1,8 +1,8 @@
 import {Request, Response} from "express";
 import Joi from "joi";
-import errors from "../../configurations/errors";
+import errors from "../../config/errors";
 import {STATUSES, UserModel} from "../../models/user.model";
-import {logger} from "../../configurations/logger";
+import {logger} from "../../config/logger";
 import {SecurityUtil} from "../../utilities/security.util";
 import {User} from "../../interfaces/user";
 import {DateUtil} from "../../utilities/date.util";

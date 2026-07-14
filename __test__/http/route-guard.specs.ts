@@ -4,7 +4,7 @@ import {assert} from "chai";
 import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
 import {Role} from "../../src/interfaces/role";
-import {DBKnex} from "../../src/configurations/knex";
+import {DBKnex} from "../../src/config/knex";
 import {RoleModel} from "../../src/models/role.model";
 
 describe("HTTP Route Guard", async () => {

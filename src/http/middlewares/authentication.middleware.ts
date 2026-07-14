@@ -1,5 +1,5 @@
 import {NextFunction, Request, Response} from "express";
-import errors from "../../configurations/errors";
+import errors from "../../config/errors";
 import {AuthenticationToken} from "../../interfaces/authentication.token";
 import {AuthenticationTokenModel, JwtExtendedPayload} from "../../models/authentication-token.model";
 import {User} from "../../interfaces/user";

@@ -1,5 +1,5 @@
 import {Knex} from "knex";
-import {DBKnex} from "../configurations/knex";
+import {DBKnex} from "../config/knex";
 
 export const ROLE_TABLE = "roles";
 

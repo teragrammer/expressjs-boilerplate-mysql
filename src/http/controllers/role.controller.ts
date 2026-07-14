@@ -1,7 +1,7 @@
 import {Request, Response} from "express";
 import Joi from "joi";
-import errors from "../../configurations/errors";
-import {logger} from "../../configurations/logger";
+import errors from "../../config/errors";
+import {logger} from "../../config/logger";
 import {DateUtil} from "../../utilities/date.util";
 import {RoleModel} from "../../models/role.model";
 import {ExtendJoiUtil} from "../../utilities/extend-joi.util";

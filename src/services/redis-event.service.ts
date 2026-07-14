@@ -1,7 +1,7 @@
-import {logger} from "../configurations/logger";
+import {logger} from "../config/logger";
 import {SET_CACHE_SETTINGS} from "../models/setting.model";
 import {SecurityUtil} from "../utilities/security.util";
-import {DBRedis, DBRedisInterface} from "../configurations/redis";
+import {DBRedis, DBRedisInterface} from "../config/redis";
 import {SET_CACHE_GUARDS} from "../models/route-guard.model";
 import SettingService from "./setting.service";
 import RouteGuardService from "./route-guard.service";

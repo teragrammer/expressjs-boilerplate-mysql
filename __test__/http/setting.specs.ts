@@ -4,7 +4,7 @@ import {assert} from "chai";
 import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
 import {Setting} from "../../src/interfaces/setting";
-import {DBKnex} from "../../src/configurations/knex";
+import {DBKnex} from "../../src/config/knex";
 import {SettingModel} from "../../src/models/setting.model";
 
 describe("HTTP Account", async () => {

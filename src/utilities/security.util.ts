@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import bcrypt from "bcrypt";
-import {__ENV} from "../configurations/environment";
+import {__ENV} from "../config/environment";
 
 export function SecurityUtil() {
     return {

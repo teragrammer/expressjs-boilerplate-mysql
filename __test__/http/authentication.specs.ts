@@ -2,7 +2,7 @@ import "mocha";
 import request from "supertest";
 import {assert} from "chai";
 import app from "../../src";
-import {DBKnex} from "../../src/configurations/knex";
+import {DBKnex} from "../../src/config/knex";
 import {UserModel} from "../../src/models/user.model";
 
 describe("HTTP Authentication", () => {

@@ -1,6 +1,6 @@
 import {Knex} from "knex";
 import {User} from "../interfaces/user";
-import {DBKnex} from "../configurations/knex";
+import {DBKnex} from "../config/knex";
 
 export const USER_TABLE = "users";
 

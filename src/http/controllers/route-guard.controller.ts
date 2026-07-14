@@ -1,7 +1,7 @@
 import {Request, Response} from "express";
 import Joi from "joi";
-import errors from "../../configurations/errors";
-import {logger} from "../../configurations/logger";
+import errors from "../../config/errors";
+import {logger} from "../../config/logger";
 import {ExtendJoiUtil} from "../../utilities/extend-joi.util";
 import {RouteGuard} from "../../interfaces/route.guard";
 import {RouteGuardModel, SET_CACHE_GUARDS} from "../../models/route-guard.model";

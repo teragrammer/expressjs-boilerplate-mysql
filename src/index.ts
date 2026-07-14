@@ -1,10 +1,10 @@
 import os from "os";
 import cluster from "node:cluster";
 import app from "./app";
-import {logger} from "./configurations/logger";
-import {__ENV} from "./configurations/environment";
-import {DBKnex} from "./configurations/knex";
-import {DBRedis} from "./configurations/redis";
+import {logger} from "./config/logger";
+import {__ENV} from "./config/environment";
+import {DBKnex} from "./config/knex";
+import {DBRedis} from "./config/redis";
 
 const CLUSTER_SIZE_WORKER = os.cpus().length;
 

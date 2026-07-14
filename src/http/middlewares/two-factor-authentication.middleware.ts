@@ -1,5 +1,5 @@
 import {NextFunction, Request, Response} from "express";
-import errors from "../../configurations/errors";
+import errors from "../../config/errors";
 import {TFA_HOLD} from "../../models/two-factor-authentication.model";
 
 export function TwoFactorAuthenticationMiddleware(isHalt = true): any {

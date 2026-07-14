@@ -2,7 +2,7 @@ import {UserRole} from "../interfaces/user";
 import AuthenticationTokenRepository from "../repositories/authentication-token.repository";
 import jwt from "jsonwebtoken";
 import {JwtExtendedPayload} from "../models/authentication-token.model";
-import {__ENV} from "../configurations/environment";
+import {__ENV} from "../config/environment";
 import {DateUtil} from "../utilities/date.util";
 import {TFA_CONTINUE, TFA_HOLD} from "../models/two-factor-authentication.model";
 

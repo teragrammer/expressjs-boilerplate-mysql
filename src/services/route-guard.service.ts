@@ -3,7 +3,7 @@ import {RoleModel} from "../models/role.model";
 import {RouteGuard} from "../interfaces/route.guard";
 import {RouteGuardModel} from "../models/route-guard.model";
 import RedisPublisherService from "./redis-publisher.service";
-import {__ENV} from "../configurations/environment";
+import {__ENV} from "../config/environment";
 
 class RouteGuardService {
     private static instance: RouteGuardService;
