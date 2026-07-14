@@ -4,8 +4,8 @@ import {assert} from "chai";
 import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
 import {User} from "../../src/modules/users/user";
-import {Role} from "../../src/interfaces/role";
-import {RoleModel} from "../../src/models/role.model";
+import {Role} from "../../src/modules/role/role";
+import {RoleModel} from "../../src/modules/role/role.model";
 import {UserModel} from "../../src/modules/users/user.model";
 
 describe("HTTP Account", async () => {

@@ -3,9 +3,9 @@ import Joi from "joi";
 import errors from "../../common/errors/messages";
 import {logger} from "../../config/logger";
 import {DateUtil} from "../../common/utils/date.util";
-import {RoleModel} from "../../models/role.model";
+import {RoleModel} from "./role.model";
 import {ExtendJoiUtil} from "../../common/utils/extend-joi.util";
-import {Role} from "../../interfaces/role";
+import {Role} from "./role";
 import catchAsync from "../../common/utils/catch-async";
 
 class Controller {

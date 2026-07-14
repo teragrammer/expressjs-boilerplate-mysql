@@ -3,9 +3,9 @@ import request from "supertest";
 import {assert} from "chai";
 import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
-import {Role} from "../../src/interfaces/role";
+import {Role} from "../../src/modules/role/role";
 import {DBKnex} from "../../src/config/knex";
-import {RoleModel} from "../../src/models/role.model";
+import {RoleModel} from "../../src/modules/role/role.model";
 
 describe("HTTP Route Guard", async () => {
     let credential: Credentials;

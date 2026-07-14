@@ -7,9 +7,9 @@ import {logger} from "../../../config/logger";
 import {SecurityUtil} from "../../../common/utils/security.util";
 import {DateUtil} from "../../../common/utils/date.util";
 import {User, UserRole} from "../../users/user";
-import {Role} from "../../../interfaces/role";
+import {Role} from "../../role/role";
 import AuthenticationTokenService from "../services/authentication-token.service";
-import {RoleModel} from "../../../models/role.model";
+import {RoleModel} from "../../role/role.model";
 import UserRepository from "../../users/user.repository";
 import catchAsync from "../../../common/utils/catch-async";
 

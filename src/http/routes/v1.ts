@@ -8,7 +8,7 @@ import TwoFactorAuthenticationController from "../../modules/auth/controllers/tw
 import PasswordRecoveryController from "../../modules/auth/controllers/password-recovery.controller";
 import AccountController from "../controllers/account.controller";
 import SettingController from "../controllers/setting.controller";
-import RoleController from "../controllers/role.controller";
+import RoleController from "../../modules/role/role.controller";
 import UserController from "../../modules/users/user.controller";
 import RouteGuardController from "../controllers/route-guard.controller";
 
