@@ -6,10 +6,10 @@ import RegisterController from "../../modules/auth/controllers/register.controll
 import AuthenticationController from "../../modules/auth/controllers/authentication.controller";
 import TwoFactorAuthenticationController from "../../modules/auth/controllers/two-factor-authentication.controller";
 import PasswordRecoveryController from "../../modules/auth/controllers/password-recovery.controller";
-import AccountController from "../controllers/account.controller";
+import AccountController from "../../modules/users/controllers/account.controller";
 import SettingController from "../controllers/setting.controller";
 import RoleController from "../../modules/role/role.controller";
-import UserController from "../../modules/users/user.controller";
+import UserController from "../../modules/users/controllers/user.controller";
 import RouteGuardController from "../controllers/route-guard.controller";
 
 const router = Router();
