@@ -13,8 +13,8 @@ import errors from "./config/errors";
 import {SET_CACHE_SETTINGS} from "./models/setting.model";
 import {SET_CACHE_GUARDS} from "./models/route-guard.model";
 
-import REQUEST_MIDDLEWARE from "./http/middlewares/request.middleware";
-import RESPONSE_MIDDLEWARE from "./http/middlewares/response.middleware";
+import REQUEST_MIDDLEWARE from "./common/middleware/request.middleware";
+import RESPONSE_MIDDLEWARE from "./common/middleware/response.middleware";
 
 import SettingService from "./services/setting.service";
 import RouteGuardService from "./services/route-guard.service";
