@@ -1,6 +1,6 @@
 import {Request, Response} from "express";
 import Joi from "joi";
-import errors from "../../config/errors";
+import errors from "../../common/errors/messages";
 import {STATUSES, UserModel} from "../../models/user.model";
 import {logger} from "../../config/logger";
 import {SecurityUtil} from "../../common/utils/security.util";

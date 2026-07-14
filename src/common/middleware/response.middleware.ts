@@ -1,5 +1,5 @@
 import {NextFunction, Request, Response} from "express";
-import errors from "../../config/errors";
+import errors from "../errors/messages";
 
 const RESPONSE_MIDDLEWARE = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
     res.failed = {

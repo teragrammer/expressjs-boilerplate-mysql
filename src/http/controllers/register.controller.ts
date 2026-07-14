@@ -2,7 +2,7 @@ import {Request, Response} from "express";
 import Joi from "joi";
 import {ExtendJoiUtil} from "../../common/utils/extend-joi.util";
 import {UserModel} from "../../models/user.model";
-import errors from "../../config/errors";
+import errors from "../../common/errors/messages";
 import {logger} from "../../config/logger";
 import {SecurityUtil} from "../../common/utils/security.util";
 import {DateUtil} from "../../common/utils/date.util";

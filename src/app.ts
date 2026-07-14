@@ -8,7 +8,7 @@ import {express as useragent} from "express-useragent";
 import v1 from "./http/routes/v1";
 import {logger} from "./config/logger";
 import {__ENV} from "./config/environment";
-import errors from "./config/errors";
+import errors from "./common/errors/messages";
 
 import {SET_CACHE_SETTINGS} from "./models/setting.model";
 import {SET_CACHE_GUARDS} from "./models/route-guard.model";

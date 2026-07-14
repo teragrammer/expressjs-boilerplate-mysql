@@ -1,7 +1,7 @@
 import {Request, Response} from "express";
 import sgMail from "@sendgrid/mail";
 import Joi from "joi";
-import errors from "../../config/errors";
+import errors from "../../common/errors/messages";
 import {DateUtil} from "../../common/utils/date.util";
 import {SecurityUtil} from "../../common/utils/security.util";
 import {TwoFactorAuthentication} from "../../interfaces/two-factor.authentication";

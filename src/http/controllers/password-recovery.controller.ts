@@ -4,7 +4,7 @@ import {ExtendJoiUtil} from "../../common/utils/extend-joi.util";
 import {PasswordRecoveryModel, RECOVERY_EMAIL, RECOVERY_PHONE, TYPES} from "../../models/password-recovery.model";
 import {UserModel} from "../../models/user.model";
 import {User, UserRole} from "../../interfaces/user";
-import errors from "../../config/errors";
+import errors from "../../common/errors/messages";
 import {PasswordRecovery} from "../../interfaces/password.recovery";
 import {DateUtil} from "../../common/utils/date.util";
 import {SecurityUtil} from "../../common/utils/security.util";
