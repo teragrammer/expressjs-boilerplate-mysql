@@ -5,7 +5,7 @@ import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
 import {SecurityUtil} from "../../src/common/utils/security.util";
 import {DBKnex} from "../../src/config/knex";
-import {SettingModel} from "../../src/models/setting.model";
+import {SettingModel} from "../../src/modules/system/models/setting.model";
 import {TwoFactorAuthenticationModel} from "../../src/modules/auth/models/two-factor-authentication.model";
 
 describe("HTTP Authentication", () => {

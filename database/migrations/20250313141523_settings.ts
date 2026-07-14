@@ -1,5 +1,5 @@
 import type {Knex} from "knex";
-import {DATA_TYPES} from "../../src/models/setting.model";
+import {DATA_TYPES} from "../../src/modules/system/models/setting.model";
 
 export async function up(knex: Knex): Promise<void> {
     return knex.schema.createTable('settings', table => {

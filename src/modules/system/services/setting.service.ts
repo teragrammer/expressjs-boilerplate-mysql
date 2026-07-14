@@ -1,8 +1,8 @@
 import {SettingKeyValue} from "../interfaces/setting-key.value";
 import {InitializerSettingInterface} from "../models/setting.model";
 import {Setting} from "../interfaces/setting";
-import {__ENV} from "../config/environment";
-import RedisPublisherService from "./redis-publisher.service";
+import {__ENV} from "../../../config/environment";
+import RedisPublisherService from "../../../services/redis-publisher.service";
 import SettingRepository from "../repositories/setting.repository";
 
 class SettingService {

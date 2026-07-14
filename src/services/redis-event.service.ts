@@ -1,10 +1,10 @@
 import {logger} from "../config/logger";
-import {SET_CACHE_SETTINGS} from "../models/setting.model";
+import {SET_CACHE_SETTINGS} from "../modules/system/models/setting.model";
 import {SecurityUtil} from "../common/utils/security.util";
 import {DBRedis, DBRedisInterface} from "../config/redis";
-import {SET_CACHE_GUARDS} from "../models/route-guard.model";
-import SettingService from "./setting.service";
-import RouteGuardService from "./route-guard.service";
+import {SET_CACHE_GUARDS} from "../modules/system/models/route-guard.model";
+import SettingService from "../modules/system/services/setting.service";
+import RouteGuardService from "../modules/system/services/route-guard.service";
 
 class RedisEventService {
     private static instance: RedisEventService;

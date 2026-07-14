@@ -3,8 +3,8 @@ import Joi from "joi";
 import {RECOVERY_EMAIL, RECOVERY_PHONE} from "../models/password-recovery.model";
 import {__ENV} from "../../../config/environment";
 import sgMail from "@sendgrid/mail";
-import {SettingKeyValue} from "../../../interfaces/setting-key.value";
-import SettingService from "../../../services/setting.service";
+import {SettingKeyValue} from "../../system/interfaces/setting-key.value";
+import SettingService from "../../system/services/setting.service";
 
 class PasswordRecoveryService {
     private static instance: PasswordRecoveryService;

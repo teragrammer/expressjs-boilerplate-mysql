@@ -1,13 +1,13 @@
 import {Request, Response} from "express";
 import Joi from "joi";
-import errors from "../../common/errors/messages";
-import {logger} from "../../config/logger";
-import {ExtendJoiUtil} from "../../common/utils/extend-joi.util";
-import {RouteGuard} from "../../interfaces/route.guard";
-import {RouteGuardModel, SET_CACHE_GUARDS} from "../../models/route-guard.model";
-import RedisPublisherService from "../../services/redis-publisher.service";
-import RouteGuardService from "../../services/route-guard.service";
-import catchAsync from "../../common/utils/catch-async";
+import errors from "../../../common/errors/messages";
+import {logger} from "../../../config/logger";
+import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
+import {RouteGuard} from "../interfaces/route.guard";
+import {RouteGuardModel, SET_CACHE_GUARDS} from "../models/route-guard.model";
+import RedisPublisherService from "../../../services/redis-publisher.service";
+import RouteGuardService from "../services/route-guard.service";
+import catchAsync from "../../../common/utils/catch-async";
 
 class Controller {
     browse = catchAsync(async (req: Request, res: Response): Promise<any> => {

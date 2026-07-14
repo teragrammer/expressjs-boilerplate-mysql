@@ -5,19 +5,19 @@ import hpp from "hpp";
 import compression from "compression";
 import {express as useragent} from "express-useragent";
 
-import v1 from "./http/routes/v1";
+import v1 from "./routes/v1";
 import {logger} from "./config/logger";
 import {__ENV} from "./config/environment";
 import errors from "./common/errors/messages";
 
-import {SET_CACHE_SETTINGS} from "./models/setting.model";
-import {SET_CACHE_GUARDS} from "./models/route-guard.model";
+import {SET_CACHE_SETTINGS} from "./modules/system/models/setting.model";
+import {SET_CACHE_GUARDS} from "./modules/system/models/route-guard.model";
 
 import REQUEST_MIDDLEWARE from "./common/middleware/request.middleware";
 import RESPONSE_MIDDLEWARE from "./common/middleware/response.middleware";
 
-import SettingService from "./services/setting.service";
-import RouteGuardService from "./services/route-guard.service";
+import SettingService from "./modules/system/services/setting.service";
+import RouteGuardService from "./modules/system/services/route-guard.service";
 import RedisSubscriberService from "./services/redis-subscriber.service";
 import RedisEventService from "./services/redis-event.service";
 

@@ -1,14 +1,14 @@
 import {Request, Response} from "express";
 import Joi from "joi";
-import errors from "../../common/errors/messages";
-import {logger} from "../../config/logger";
-import {DATA_TYPES, SET_CACHE_SETTINGS, SettingModel} from "../../models/setting.model";
-import {DateUtil} from "../../common/utils/date.util";
-import {ExtendJoiUtil} from "../../common/utils/extend-joi.util";
-import {Setting} from "../../interfaces/setting";
-import RedisPublisherService from "../../services/redis-publisher.service";
-import SettingService from "../../services/setting.service";
-import catchAsync from "../../common/utils/catch-async";
+import errors from "../../../common/errors/messages";
+import {logger} from "../../../config/logger";
+import {DATA_TYPES, SET_CACHE_SETTINGS, SettingModel} from "../models/setting.model";
+import {DateUtil} from "../../../common/utils/date.util";
+import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
+import {Setting} from "../interfaces/setting";
+import RedisPublisherService from "../../../services/redis-publisher.service";
+import SettingService from "../services/setting.service";
+import catchAsync from "../../../common/utils/catch-async";
 
 class Controller {
     browse = catchAsync(async (req: Request, res: Response): Promise<any> => {
