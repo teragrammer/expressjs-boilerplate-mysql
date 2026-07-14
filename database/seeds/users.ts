@@ -1,5 +1,5 @@
 import {Knex} from "knex";
-import {SecurityUtil} from "../../src/utilities/security.util";
+import {SecurityUtil} from "../../src/common/utils/security.util";
 
 export async function seed(knex: Knex): Promise<void> {
     // Insert roles

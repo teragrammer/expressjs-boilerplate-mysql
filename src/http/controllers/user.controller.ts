@@ -3,11 +3,11 @@ import Joi from "joi";
 import errors from "../../config/errors";
 import {STATUSES, UserModel} from "../../models/user.model";
 import {logger} from "../../config/logger";
-import {SecurityUtil} from "../../utilities/security.util";
+import {SecurityUtil} from "../../common/utils/security.util";
 import {User} from "../../interfaces/user";
-import {DateUtil} from "../../utilities/date.util";
-import {ExtendJoiUtil} from "../../utilities/extend-joi.util";
-import catchAsync from "../../utilities/catch-async";
+import {DateUtil} from "../../common/utils/date.util";
+import {ExtendJoiUtil} from "../../common/utils/extend-joi.util";
+import catchAsync from "../../common/utils/catch-async";
 
 class Controller {
     browse = catchAsync(async (req: Request, res: Response): Promise<any> => {

@@ -2,18 +2,18 @@ import {Request, Response} from "express";
 import sgMail from "@sendgrid/mail";
 import Joi from "joi";
 import errors from "../../config/errors";
-import {DateUtil} from "../../utilities/date.util";
-import {SecurityUtil} from "../../utilities/security.util";
+import {DateUtil} from "../../common/utils/date.util";
+import {SecurityUtil} from "../../common/utils/security.util";
 import {TwoFactorAuthentication} from "../../interfaces/two-factor.authentication";
 import {TFA_CONTINUE, TwoFactorAuthenticationModel} from "../../models/two-factor-authentication.model";
 import {__ENV} from "../../config/environment";
 import {logger} from "../../config/logger";
 import {SettingKeyValue} from "../../interfaces/setting-key.value";
-import {ExtendJoiUtil} from "../../utilities/extend-joi.util";
+import {ExtendJoiUtil} from "../../common/utils/extend-joi.util";
 import AuthenticationTokenService from "../../services/authentication-token.service";
 import SettingService from "../../services/setting.service";
 import TwoFactorAuthenticationService from "../../services/two-factor-authentication.service";
-import catchAsync from "../../utilities/catch-async";
+import catchAsync from "../../common/utils/catch-async";
 
 class Controller {
     send = catchAsync(async (req: Request, res: Response): Promise<any> => {

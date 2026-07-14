@@ -4,7 +4,7 @@ import {assert} from "chai";
 import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
 import {User} from "../../src/interfaces/user";
-import {SecurityUtil} from "../../src/utilities/security.util";
+import {SecurityUtil} from "../../src/common/utils/security.util";
 import {DBKnex} from "../../src/config/knex";
 import {UserModel} from "../../src/models/user.model";
 import {PasswordRecoveryModel} from "../../src/models/password-recovery.model";

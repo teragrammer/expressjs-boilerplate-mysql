@@ -3,15 +3,15 @@ import Joi from "joi";
 import errors from "../../config/errors";
 import {User, UserRole} from "../../interfaces/user";
 import {UserModel} from "../../models/user.model";
-import {DateUtil} from "../../utilities/date.util";
-import {SecurityUtil} from "../../utilities/security.util";
+import {DateUtil} from "../../common/utils/date.util";
+import {SecurityUtil} from "../../common/utils/security.util";
 import {AuthenticationTokenModel} from "../../models/authentication-token.model";
-import {ExtendJoiUtil} from "../../utilities/extend-joi.util";
+import {ExtendJoiUtil} from "../../common/utils/extend-joi.util";
 import {SettingKeyValue} from "../../interfaces/setting-key.value";
 import AuthenticationTokenService from "../../services/authentication-token.service";
 import UserRepository from "../../repositories/user.repository";
 import SettingService from "../../services/setting.service";
-import catchAsync from "../../utilities/catch-async";
+import catchAsync from "../../common/utils/catch-async";
 
 class Controller {
     login = catchAsync(async (req: Request, res: Response) => {

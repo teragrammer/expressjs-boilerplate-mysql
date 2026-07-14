@@ -1,17 +1,17 @@
 import {Request, Response} from "express";
 import Joi from "joi";
-import {ExtendJoiUtil} from "../../utilities/extend-joi.util";
+import {ExtendJoiUtil} from "../../common/utils/extend-joi.util";
 import {UserModel} from "../../models/user.model";
 import errors from "../../config/errors";
 import {logger} from "../../config/logger";
-import {SecurityUtil} from "../../utilities/security.util";
-import {DateUtil} from "../../utilities/date.util";
+import {SecurityUtil} from "../../common/utils/security.util";
+import {DateUtil} from "../../common/utils/date.util";
 import {User, UserRole} from "../../interfaces/user";
 import {Role} from "../../interfaces/role";
 import AuthenticationTokenService from "../../services/authentication-token.service";
 import {RoleModel} from "../../models/role.model";
 import UserRepository from "../../repositories/user.repository";
-import catchAsync from "../../utilities/catch-async";
+import catchAsync from "../../common/utils/catch-async";
 
 class Controller {
     create = catchAsync(async (req: Request, res: Response): Promise<any> => {

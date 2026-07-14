@@ -3,7 +3,7 @@ import request from "supertest";
 import {assert} from "chai";
 import app from "../../src";
 import {Credentials, mockCredential} from "../utils";
-import {SecurityUtil} from "../../src/utilities/security.util";
+import {SecurityUtil} from "../../src/common/utils/security.util";
 import {DBKnex} from "../../src/config/knex";
 import {SettingModel} from "../../src/models/setting.model";
 import {TwoFactorAuthenticationModel} from "../../src/models/two-factor-authentication.model";

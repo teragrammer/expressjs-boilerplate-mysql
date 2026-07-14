@@ -2,11 +2,11 @@ import {Request, Response} from "express";
 import Joi from "joi";
 import errors from "../../config/errors";
 import {logger} from "../../config/logger";
-import {DateUtil} from "../../utilities/date.util";
+import {DateUtil} from "../../common/utils/date.util";
 import {RoleModel} from "../../models/role.model";
-import {ExtendJoiUtil} from "../../utilities/extend-joi.util";
+import {ExtendJoiUtil} from "../../common/utils/extend-joi.util";
 import {Role} from "../../interfaces/role";
-import catchAsync from "../../utilities/catch-async";
+import catchAsync from "../../common/utils/catch-async";
 
 class Controller {
     browse = catchAsync(async (req: Request, res: Response): Promise<any> => {

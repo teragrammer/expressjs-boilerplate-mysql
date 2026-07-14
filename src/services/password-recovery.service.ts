@@ -1,4 +1,4 @@
-import {ExtendJoiUtil} from "../utilities/extend-joi.util";
+import {ExtendJoiUtil} from "../common/utils/extend-joi.util";
 import Joi from "joi";
 import {RECOVERY_EMAIL, RECOVERY_PHONE} from "../models/password-recovery.model";
 import {__ENV} from "../config/environment";

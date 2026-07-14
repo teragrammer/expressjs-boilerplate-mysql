@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {SecurityUtil} from "../../src/utilities/security.util";
+import {SecurityUtil} from "../../src/common/utils/security.util";
 
 describe("security.util.ts", () => {
     it("hashing correctly", async () => {

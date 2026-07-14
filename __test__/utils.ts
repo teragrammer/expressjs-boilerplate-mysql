@@ -4,7 +4,7 @@ import UserRepository from "../src/repositories/user.repository";
 import AuthenticationTokenService from "../src/services/authentication-token.service";
 import {UserModel} from "../src/models/user.model";
 import {RoleModel} from "../src/models/role.model";
-import {SecurityUtil} from "../src/utilities/security.util";
+import {SecurityUtil} from "../src/common/utils/security.util";
 import {TFA_HOLD} from "../src/models/two-factor-authentication.model";
 import {__ENV} from "../src/config/environment";
 

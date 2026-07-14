@@ -3,7 +3,7 @@ import AuthenticationTokenRepository from "../repositories/authentication-token.
 import jwt from "jsonwebtoken";
 import {JwtExtendedPayload} from "../models/authentication-token.model";
 import {__ENV} from "../config/environment";
-import {DateUtil} from "../utilities/date.util";
+import {DateUtil} from "../common/utils/date.util";
 import {TFA_CONTINUE, TFA_HOLD} from "../models/two-factor-authentication.model";
 
 const JWT_TFA = __ENV.JWT_TFA;
