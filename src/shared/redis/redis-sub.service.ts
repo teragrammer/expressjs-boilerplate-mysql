@@ -1,16 +1,16 @@
-import {logger} from "../config/logger";
-import {DBRedis} from "../config/redis";
-import RedisPublisherService from "./redis-publisher.service";
+import {logger} from "../../config/logger";
+import {DBRedis} from "../../config/redis";
+import RedisPublisherService from "./redis-pub.service";
 
-class RedisSubscriberService {
-    private static instance: RedisSubscriberService;
+class RedisSubService {
+    private static instance: RedisSubService;
 
     private constructor() {
     }
 
-    static getInstance(): RedisSubscriberService {
-        if (!RedisSubscriberService.instance) RedisSubscriberService.instance = new RedisSubscriberService();
-        return RedisSubscriberService.instance;
+    static getInstance(): RedisSubService {
+        if (!RedisSubService.instance) RedisSubService.instance = new RedisSubService();
+        return RedisSubService.instance;
     }
 
     subscribe(name: string) {
@@ -27,4 +27,4 @@ class RedisSubscriberService {
     }
 }
 
-export default RedisSubscriberService.getInstance();
+export default RedisSubService.getInstance();

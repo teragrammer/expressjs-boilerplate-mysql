@@ -6,7 +6,7 @@ import {DATA_TYPES, SET_CACHE_SETTINGS, SettingModel} from "../models/setting.mo
 import {DateUtil} from "../../../common/utils/date.util";
 import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
 import {Setting} from "../interfaces/setting";
-import RedisPublisherService from "../../../services/redis-publisher.service";
+import RedisPublisherService from "../../../shared/redis/redis-pub.service";
 import SettingService from "../services/setting.service";
 import catchAsync from "../../../common/utils/catch-async";
 
@@ -76,7 +76,9 @@ class Controller {
                 .insert(DATA);
 
             // update the local cache and publish newly created setting
-            if (RESULT.length) await RedisPublisherService.publishCache(SET_CACHE_SETTINGS, await SettingService.initializer());
+            const settings = await SettingService.initializer();
+            SettingService.setCache(settings);
+            if (RESULT.length) await RedisPublisherService.publishCache(SET_CACHE_SETTINGS, settings);
 
             res.status(200).json({id: RESULT[0]});
         } catch (e) {
@@ -114,7 +116,9 @@ class Controller {
             });
 
             // update the local cache and publish newly updated setting
-            if (RESULT === 1) await RedisPublisherService.publishCache(SET_CACHE_SETTINGS, await SettingService.initializer());
+            const settings = await SettingService.initializer();
+            SettingService.setCache(settings);
+            if (RESULT === 1) await RedisPublisherService.publishCache(SET_CACHE_SETTINGS, settings);
 
             res.status(200).send();
         } catch (e) {
@@ -140,7 +144,9 @@ class Controller {
             });
         } else {
             // update the local cache and publish newly updated setting
-            await RedisPublisherService.publishCache(SET_CACHE_SETTINGS, await SettingService.initializer());
+            const settings = await SettingService.initializer();
+            SettingService.setCache(settings);
+            await RedisPublisherService.publishCache(SET_CACHE_SETTINGS, settings);
         }
 
         res.status(200).json({result: RESULT === 1});

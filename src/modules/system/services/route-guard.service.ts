@@ -2,7 +2,7 @@ import {Role} from "../../role/role";
 import {RoleModel} from "../../role/role.model";
 import {RouteGuard} from "../interfaces/route.guard";
 import {RouteGuardModel} from "../models/route-guard.model";
-import RedisPublisherService from "../../../services/redis-publisher.service";
+import RedisPublisherService from "../../../shared/redis/redis-pub.service";
 import {__ENV} from "../../../config/environment";
 
 class RouteGuardService {

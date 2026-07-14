@@ -5,7 +5,7 @@ import {logger} from "../../../config/logger";
 import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
 import {RouteGuard} from "../interfaces/route.guard";
 import {RouteGuardModel, SET_CACHE_GUARDS} from "../models/route-guard.model";
-import RedisPublisherService from "../../../services/redis-publisher.service";
+import RedisPublisherService from "../../../shared/redis/redis-pub.service";
 import RouteGuardService from "../services/route-guard.service";
 import catchAsync from "../../../common/utils/catch-async";
 
@@ -49,7 +49,9 @@ class Controller {
                 .insert(DATA);
 
             // update the local cache and publish newly updated setting
-            if (ID) await RedisPublisherService.publishCache(SET_CACHE_GUARDS, await RouteGuardService.initializer());
+            const routeGuards = await RouteGuardService.initializer();
+            RouteGuardService.setCache(routeGuards);
+            if (ID) await RedisPublisherService.publishCache(SET_CACHE_GUARDS, routeGuards);
 
             res.status(200).json({id: ID});
         } catch (e) {
@@ -75,7 +77,9 @@ class Controller {
             });
         } else {
             // update the local cache and publish newly updated setting
-            await RedisPublisherService.publishCache(SET_CACHE_GUARDS, await RouteGuardService.initializer());
+            const routeGuards = await RouteGuardService.initializer();
+            RouteGuardService.setCache(routeGuards);
+            await RedisPublisherService.publishCache(SET_CACHE_GUARDS, routeGuards);
         }
 
         res.status(200).json({result: RESULT === 1});

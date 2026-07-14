@@ -18,8 +18,8 @@ import RESPONSE_MIDDLEWARE from "./common/middleware/response.middleware";
 
 import SettingService from "./modules/system/services/setting.service";
 import RouteGuardService from "./modules/system/services/route-guard.service";
-import RedisSubscriberService from "./services/redis-subscriber.service";
-import RedisEventService from "./services/redis-event.service";
+import RedisSubscriberService from "./shared/redis/redis-sub.service";
+import SystemEventHandler from "./modules/system/events/system.event";
 
 const app = express();
 
@@ -66,7 +66,8 @@ RedisSubscriberService.subscribe(SET_CACHE_SETTINGS);
 RedisSubscriberService.subscribe(SET_CACHE_GUARDS);
 
 // Received redis events
-RedisEventService.onReceived();
+SystemEventHandler.initListeners();
+logger.info("System module event listeners initialized.");
 
 // Routes with versioning
 app.use("/api/v1", v1());
