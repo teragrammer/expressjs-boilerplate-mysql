@@ -1,5 +1,5 @@
 import {UserRole} from "../../users/user";
-import AuthenticationTokenRepository from "../authentication-token.repository";
+import AuthenticationTokenRepository from "../repositories/authentication-token.repository";
 import jwt from "jsonwebtoken";
 import {JwtExtendedPayload} from "../models/authentication-token.model";
 import {__ENV} from "../../../config/environment";
