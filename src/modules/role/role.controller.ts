@@ -1,6 +1,6 @@
 import {Request, Response} from "express";
 import Joi from "joi";
-import errors from "../../common/errors/messages";
+import errors from "../../common/utils/messages";
 import {logger} from "../../config/logger";
 import {DateUtil} from "../../common/utils/date.util";
 import {RoleModel} from "./role.model";
