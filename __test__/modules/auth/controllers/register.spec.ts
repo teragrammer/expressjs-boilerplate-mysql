@@ -1,17 +1,32 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {Request, Response} from "express";
+// 3. Import the controller AFTER mocks are set up to prevent premature constructor execution errors
 import RegisterController from "../../../../src/modules/auth/controllers/register.controller";
 
-// Mock the Schema and its validation method
-const mockValidateAsync = vi.fn();
+// 1. Hoist variables so they exist before any ES module imports/mocks are evaluated
+const {
+    mockValidateAsync,
+    mockHash,
+    mockSqlDate,
+    mockGetRoleBySlug,
+    mockCreateUser,
+    mockGenerateToken,
+} = vi.hoisted(() => ({
+    mockValidateAsync: vi.fn(),
+    mockHash: vi.fn(),
+    mockSqlDate: vi.fn(),
+    mockGetRoleBySlug: vi.fn(),
+    mockCreateUser: vi.fn(),
+    mockGenerateToken: vi.fn(),
+}));
+
+// 2. Define Mocks using the hoisted variables
 vi.mock("../../../../src/modules/auth/validations/register.schema", () => ({
     registerSchema: {
         validateAsync: (...args: any[]) => mockValidateAsync(...args),
     },
 }));
 
-// Mock Utilities (using standard constructible functions/classes)
-const mockHash = vi.fn();
 vi.mock("../../../../src/common/utils/security.util", () => ({
     SecurityUtil: function () {
         return {
@@ -20,7 +35,6 @@ vi.mock("../../../../src/common/utils/security.util", () => ({
     },
 }));
 
-const mockSqlDate = vi.fn();
 vi.mock("../../../../src/common/utils/date.util", () => ({
     DateUtil: function () {
         return {
@@ -29,39 +43,29 @@ vi.mock("../../../../src/common/utils/date.util", () => ({
     },
 }));
 
-// Mock the Services (using standard constructible functions)
-const mockGetRoleBySlug = vi.fn();
-vi.mock("../../../../src/modules/role/role.service", () => {
-    return {
-        RoleService: function () {
-            return {
-                getRoleBySlug: mockGetRoleBySlug,
-            };
-        },
-    };
-});
+vi.mock("../../../../src/modules/role/role.service", () => ({
+    RoleService: function () {
+        return {
+            getRoleBySlug: mockGetRoleBySlug,
+        };
+    },
+}));
 
-const mockCreateUser = vi.fn();
-vi.mock("../../../../src/modules/users/user.service", () => {
-    return {
-        UserService: function () {
-            return {
-                createUser: mockCreateUser,
-            };
-        },
-    };
-});
+vi.mock("../../../../src/modules/users/user.service", () => ({
+    UserService: function () {
+        return {
+            createUser: mockCreateUser,
+        };
+    },
+}));
 
-const mockGenerateToken = vi.fn();
-vi.mock("../../../../src/modules/auth/services/authentication-token.service", () => {
-    return {
-        TokenService: function () {
-            return {
-                generateToken: mockGenerateToken,
-            };
-        },
-    };
-});
+vi.mock("../../../../src/modules/auth/services/authentication-token.service", () => ({
+    TokenService: function () {
+        return {
+            generateToken: mockGenerateToken,
+        };
+    },
+}));
 
 describe("RegisterController - create", () => {
     let req: any;
@@ -150,17 +154,19 @@ describe("RegisterController - create", () => {
             first_name: "John",
             last_name: "Doe",
             username: "johndoe",
-            password: "password123",
+            password: "hashed_password_123",
+            role_id: 2,
+            created_at: "2026-07-15 09:00:00",
             email: "john@example.com",
         });
 
         expect(mockGenerateToken).toHaveBeenCalledWith({
             uid: 42,
             tid: 0,
-            tfa: true,
+            tfa: false,
         });
 
-        expect(statusMock).toHaveBeenCalledWith(200);
+        expect(statusMock).toHaveBeenCalledWith(201);
         expect(jsonMock).toHaveBeenCalledWith({token: "mocked-jwt-token-string"});
     });
 
@@ -172,7 +178,6 @@ describe("RegisterController - create", () => {
 
         await new Promise(process.nextTick);
 
-        // Verify the controller stopped and forwarded the validation error to next middleware
         expect(nextMock).toHaveBeenCalledWith(validationError);
         expect(mockGetRoleBySlug).not.toHaveBeenCalled();
         expect(mockCreateUser).not.toHaveBeenCalled();
@@ -188,7 +193,6 @@ describe("RegisterController - create", () => {
         };
         mockValidateAsync.mockResolvedValue(mockValidatedData);
 
-        // Simulate missing role or failing DB query
         const roleError = new Error("Role 'customer' not found");
         mockGetRoleBySlug.mockRejectedValue(roleError);
 
@@ -213,7 +217,6 @@ describe("RegisterController - create", () => {
         mockHash.mockResolvedValue("hashed_password_123");
         mockSqlDate.mockReturnValue("2026-07-15 09:00:00");
 
-        // Simulate database constraint error (e.g., unique email violation)
         const dbError = new Error("Unique constraint violation on email");
         mockCreateUser.mockRejectedValue(dbError);
 

@@ -3,42 +3,64 @@ import {Request, Response} from "express";
 import {registerSchema} from "../validations/register.schema";
 import {SecurityUtil} from "../../../common/utils/security.util";
 import {DateUtil} from "../../../common/utils/date.util";
-import {Role} from "../../role/role.interface";
 import catchAsync from "../../../common/utils/catch-async";
 import {RoleService} from "../../role/role.service";
 import {UserService} from "../../users/user.service";
-import {User} from "../../users/user.interface";
 import {TokenService} from "../services/authentication-token.service";
 
 class Controller {
-    create = catchAsync(async (req: Request, res: Response): Promise<void> => {
-        const rawData = req.sanitize.body.only(["first_name", "middle_name", "last_name", "username", "password", "email"]);
+    // Instantiating services once at the class level (Simplifies testing and saves memory)
+    private readonly roleService = new RoleService();
+    private readonly userService = new UserService();
+    private readonly tokenService = new TokenService();
+    private readonly securityUtil = SecurityUtil();
+    private readonly dateUtil = DateUtil();
 
-        // Clean Validation Execution
-        // validateAsync is required here since we evaluate database uniqueness asynchronously
+    create = catchAsync(async (req: Request, res: Response): Promise<void> => {
+        // Only pluck the fields we care about
+        const rawData = req.sanitize.body.only([
+            "first_name",
+            "middle_name",
+            "last_name",
+            "username",
+            "password",
+            "email"
+        ]);
+
+        // Clean validation execution
         const validatedData = await registerSchema.validateAsync(rawData, {abortEarly: false});
 
-        // Instantiate your service layer (preferably done once at the class/module level)
-        const roleService = new RoleService();
-        // Fetch the role safely using the service layer
-        const role: Role = await roleService.getRoleBySlug("customer");
+        // Fetch the default customer role safely
+        const role = await this.roleService.getRoleBySlug("customer");
+        if (!role) {
+            throw new Error("Default registration role 'customer' could not be resolved.");
+        }
 
-        // Process Account Record Creation securely
-        validatedData.role_id = role.id;
-        validatedData.password = await SecurityUtil().hash(validatedData.password);
-        validatedData.created_at = DateUtil().sql();
+        // Hash password and capture creation timestamp
+        const hashedPassword = await this.securityUtil.hash(validatedData.password);
+        const createdAt = this.dateUtil.sql();
 
-        // Instantiate the repository
-        const userService = new UserService();
-        // Insert the validated data using our repository pattern
-        // The repo handles mapping and safely returns the full created UserLegacy object
-        const newUser: User = await userService.createUser(req.body);
+        // BUILD A CLEAN PAYLOAD (Instead of mutating validatedData or passing req.body)
+        const userPayload = {
+            ...validatedData,
+            password: hashedPassword,
+            role_id: role.id,
+            created_at: createdAt
+        };
+
+        // PERSIST THE USER (Passing the safe, hashed userPayload)
+        const newUser = await this.userService.createUser(userPayload);
 
         // Generate the JWT token
-        const tokenService = new TokenService();
-        const token = tokenService.generateToken({uid: newUser.id, tid: 0, tfa: true});
+        const token = this.tokenService.generateToken({
+            uid: newUser.id,
+            tid: 0,
+            // Set to 'false' because a newly registered user must still complete 2FA validation
+            // before they are considered fully authenticated (if 2FA is active/required).
+            tfa: false,
+        });
 
-        res.status(200).json({token});
+        res.status(201).json({token}); // 201 Created is semantically better for registration!
     });
 }
 
