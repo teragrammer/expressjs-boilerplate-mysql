@@ -68,6 +68,7 @@ export interface CreateUserDTO {
     password?: string | null;
     status?: Status;
     comments?: string | null;
+    created_at?: string;
 }
 
 export type UpdateUserDTO = Partial<CreateUserDTO> & {
