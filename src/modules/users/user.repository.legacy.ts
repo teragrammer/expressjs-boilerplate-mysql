@@ -1,16 +1,16 @@
 import {UserModel} from "./user.model";
-import {UserRole} from "./user";
+import {UserRole} from "./user.legacy";
 
-class UserRepository {
-    private static instance: UserRepository;
+class UserRepositoryLegacy {
+    private static instance: UserRepositoryLegacy;
     private readonly _PROFILE_COLUMN_COMPLETE = ["users.*", "roles.slug", "roles.is_public", "roles.is_bypass_authorization"];
 
     constructor() {
     }
 
-    static getInstance(): UserRepository {
-        if (!UserRepository.instance) UserRepository.instance = new UserRepository();
-        return UserRepository.instance;
+    static getInstance(): UserRepositoryLegacy {
+        if (!UserRepositoryLegacy.instance) UserRepositoryLegacy.instance = new UserRepositoryLegacy();
+        return UserRepositoryLegacy.instance;
     }
 
     joinRole() {
@@ -51,4 +51,4 @@ class UserRepository {
     }
 }
 
-export default UserRepository.getInstance();
+export default UserRepositoryLegacy.getInstance();

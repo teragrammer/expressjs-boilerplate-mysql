@@ -1,13 +1,13 @@
 import {Request, Response} from "express";
 import Joi from "joi";
-import errors from "../../../common/errors/messages";
+import errors from "../../../common/utils/messages";
 import {logger} from "../../../config/logger";
 import {UserModel} from "../user.model";
 import {SecurityUtil} from "../../../common/utils/security.util";
 import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
 import {DateUtil} from "../../../common/utils/date.util";
-import {User, UserRole} from "../user";
-import AuthenticationTokenService from "../../auth/services/authentication-token.service";
+import {UserLegacy, UserRole} from "../user.legacy";
+import AuthenticationTokenService from "../../auth/services/authentication-token.service.legacy";
 import catchAsync from "../../../common/utils/catch-async";
 
 class Controller {

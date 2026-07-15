@@ -1,10 +1,10 @@
 import {Request, Response} from "express";
 import Joi from "joi";
-import errors from "../../../common/errors/messages";
+import errors from "../../../common/utils/messages";
 import {STATUSES, UserModel} from "../user.model";
 import {logger} from "../../../config/logger";
 import {SecurityUtil} from "../../../common/utils/security.util";
-import {User} from "../user";
+import {UserLegacy} from "../user.legacy";
 import {DateUtil} from "../../../common/utils/date.util";
 import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
 import catchAsync from "../../../common/utils/catch-async";
@@ -32,7 +32,7 @@ class Controller {
         }
 
         const PAGINATE = res.app.get("paginate");
-        const USERS: User[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
+        const USERS: UserLegacy[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
 
         // remove sensitive data
         for (let i = 0; i < USERS.length; i++) UserModel().hidden(USERS[i]);
@@ -42,7 +42,7 @@ class Controller {
 
     view = catchAsync(async (req: Request, res: Response): Promise<any> => {
         const ID = req.params.id;
-        const USER: User = await UserModel().table()
+        const USER: UserLegacy = await UserModel().table()
             .where("id", ID)
             .first();
 
