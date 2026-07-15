@@ -1,7 +1,7 @@
 import {Request, Response} from "express";
 import sgMail from "@sendgrid/mail";
 import Joi from "joi";
-import errors from "../../../common/errors/messages";
+import errors from "../../../common/utils/messages";
 import {DateUtil} from "../../../common/utils/date.util";
 import {SecurityUtil} from "../../../common/utils/security.util";
 import {TwoFactorAuthentication} from "../interfaces/two-factor.authentication";
@@ -10,7 +10,7 @@ import {__ENV} from "../../../config/environment";
 import {logger} from "../../../config/logger";
 import {SettingKeyValue} from "../../system/interfaces/setting-key.value";
 import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
-import AuthenticationTokenService from "../services/authentication-token.service";
+import AuthenticationTokenService from "../services/authentication-token.service.legacy";
 import SettingService from "../../system/services/setting.service";
 import TwoFactorAuthenticationService from "../services/two-factor-authentication.service";
 import catchAsync from "../../../common/utils/catch-async";

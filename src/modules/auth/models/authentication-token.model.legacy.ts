@@ -18,7 +18,7 @@ export interface JwtExtendedPayload extends JwtPayload {
     tfa: string;        // two-factor authentication status
 }
 
-export function AuthenticationTokenModel(knex?: Knex) {
+export function AuthenticationTokenModelLegacy(knex?: Knex) {
     return {
         table: () => (knex ? knex : DBKnex).table(AUTHENTICATION_TOKEN_TABLE),
     };

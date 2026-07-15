@@ -3,14 +3,14 @@ import Joi from "joi";
 import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
 import {PasswordRecoveryModel, RECOVERY_EMAIL, RECOVERY_PHONE, TYPES} from "../models/password-recovery.model";
 import {UserModel} from "../../users/user.model";
-import {User, UserRole} from "../../users/user";
-import errors from "../../../common/errors/messages";
+import {UserLegacy, UserRole} from "../../users/user.legacy";
+import errors from "../../../common/utils/messages";
 import {PasswordRecovery} from "../interfaces/password.recovery";
 import {DateUtil} from "../../../common/utils/date.util";
 import {SecurityUtil} from "../../../common/utils/security.util";
-import AuthenticationTokenService from "../services/authentication-token.service";
+import AuthenticationTokenService from "../services/authentication-token.service.legacy";
 import PasswordRecoveryService from "../services/password-recovery.service";
-import UserRepository from "../../users/user.repository";
+import UserRepository from "../../users/user.repository.legacy";
 import catchAsync from "../../../common/utils/catch-async";
 
 const CODE_LENGTH = 6;
@@ -32,7 +32,7 @@ class Controller {
         const SEND_TO = await PasswordRecoveryService.validateSender(DATA);
         if (!SEND_TO.status || !SEND_TO.name || !SEND_TO.value) return;
 
-        const USER: User = await UserModel().table().where(SEND_TO.name, SEND_TO.value).first();
+        const USER: UserLegacy = await UserModel().table().where(SEND_TO.name, SEND_TO.value).first();
         if (!USER) return res.status(404).json({
             code: errors.DATA_NOT_FOUND.code,
             message: errors.DATA_NOT_FOUND.message,

@@ -1,15 +1,15 @@
 import {Request, Response} from "express";
 import Joi from "joi";
-import errors from "../../../common/errors/messages";
-import {User, UserRole} from "../../users/user";
+import errors from "../../../common/utils/messages";
+import {UserLegacy, UserRole} from "../../users/user.legacy";
 import {UserModel} from "../../users/user.model";
 import {DateUtil} from "../../../common/utils/date.util";
 import {SecurityUtil} from "../../../common/utils/security.util";
-import {AuthenticationTokenModel} from "../models/authentication-token.model";
+import {AuthenticationTokenModelLegacy} from "../models/authentication-token.model.legacy";
 import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
 import {SettingKeyValue} from "../../system/interfaces/setting-key.value";
-import AuthenticationTokenService from "../services/authentication-token.service";
-import UserRepository from "../../users/user.repository";
+import AuthenticationTokenService from "../services/authentication-token.service.legacy";
+import UserRepository from "../../users/user.repository.legacy";
 import SettingService from "../../system/services/setting.service";
 import catchAsync from "../../../common/utils/catch-async";
 
@@ -92,7 +92,7 @@ class Controller {
     });
 
     logout = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const RESULT: number = await AuthenticationTokenModel().table()
+        const RESULT: number = await AuthenticationTokenModelLegacy().table()
             .where("id", req.credentials.jwt.tid)
             .delete();
 

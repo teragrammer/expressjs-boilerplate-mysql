@@ -1,4 +1,4 @@
-import {AuthenticationTokenModel} from "../models/authentication-token.model";
+import {AuthenticationTokenModelLegacy} from "../models/authentication-token.model.legacy";
 import {DateUtil} from "../../../common/utils/date.util";
 
 class AuthenticationTokenRepository {
@@ -13,18 +13,18 @@ class AuthenticationTokenRepository {
     }
 
     insert(data: any) {
-        return AuthenticationTokenModel().table().returning("id").insert(data);
+        return AuthenticationTokenModelLegacy().table().returning("id").insert(data);
     }
 
     deleteExpiredByUserId(userId: number) {
-        return AuthenticationTokenModel().table()
+        return AuthenticationTokenModelLegacy().table()
             .where("user_id", userId)
             .where("expired_at", "<", DateUtil().sql())
             .delete();
     }
 
     deleteAllByUserId(userId: number) {
-        return AuthenticationTokenModel().table()
+        return AuthenticationTokenModelLegacy().table()
             .where("user_id", userId)
             .delete();
     }

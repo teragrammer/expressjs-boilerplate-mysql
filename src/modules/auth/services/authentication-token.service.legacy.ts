@@ -1,7 +1,7 @@
-import {UserRole} from "../../users/user";
+import {UserRole} from "../../users/user.legacy";
 import AuthenticationTokenRepository from "../repositories/authentication-token.repository";
 import jwt from "jsonwebtoken";
-import {JwtExtendedPayload} from "../models/authentication-token.model";
+import {JwtExtendedPayload} from "../models/authentication-token.model.legacy";
 import {__ENV} from "../../../config/environment";
 import {DateUtil} from "../../../common/utils/date.util";
 import {TFA_CONTINUE, TFA_HOLD} from "../models/two-factor-authentication.model";
@@ -16,15 +16,15 @@ export interface AuthenticationMetaData {
     os: string | null;
 }
 
-class AuthenticationTokenService {
-    private static instance: AuthenticationTokenService;
+class AuthenticationTokenServiceLegacy {
+    private static instance: AuthenticationTokenServiceLegacy;
 
     private constructor() {
     }
 
-    static getInstance(): AuthenticationTokenService {
-        if (!AuthenticationTokenService.instance) AuthenticationTokenService.instance = new AuthenticationTokenService();
-        return AuthenticationTokenService.instance;
+    static getInstance(): AuthenticationTokenServiceLegacy {
+        if (!AuthenticationTokenServiceLegacy.instance) AuthenticationTokenServiceLegacy.instance = new AuthenticationTokenServiceLegacy();
+        return AuthenticationTokenServiceLegacy.instance;
     }
 
     async generate(user: UserRole, metadata?: AuthenticationMetaData): Promise<string> {
@@ -84,4 +84,4 @@ class AuthenticationTokenService {
     }
 }
 
-export default AuthenticationTokenService.getInstance();
+export default AuthenticationTokenServiceLegacy.getInstance();
