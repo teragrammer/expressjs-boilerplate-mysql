@@ -1,78 +1,70 @@
+// src/shared/validations/database/unique.ts
 import Joi from 'joi';
-import {DBKnex} from "../../../config/knex";
+import { Knex } from 'knex';
+import { DBKnex } from "../../../config/knex";
 
 interface CompositeUniqueOptions {
     ignoreId?: string | number;
     idColumn?: string;
+    db?: Knex;
 }
 
-/**
- * Validates unique constraints across multiple combined columns.
- * Designed to be used with Joi's `.external()` method.
- * * @param table - DB Table Name
- * @param table
- * @param columns - Array of columns that make up the unique key
- * @param options - Configuration options (ignoreId, idColumn)
- *
- * @example
- * // 1. Usage in a schema definition:
- * interface MembershipInput {
- *      ser_id: number;
- *      organization_id: number;
- * }
- *
- * const membershipSchema = (ignoreId?: number) => {
- *      return Joi.object<MembershipInput>({
- *          user_id: Joi.number().integer().required(),
- *          organization_id: Joi.number().integer().required()
- *      }).external(
- *          validateCompositeUnique('memberships', ['user_id', 'organization_id'], { ignoreId })
- *      );
- * };
- *
- * @example
- * // 2. Executing the schema inside an Express controller/middleware:
- * try {
- *      const ignoreId = req.params.id ? Number(req.params.id) : undefined;
- *      // .validateAsync() is MANDATORY when using .external()
- *      const validatedBody = await membershipSchema(ignoreId).validateAsync(req.body, { abortEarly: false });
- *      req.body = validatedBody;
- * } catch (error) {
- *      if (error instanceof Joi.ValidationError) {
- *          res.status(422).json({ errors: error.details });
- *      }
- * }
- */
 export const validateCompositeUnique = (
     table: string,
     columns: string[],
-    {ignoreId, idColumn = 'id'}: CompositeUniqueOptions = {}
+    { ignoreId, idColumn = 'id', db = DBKnex }: CompositeUniqueOptions = {}
 ) => {
+    const validIdentifierRegex = /^[a-zA-Z0-9_]+$/;
+    if (!validIdentifierRegex.test(table) || !validIdentifierRegex.test(idColumn) || !columns.every(col => validIdentifierRegex.test(col))) {
+        throw new Error(`Security Exception: Invalid characters in table, column, or identity identifier structures.`);
+    }
+
     return async (value: Record<string, any>, helpers: Joi.CustomHelpers): Promise<Record<string, any>> => {
         if (!value) return value;
 
-        const query = DBKnex(table);
+        let row: any;
 
-        columns.forEach((col) => {
-            const fieldValue = value[col];
-            query.where(col, fieldValue !== undefined ? fieldValue : null);
-        });
+        // 1. ONLY wrap the database operation in try/catch
+        try {
+            const query = db(table).select(1);
 
-        if (ignoreId !== undefined && ignoreId !== null) {
-            query.whereNot(idColumn, ignoreId);
+            columns.forEach((col) => {
+                const fieldValue = value[col];
+                query.where(col, fieldValue !== undefined ? fieldValue : null);
+            });
+
+            if (ignoreId !== undefined && ignoreId !== null) {
+                query.whereNot(idColumn, ignoreId);
+            }
+
+            row = await query.first();
+        } catch (error) {
+            console.error(`Database unique validation error on ${table} [${columns.join(', ')}]:`, error);
+
+            throw new Joi.ValidationError(
+                'database.error',
+                [
+                    {
+                        message: 'An internal validation error occurred.',
+                        path: helpers.state.path ?? [],
+                        type: 'database.error',
+                        context: { key: columns.join('_') }
+                    }
+                ],
+                value
+            );
         }
 
-        const row = await query.first();
-
+        // 2. Throw the validation error OUTSIDE the try/catch block
         if (row) {
             throw new Joi.ValidationError(
                 'any.unique',
                 [
                     {
-                        message: `The combination of ${columns.join(' & ')} must be unique.`,
-                        path: columns,
+                        message: `The combination of fields (${columns.join(', ')}) already exists.`,
+                        path: helpers.state.path && helpers.state.path.length > 0 ? helpers.state.path : columns,
                         type: 'any.unique',
-                        context: {key: columns.join('_'), value}
+                        context: { key: columns.join('_'), value }
                     }
                 ],
                 value

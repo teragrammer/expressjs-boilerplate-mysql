@@ -1,3 +1,4 @@
+// src/common/utils/security.util.ts
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import {__ENV} from "../../config/environment";

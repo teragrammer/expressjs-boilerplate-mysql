@@ -1,66 +1,64 @@
+// src/shared/validations/database/exists.ts
 import Joi from 'joi';
-import {DBKnex} from "../../../config/knex";
+import {Knex} from 'knex';
+import {DBKnex} from '../../../config/knex';
 
 interface ExistsOptions {
     column?: string;
+    db?: Knex;
 }
 
-/**
- * Validates that a reference value exists in the database.
- * Designed to be used with Joi's `.external()` method.
- * * @param table - DB Table Name to query
- * @param options - Configuration options (column to match against, defaults to 'id')
- *
- * * @example
- * // 1. Usage in a schema definition:
- * interface ArticleInput {
- *      title: string;
- *      author_id: number;
- *      slug: string;
- * }
- * * const articleSchema = Joi.object<ArticleInput>({
- *      title: Joi.string().required(),
- *      // Checks if user exists in the 'users' table on the default 'id' column
- *      author_id: Joi.number().integer().required().external(
- *          validateExists('users')
- *      ),
- *      // Checks if a parent category slug exists in the 'categories' table
- *      slug: Joi.string().required().external(
- *          validateExists('categories', { column: 'slug' })
- *      )
- * });
- *
- * * @example
- * // 2. Executing the schema:
- * try {
- *      const validatedBody = await articleSchema.validateAsync(req.body, { abortEarly: false });
- * } catch (error) {
- *      if (error instanceof Joi.ValidationError) {
- *          res.status(422).json({ errors: error.details });
- *      }
- * }
- * @param table
- */
 export const validateExists = (
     table: string,
-    {column = 'id'}: ExistsOptions = {}
+    {column = 'id', db = DBKnex}: ExistsOptions = {}
 ) => {
+    const validIdentifierRegex = /^[a-zA-Z0-9_]+$/;
+    if (!validIdentifierRegex.test(table) || !validIdentifierRegex.test(column)) {
+        throw new Error(`Security Exception: Invalid characters in table "${table}" or column "${column}" names.`);
+    }
+
     return async (value: any, helpers: Joi.CustomHelpers): Promise<any> => {
-        // If the input value is empty, let Joi's synchronous validation handle null/undefined checks
         if (value === undefined || value === null) return value;
 
-        const row = await DBKnex(table).where(column, value).first();
+        let row: any;
 
+        // 1. ONLY wrap the database operation in try/catch
+        try {
+            row = await db(table)
+                .select(1)
+                .where(column, value)
+                .first();
+        } catch (error) {
+            console.error(`Database validation error on ${table}.${column}:`, error);
+
+            throw new Joi.ValidationError(
+                'database.error',
+                [
+                    {
+                        message: 'An internal validation error occurred.',
+                        path: helpers.state.path ?? [],
+                        type: 'database.error',
+                        context: {key: helpers.state.path?.join('.') ?? ''}
+                    }
+                ],
+                value
+            );
+        }
+
+        // 2. Throw the validation error OUTSIDE the try/catch block
         if (!row) {
-            // Throw a structured validation error pointing exactly to the invalid field path
             throw new Joi.ValidationError(
                 'any.exists',
                 [
                     {
-                        message: `The referenced ${table} with ${column} "${value}" does not exist.`,
-                        path: helpers.state.path ?? [], // Dynamically maps to the current field's path (e.g., ['author_id'])
+                        message: `The referenced record with ${column} does not exist.`,
+                        path: helpers.state.path ?? [],
                         type: 'any.exists',
-                        context: {key: helpers.state.path?.join('.') ?? '', value}
+                        context: {
+                            key: helpers.state.path?.join('.') ?? '',
+                            value,
+                            table
+                        }
                     }
                 ],
                 value
