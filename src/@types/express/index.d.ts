@@ -1,5 +1,6 @@
-import {JwtExtendedPayload} from "../../modules/auth/models/authentication-token.model";
-import {UserRole} from "../../modules/users/user";
+// src/@types/express/index.d.ts
+import {JwtExtendedPayload} from "../../modules/auth/models/authentication-token.model.legacy";
+import {UserRole} from "../../modules/users/user.legacy";
 import {AuthenticationToken} from "../../modules/auth/interfaces/authentication.token";
 
 export interface RequestCredentials {

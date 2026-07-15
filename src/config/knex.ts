@@ -1,55 +1,54 @@
+// src/config/knex.ts
 import fs from "fs";
-import Knex from "knex";
+import knex, {Knex} from "knex";
 import {__ENV} from "./environment";
 import {logger} from "./logger";
 
-const CONFIG: any = {
+const CONFIG: Knex.Config = {
     client: __ENV.DB_CLIENT,
     connection: {
         host: __ENV.DB_HOST,
-        port: __ENV.DB_PORT,
+        port: Number(__ENV.DB_PORT),
         user: __ENV.DB_USER,
         password: __ENV.DB_PASS,
         database: __ENV.DB_NAME,
         charset: __ENV.DB_CHARSET,
         dateStrings: __ENV.DB_DATE_STRING,
+        ...(__ENV.DB_SSL && {
+            ssl: {
+                ca: fs.readFileSync(__ENV.DB_SSL_CA, "utf8"),
+                cert: fs.readFileSync(__ENV.DB_SSL_CERT, "utf8"),
+                key: fs.readFileSync(__ENV.DB_SSL_KEY, "utf8"),
+            },
+        }),
     },
-    pool: {min: __ENV.DB_POOL_MIN, max: __ENV.DB_POOL_MAX},
+    pool: {
+        min: Number(__ENV.DB_POOL_MIN || 2),
+        max: Number(__ENV.DB_POOL_MAX || 10),
+    },
 };
 
-// set SSL connection support
-if (__ENV.DB_SSL) {
-    CONFIG.connection.ssl = {
-        ca: fs.readFileSync(__ENV.DB_SSL_CA).toString(),
-        cert: fs.readFileSync(__ENV.DB_SSL_CERT).toString(),
-        key: fs.readFileSync(__ENV.DB_SSL_KEY).toString(),
-    };
-}
+// Initialize Knex instance
+export const DBKnex = knex(CONFIG);
 
-const CONNECTION = Knex(CONFIG);
-
-async function checkConnection() {
+// Connection checker function for startup safety
+export async function checkDbConnection(): Promise<boolean> {
     try {
-        // Perform a simple query to check connection
-        await CONNECTION.raw("SELECT 1+1 AS result");
+        await DBKnex.raw("SELECT 1+1 AS result");
+        logger.info("🤝 Connected to the database (KNEX)");
+        return true;
     } catch (error) {
         logger.error(`Knex failed to connect to the database: ${error}`);
+        return false;
     }
 }
 
-// Connection checker
-checkConnection().then(() => {
-    logger.info("🤝 Connected to the database (KNEX)");
-});
-
-// Handle global error events
-CONNECTION.on("query-error", (error, obj) => {
+// Global Event Listeners for query monitoring and error tracing
+DBKnex.on("query-error", (error, obj) => {
     logger.error(`Knex Query Error: ${error.message}`);
     logger.error(`Knex Query Details: ${obj.sql}`);
 });
 
-CONNECTION.on("error", (error) => {
+DBKnex.on("error", (error) => {
     logger.error(`Knex Global Error: ${error.message}`);
 });
-
-export const DBKnex = CONNECTION;

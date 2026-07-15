@@ -16,7 +16,7 @@ environment configuration to help you kickstart your API development with best p
 - Database Connection (MySQL)
 - Redis Connection (cache application settings and roles guard)
 - Registration and Login (JWT Token)
-- User Roles (Can be manage by admin)
+- UserLegacy Roles (Can be manage by admin)
 - Two-Factor Authentication Setup (Using Email)
 - Password Recovery
 - Profile Information and Password Change

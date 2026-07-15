@@ -1,7 +1,7 @@
 import {NextFunction, Request, Response} from "express";
-import errors from "../errors/messages";
+import errors from "../utils/messages";
 
-const RESPONSE_MIDDLEWARE = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+const responseHandler = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
     res.failed = {
         message: (status: number, message?: string, code?: any) => {
             let _code = errors.SERVER_ERROR;
@@ -25,4 +25,4 @@ const RESPONSE_MIDDLEWARE = async (_req: Request, res: Response, next: NextFunct
     next();
 };
 
-export default RESPONSE_MIDDLEWARE;
+export default responseHandler;

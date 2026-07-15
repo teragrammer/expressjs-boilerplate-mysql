@@ -1,4 +1,6 @@
-const Messages: any = {
+// src/utils/messages.ts
+
+export const Messages = {
     VALIDATION_FAILED: {code: "VALIDATION_FAILED", message: "Validation errors were encountered during the process"},
     DUPLICATE_DATA: {code: "DUPLICATE_DATA", message: "The data you've selected is already assigned"},
     DATA_NOT_FOUND: {code: "DATA_NOT_FOUND", message: "The information you are looking for is not available"},
@@ -40,6 +42,10 @@ const Messages: any = {
         code: "DELETE_FAILED",
         message: "Unable to delete the requested resource at this time. Please try again shortly",
     },
-};
+} as const;
 
-export default Object.freeze(Messages);
+// Freeze the object at runtime to prevent any accidental code modification
+Object.freeze(Messages);
+
+// Named export is preferred for tooling autocomplete, but we can also export a default type
+export default Messages;

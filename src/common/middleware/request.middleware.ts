@@ -50,7 +50,7 @@ const GET = (inputs: any, key: string, defaults: any = null) => {
     return defaults;
 };
 
-const REQUEST_MIDDLEWARE = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
+const requestHandler = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     // sanitize inputs from query or body
     req.sanitize = {
         body: {
@@ -100,4 +100,4 @@ const REQUEST_MIDDLEWARE = async (req: Request, _res: Response, next: NextFuncti
     next();
 };
 
-export default REQUEST_MIDDLEWARE;
+export default requestHandler;

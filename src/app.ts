@@ -8,18 +8,19 @@ import {express as useragent} from "express-useragent";
 import v1 from "./routes/v1";
 import {logger} from "./config/logger";
 import {__ENV} from "./config/environment";
-import errors from "./common/errors/messages";
+import errors from "./common/utils/messages";
 
 import {SET_CACHE_SETTINGS} from "./modules/system/models/setting.model";
 import {SET_CACHE_GUARDS} from "./modules/system/models/route-guard.model";
 
-import REQUEST_MIDDLEWARE from "./common/middleware/request.middleware";
-import RESPONSE_MIDDLEWARE from "./common/middleware/response.middleware";
+import requestHandler from "./common/middleware/request.middleware";
+import responseHandler from "./common/middleware/response.middleware";
 
 import SettingService from "./modules/system/services/setting.service";
 import RouteGuardService from "./modules/system/services/route-guard.service";
 import RedisSubscriberService from "./shared/redis/redis-sub.service";
 import SystemEventHandler from "./modules/system/events/system.event";
+import {errorHandler} from "./common/middleware/error.middleware";
 
 const app = express();
 
@@ -54,8 +55,9 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 });
 
 // Custom middlewares
-app.use(REQUEST_MIDDLEWARE);
-app.use(RESPONSE_MIDDLEWARE);
+app.use(errorHandler);
+app.use(requestHandler);
+app.use(responseHandler);
 
 // Cache application settings and route guards
 SettingService.boot().then(() => logger.info("Setting Cached"));

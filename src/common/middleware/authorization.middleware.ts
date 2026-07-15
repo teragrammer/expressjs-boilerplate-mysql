@@ -1,5 +1,5 @@
 import {NextFunction, Request, Response} from "express";
-import errors from "../errors/messages";
+import errors from "../utils/messages";
 import RouteGuardService from "../../modules/system/services/route-guard.service";
 
 export function AuthorizationMiddleware(route: string, isHalt = true) {

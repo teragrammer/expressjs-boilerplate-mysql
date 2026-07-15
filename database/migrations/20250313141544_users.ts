@@ -1,5 +1,5 @@
 import type { Knex } from "knex";
-import {GENDERS, STATUSES} from "../../src/modules/users/user.model";
+import {GENDERS, STATUSES} from "../../src/modules/users/user.interface";
 
 export async function up(knex: Knex): Promise<void> {
     return knex.schema.createTable('users', table => {

@@ -1,17 +1,17 @@
 import {NextFunction, Request, Response} from "express";
-import errors from "../errors/messages";
+import errors from "../utils/messages";
 import {AuthenticationToken} from "../../modules/auth/interfaces/authentication.token";
-import {AuthenticationTokenModel, JwtExtendedPayload} from "../../modules/auth/models/authentication-token.model";
-import {User} from "../../modules/users/user";
-import AuthenticationTokenService from "../../modules/auth/services/authentication-token.service";
-import UserRepository from "../../modules/users/user.repository";
+import {AuthenticationTokenModelLegacy, JwtExtendedPayload} from "../../modules/auth/models/authentication-token.model.legacy";
+import {UserLegacy} from "../../modules/users/user.legacy";
+import AuthenticationTokenService from "../../modules/auth/services/authentication-token.service.legacy";
+import UserRepository from "../../modules/users/user.repository.legacy";
 
 export function AuthenticationMiddleware(isHalt = true): any {
-    const USER = async (payload: JwtExtendedPayload): Promise<User> =>
+    const USER = async (payload: JwtExtendedPayload): Promise<UserLegacy> =>
         UserRepository.byId(payload.uid);
 
     const AUTHENTICATION = (payload: JwtExtendedPayload): Promise<AuthenticationToken> =>
-        AuthenticationTokenModel().table().where("id", payload.tid).first();
+        AuthenticationTokenModelLegacy().table().where("id", payload.tid).first();
 
     return async function (req: Request, res: Response, next: NextFunction) {
         const AUTH_HEADER = req.headers.authorization;

@@ -1,7 +1,7 @@
 import Joi, {ObjectSchema} from "joi";
 import {Response} from "express";
 import {PhoneNumberUtil} from "google-libphonenumber";
-import errors from "../errors/messages";
+import errors from "./messages";
 import {DBKnex} from "../../config/knex";
 
 const phoneUtil = PhoneNumberUtil.getInstance();
