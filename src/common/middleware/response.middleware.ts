@@ -1,11 +1,23 @@
 import {NextFunction, Request, Response} from "express";
-import errors from "../utils/messages";
+import Messages from "../utils/messages";
+
+type MessageCode = keyof typeof Messages;
+
+// Declare a clean interface for a single message object
+interface SystemMessage {
+    readonly code: string;
+    readonly message: string;
+}
 
 const responseHandler = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
     res.failed = {
-        message: (status: number, message?: string, code?: any) => {
-            let _code = errors.SERVER_ERROR;
-            if (code && code in errors) _code = errors[code];
+        message: (status: number, message?: string, code?: MessageCode | string) => {
+            // Explicitly type _code as SystemMessage so it accepts any of the sub-objects
+            let _code: SystemMessage = Messages.SERVER_ERROR;
+
+            if (code && code in Messages) {
+                _code = Messages[code as MessageCode];
+            }
 
             res.status(status).json({
                 code: _code.code,
@@ -15,8 +27,8 @@ const responseHandler = async (_req: Request, res: Response, next: NextFunction)
 
         fields: (status: number, _errors: any) => {
             res.status(status).json({
-                code: errors.VALIDATION_FAILED.code,
-                message: errors.VALIDATION_FAILED.message,
+                code: Messages.VALIDATION_FAILED.code,
+                message: Messages.VALIDATION_FAILED.message,
                 errors: [_errors],
             });
         },

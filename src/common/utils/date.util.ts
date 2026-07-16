@@ -10,16 +10,28 @@ export function DateUtil() {
             return DateTime.fromJSDate(date).toFormat("yyyy-LL-dd HH:mm:ss");
         },
 
-        expiredAt(amount: number | string, unit: string, dateTime = new Date(), dateOnly = false): string {
-            amount = typeof amount === "string" ? parseInt(amount) : amount;
-            if (typeof dateTime === "undefined" || dateTime == null) dateTime = new Date();
+        expiredAt(
+            amount: number | string,
+            unit: string,
+            dateTime: Date = new Date(),
+            dateOnly = false
+        ): Date {
+            // Ensure amount is a number
+            const numericAmount = typeof amount === "string" ? parseInt(amount, 10) : amount;
 
-            let duration: any = {};
-            duration[unit] = amount;
+            // Fallback to current date if dateTime is null/undefined
+            const baseDate = dateTime ?? new Date();
 
-            if (dateOnly) return DateTime.fromJSDate(dateTime).plus(duration).toFormat("yyyy-LL-dd");
+            // Create Luxon DateTime and add the duration
+            let result = DateTime.fromJSDate(baseDate).plus({[unit]: numericAmount});
 
-            return DateTime.fromJSDate(dateTime).plus(duration).toFormat("yyyy-LL-dd HH:mm:ss");
+            // If dateOnly is true, truncate time to start of day (00:00:00.000)
+            if (dateOnly) {
+                result = result.startOf("day");
+            }
+
+            // Return native JS Date object
+            return result.toJSDate();
         },
 
         unix(dateTime = new Date()): number {
