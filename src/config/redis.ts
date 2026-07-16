@@ -1,60 +1,119 @@
+// src/config/redis.ts
+
+import Redis, {RedisOptions} from "ioredis";
+import * as fs from "fs";
 import {__ENV} from "./environment";
-import Redis from "ioredis";
-import fs from "fs";
 import {logger} from "./logger";
-
-let redis: Redis | undefined;
-let redisSubClient: Redis | undefined;
-
-if (__ENV.REDIS_HOST == "") {
-    redis = undefined;
-    redisSubClient = undefined;
-} else {
-    const CONFIG: any = {
-        host: __ENV.REDIS_HOST,
-        port: __ENV.REDIS_PORT,
-        password: __ENV.REDIS_PASS,
-    };
-
-    // set SSL connection support
-    if (__ENV.REDIS_TLS) {
-        CONFIG.tls = {
-            ca: fs.readFileSync(__ENV.REDIS_TLS_CA).toString(),
-            cert: fs.readFileSync(__ENV.REDIS_TLS_CERT).toString(),
-            key: fs.readFileSync(__ENV.REDIS_TLS_KEY).toString(),
-            // Optional for self-signed certs:
-            rejectUnauthorized: false,
-        };
-    }
-
-    redis = new Redis(CONFIG);
-    redisSubClient = redis.duplicate();
-
-    redis.on("connect", () => {
-        logger.info("🤝 Connected to Redis over TLS ✅");
-    });
-
-    redis.on("ready", () => {
-        logger.info("Redis ready for commands");
-    });
-
-    redis.on("error", (err: any) => {
-        logger.info(`Redis connection error ❌, ${err.message}`);
-    });
-
-    redis.on("close", () => {
-        logger.info("Redis connection closed");
-    });
-
-    redis.ping().then(() => logger.info("Redis received PONG")).catch(() => logger.error("Regis PING failed"));
-}
 
 export interface DBRedisInterface {
     publisher?: Redis;
     subscriber?: Redis;
 }
 
-export const DBRedis: DBRedisInterface = {
-    publisher: redis,
-    subscriber: redisSubClient,
-};
+/**
+ * Generates secure, robust configurations for Redis clients.
+ */
+export function buildRedisConfig(): RedisOptions | null {
+    if (!__ENV.REDIS_HOST) {
+        logger.warn("Redis host is empty. Redis client will not be initialized.");
+        return null;
+    }
+
+    const config: RedisOptions = {
+        host: __ENV.REDIS_HOST,
+        port: Number(__ENV.REDIS_PORT) || 6379,
+        password: __ENV.REDIS_PASS || undefined,
+        maxRetriesPerRequest: 3,
+        retryStrategy(times) {
+            return Math.min(times * 50, 2000);
+        },
+    };
+
+    if (__ENV.REDIS_TLS) {
+        try {
+            config.tls = {
+                ca: fs.readFileSync(__ENV.REDIS_TLS_CA).toString(),
+                cert: fs.readFileSync(__ENV.REDIS_TLS_CERT).toString(),
+                key: fs.readFileSync(__ENV.REDIS_TLS_KEY).toString(),
+                rejectUnauthorized: __ENV.NODE_ENV === "production",
+            };
+        } catch (error: any) {
+            logger.error(`CRITICAL: Failed to load TLS certificates for Redis: ${error.message}`);
+            throw new Error(`Redis TLS initialization failed: ${error.message}`);
+        }
+    }
+
+    return config;
+}
+
+/**
+ * Managed Redis clients container.
+ */
+export class RedisConnectionManager {
+    private publisherClient?: Redis;
+    private subscriberClient?: Redis;
+
+    constructor() {
+        this.initializeClients();
+    }
+
+    private initializeClients(): void {
+        try {
+            const baseConfig = buildRedisConfig();
+            if (!baseConfig) return;
+
+            // 1. Standard Publisher config
+            this.publisherClient = new Redis(baseConfig);
+
+            // 2. Subscriber config: We MUST disable background handshake queries
+            // to prevent the subscriber socket from attempting to execute "CLIENT INFO"
+            this.subscriberClient = new Redis({
+                ...baseConfig,
+                disableClientInfo: true // ⚡️ This stops the background client info errors!
+            });
+
+            this.setupEventListeners(this.publisherClient, "Publisher");
+            this.setupEventListeners(this.subscriberClient, "Subscriber");
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            logger.error(`Failed to boot Redis Manager clients: ${message}`);
+        }
+    }
+
+    private setupEventListeners(client: Redis, label: string): void {
+        client.on("connect", () => {
+            logger.info(`🤝 ${label} connected to Redis ✅`);
+        });
+
+        client.on("ready", () => {
+            logger.info(`${label} is ready for commands`);
+        });
+
+        client.on("error", (err: Error) => {
+            logger.error(`${label} connection error: ${err.message}`);
+        });
+
+        client.on("close", () => {
+            logger.warn(`${label} connection closed`);
+        });
+    }
+
+    public getClients(): DBRedisInterface {
+        return {
+            publisher: this.publisherClient,
+            subscriber: this.subscriberClient,
+        };
+    }
+
+    public async disconnectAll(): Promise<void> {
+        const promises: Promise<string>[] = [];
+        if (this.publisherClient) promises.push(this.publisherClient.quit());
+        if (this.subscriberClient) promises.push(this.subscriberClient.quit());
+        await Promise.all(promises);
+        logger.info("All Redis connections shut down cleanly.");
+    }
+}
+
+const manager = new RedisConnectionManager();
+export const DBRedis: DBRedisInterface = manager.getClients();
+export const disconnectRedis = () => manager.disconnectAll();

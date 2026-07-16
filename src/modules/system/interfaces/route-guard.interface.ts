@@ -1,3 +1,5 @@
+// src/modules/system/interfaces/route.guard.ts
+
 export interface RouteGuard {
     id: number;
     role_id: number;

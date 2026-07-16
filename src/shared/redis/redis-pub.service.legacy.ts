@@ -1,4 +1,4 @@
-import { DBRedis, DBRedisInterface } from "../../config/redis";
+import { DBRedis, DBRedisInterface } from "../../config/redis.legacy";
 import { SecurityUtil } from "../../common/utils/security.util";
 import { logger } from "../../config/logger";
 import { __ENV } from "../../config/environment";
