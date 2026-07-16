@@ -3,13 +3,13 @@ import { SecurityUtil } from "../../common/utils/security.util";
 import { logger } from "../../config/logger";
 import { __ENV } from "../../config/environment";
 
-class RedisPubService {
-    private static instance: RedisPubService;
+class RedisPubServiceLegacy {
+    private static instance: RedisPubServiceLegacy;
     private constructor() {}
 
     static getInstance() {
-        if (!RedisPubService.instance) RedisPubService.instance = new RedisPubService();
-        return RedisPubService.instance;
+        if (!RedisPubServiceLegacy.instance) RedisPubServiceLegacy.instance = new RedisPubServiceLegacy();
+        return RedisPubServiceLegacy.instance;
     }
 
     async publishCache(channel: string, data: any) {
@@ -38,4 +38,4 @@ class RedisPubService {
     }
 }
 
-export default RedisPubService.getInstance();
+export default RedisPubServiceLegacy.getInstance();
