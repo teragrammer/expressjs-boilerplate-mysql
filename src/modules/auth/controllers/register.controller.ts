@@ -23,7 +23,7 @@ class Controller {
         const validatedData = await registerSchema.validateAsync(rawData, {abortEarly: false});
 
         // Delegate to Business Service
-        const result = await this.authService.registerCustomer(validatedData);
+        const result = await this.authService.register(validatedData);
 
         // Send HTTP response
         res.status(201).json(result);

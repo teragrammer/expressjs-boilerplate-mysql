@@ -4,15 +4,15 @@ import {Request, Response} from "express";
 import RegisterController from "../../../../src/modules/auth/controllers/register.controller";
 
 // 1. Hoist the mock function so it is available before imports are executed
-const {mockRegisterCustomer} = vi.hoisted(() => ({
-    mockRegisterCustomer: vi.fn(),
+const {mockRegister} = vi.hoisted(() => ({
+    mockRegister: vi.fn(),
 }));
 
 // 2. Mock ONLY the AuthService (The single direct dependency of the controller)
 vi.mock("../../../../src/modules/auth/services/auth.service", () => ({
     AuthService: function () {
         return {
-            registerCustomer: mockRegisterCustomer,
+            register: mockRegister,
         };
     },
 }));
@@ -73,7 +73,7 @@ describe("RegisterController - create", () => {
             email: "john@example.com",
         };
         mockValidateAsync.mockResolvedValue(mockValidatedData);
-        mockRegisterCustomer.mockResolvedValue({token: "mocked-jwt-token-string"});
+        mockRegister.mockResolvedValue({token: "mocked-jwt-token-string"});
 
         // Execute controller handler
         RegisterController.create(req as Request, res as Response, nextMock);
@@ -94,7 +94,7 @@ describe("RegisterController - create", () => {
         expect(mockValidateAsync).toHaveBeenCalledWith(mockValidatedData, {abortEarly: false});
 
         // Ensure work is delegated properly to the business service layer
-        expect(mockRegisterCustomer).toHaveBeenCalledWith(mockValidatedData);
+        expect(mockRegister).toHaveBeenCalledWith(mockValidatedData);
 
         expect(statusMock).toHaveBeenCalledWith(201);
         expect(jsonMock).toHaveBeenCalledWith({token: "mocked-jwt-token-string"});
@@ -109,7 +109,7 @@ describe("RegisterController - create", () => {
         await new Promise(process.nextTick);
 
         expect(nextMock).toHaveBeenCalledWith(validationError);
-        expect(mockRegisterCustomer).not.toHaveBeenCalled();
+        expect(mockRegister).not.toHaveBeenCalled();
     });
 
     it("should forward business logic exceptions from AuthService to next middleware", async () => {
@@ -123,7 +123,7 @@ describe("RegisterController - create", () => {
         mockValidateAsync.mockResolvedValue(mockValidatedData);
 
         const businessError = new Error("Email address already registered");
-        mockRegisterCustomer.mockRejectedValue(businessError);
+        mockRegister.mockRejectedValue(businessError);
 
         RegisterController.create(req as Request, res as Response, nextMock);
 
