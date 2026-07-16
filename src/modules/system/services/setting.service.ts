@@ -1,0 +1,154 @@
+// src/modules/system/services/setting.service.ts
+
+import {InitializerSetting, SettingRow} from "../interfaces/setting.interface";
+import {SettingRepository} from "../repositories/setting.repository";
+import {RedisCache} from "../../../shared/redis/redis-cache";
+import {SettingKeyValue} from "../interfaces/setting-key-value.interface";
+
+export class SettingService {
+    // Made CACHE_KEY public static so it is easily exportable/importable
+    public static readonly CACHE_KEY = "app:settings";
+
+    private localCache: InitializerSetting | null = null;
+    private readonly DEFAULT_TTL = 3600; // 1 hour
+
+    constructor(
+        private readonly settingRepository: SettingRepository,
+        private readonly redisCache: RedisCache
+    ) {
+    }
+
+    updateLocalMemory(settings: InitializerSetting): void {
+        this.localCache = settings;
+    }
+
+    /**
+     * Safe getter: Returns deeply frozen settings.
+     * Resolves: Local Memory (L1) -> Redis Cache (L2) -> Database (L3)
+     */
+    async getCache(): Promise<Readonly<InitializerSetting>> {
+        // Check Local Memory Cache (L1)
+        if (this.localCache) {
+            return Object.freeze(this.localCache);
+        }
+
+        // If Redis is connected, attempt to fetch from Redis (L2)
+        if (this.redisCache.isConnected()) {
+            try {
+                const cachedData = await this.redisCache.get<InitializerSetting>(SettingService.CACHE_KEY);
+                if (cachedData) {
+                    this.localCache = cachedData;
+                    return Object.freeze(this.localCache);
+                }
+            } catch (error) {
+                console.error("Failed to read from Redis cache, falling back to DB:", error);
+            }
+        }
+
+        // Fallback to Database (L3) and warm caches
+        return Object.freeze(await this.boot());
+    }
+
+    /**
+     * Rebuilds the cache from the database and updates both Local and Redis layers.
+     */
+    async boot(): Promise<InitializerSetting> {
+        const freshSettings = await this.initializer();
+
+        // Warm L1 Cache
+        this.localCache = freshSettings;
+
+        // Warm L2 Cache asynchronously to optimize thread performance
+        if (this.redisCache.isConnected()) {
+            this.redisCache.set(SettingService.CACHE_KEY, freshSettings, this.DEFAULT_TTL).catch((err) => {
+                console.error("Failed to sync fresh settings to Redis:", err);
+            });
+        }
+
+        return freshSettings;
+    }
+
+    /**
+     * Coordinates private and public DB settings retrieval in parallel.
+     */
+    async initializer(): Promise<InitializerSetting> {
+        const [privateSettings, publicSettings] = await Promise.all([
+            this.value([], undefined), // Private settings
+            this.value([], 1)          // Public settings
+        ]);
+
+        return {
+            pri: privateSettings,
+            pub: publicSettings,
+        };
+    }
+
+    /**
+     * Fetches settings from the database and parses them safely.
+     */
+    async value(slugs: string[] = [], is_public?: number): Promise<SettingKeyValue> {
+        try {
+            const settings = await this.settingRepository.findBySlug(slugs, is_public);
+            return this.parser(settings);
+        } catch (error) {
+            console.error(`Database retrieval failed for is_public=${is_public}:`, error);
+            throw new Error("Unable to fetch configuration settings from database.");
+        }
+    }
+
+    /**
+     * Safe runtime type parser. Prevents type confusion and guarantees clean fallbacks.
+     */
+    // src/modules/system/services/setting.service.ts
+
+    parser(settings: SettingRow[] | undefined): SettingKeyValue {
+        // 1. Declare parsedObj as Partial so keys can be omitted initially
+        const parsedObj: Partial<SettingKeyValue> = {};
+
+        // Fallback: If no settings, we assert the empty object as SettingKeyValue
+        // or you can return a default configuration object.
+        if (!settings || !settings.length) return parsedObj as SettingKeyValue;
+
+        for (const setting of settings) {
+            const {slug, type, value} = setting;
+            if (!slug) continue;
+
+            // Cast key to keyof SettingKeyValue so TS allows dynamic assignment
+            const key = slug as keyof SettingKeyValue;
+
+            if (value === null || value === undefined) {
+                (parsedObj[key] as any) = type === "array" ? [] : type === "boolean" ? 0 : null;
+                continue;
+            }
+
+            switch (type) {
+                case "integer":
+                    (parsedObj[key] as any) = parseInt(value, 10) || 0;
+                    break;
+                case "float":
+                    (parsedObj[key] as any) = parseFloat(value) || 0;
+                    break;
+                case "boolean": {
+                    const intVal = parseInt(value, 10);
+                    (parsedObj[key] as any) = intVal === 1 || value === "true" ? 1 : 0;
+                    break;
+                }
+                case "array":
+                    (parsedObj[key] as any) = value.split(",");
+                    break;
+                default:
+                    (parsedObj[key] as any) = value;
+            }
+        }
+
+        // 2. Safely cast the fully built object to SettingKeyValue on return
+        return parsedObj as SettingKeyValue;
+    }
+
+    /**
+     * Evicts the local memory cache (triggered by pub/sub when settings change).
+     */
+    clearLocalCache(): void {
+        this.localCache = null;
+    }
+}

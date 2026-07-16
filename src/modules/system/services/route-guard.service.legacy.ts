@@ -1,21 +1,21 @@
 import {Role} from "../../role/role";
 import {RoleModel} from "../../role/role.model";
-import {RouteGuard} from "../interfaces/route.guard";
+import {RouteGuard} from "../interfaces/route-guard.interface";
 import {RouteGuardModel} from "../models/route-guard.model";
 import RedisPublisherService from "../../../shared/redis/redis-pub.service.legacy";
 import {__ENV} from "../../../config/environment";
 
-class RouteGuardService {
-    private static instance: RouteGuardService;
+class RouteGuardServiceLegacy {
+    private static instance: RouteGuardServiceLegacy;
 
     private cache?: Record<string, string[]>;
 
     private constructor() {
     }
 
-    static getInstance(): RouteGuardService {
-        if (!RouteGuardService.instance) RouteGuardService.instance = new RouteGuardService();
-        return RouteGuardService.instance;
+    static getInstance(): RouteGuardServiceLegacy {
+        if (!RouteGuardServiceLegacy.instance) RouteGuardServiceLegacy.instance = new RouteGuardServiceLegacy();
+        return RouteGuardServiceLegacy.instance;
     }
 
     async initializer(): Promise<Record<string, string[]>> {
@@ -54,4 +54,4 @@ class RouteGuardService {
     }
 }
 
-export default RouteGuardService.getInstance();
+export default RouteGuardServiceLegacy.getInstance();

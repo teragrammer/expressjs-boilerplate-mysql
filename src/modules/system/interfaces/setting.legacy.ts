@@ -1,4 +1,4 @@
-export interface Setting {
+export interface SettingLegacy {
     id: number;
     name: string;
     slug: string;

@@ -1,40 +1,51 @@
+// src/modules/system/events/system.event.ts
+
 import {logger} from "../../../config/logger";
-import {DBRedis} from "../../../config/redis";
-import {SecurityUtil} from "../../../common/utils/security.util";
-import {SET_CACHE_SETTINGS} from "../models/setting.model";
-import {SET_CACHE_GUARDS} from "../models/route-guard.model";
-import SettingService from "../services/setting.service";
-import RouteGuardService from "../services/route-guard.service";
+import {RedisCache} from "../../../shared/redis/redis-cache";
+import {SettingService} from "../services/setting.service";
+import {RouteGuardService} from "../services/route-guard.service";
 
-class SystemEventHandler {
-    // Called once on application startup to bind listeners for this module
-    initListeners() {
-        if (!DBRedis.subscriber) return;
-
-        DBRedis.subscriber.on("message", async (channel: string) => {
-            if (channel === SET_CACHE_SETTINGS || channel === SET_CACHE_GUARDS) {
-                await this.handleCacheUpdate(channel);
-            }
-        });
+export class SystemEventHandler {
+    constructor(
+        private readonly redisCache: RedisCache,
+        private readonly settingService: SettingService,
+        private readonly routeGuardService: RouteGuardService
+    ) {
     }
 
-    private async handleCacheUpdate(channel: string) {
+    /**
+     * Centralized event processor for cache update events.
+     * Fetches, decrypts, and updates local memory caches based on the incoming channel.
+     * * NOTE: This updates the L1 memory layer directly to prevent an infinite write-back loop.
+     */
+    async handleCacheUpdate(channel: string): Promise<void> {
         try {
-            if (!DBRedis.publisher) return;
-            const encryptedData = await DBRedis.publisher.get(channel);
-            if (!encryptedData) return;
+            logger.info(`System event received on channel: ${channel}. Synchronizing local caches...`);
 
-            const decrypted = await SecurityUtil().unshield(encryptedData);
-            const parsedData = JSON.parse(decrypted);
+            if (channel === SettingService.CACHE_KEY) {
+                // 1. Fetch, decrypt, and parse the updated configuration payload securely from Redis
+                const freshSettings = await this.redisCache.get<any>(SettingService.CACHE_KEY);
+                if (freshSettings) {
+                    // Update the L1 local memory reference directly.
+                    // DO NOT call .boot() here, as .boot() writes back to Redis and causes a loop.
+                    this.settingService.updateLocalMemory(freshSettings);
+                    logger.info("Local Setting L1 cache updated.");
+                }
+            }
 
-            if (channel === SET_CACHE_SETTINGS) SettingService.setCache(parsedData);
-            if (channel === SET_CACHE_GUARDS) RouteGuardService.setCache(parsedData);
+            if (channel === RouteGuardService.CACHE_KEY) {
+                // 2. Fetch, decrypt, and parse the updated route mappings securely from Redis
+                const freshGuards = await this.redisCache.get<any>(RouteGuardService.CACHE_KEY);
+                if (freshGuards) {
+                    // Update the L1 local memory reference directly.
+                    // DO NOT call .boot() here, as .boot() writes back to Redis and causes a loop.
+                    this.routeGuardService.updateLocalMemory(freshGuards);
+                    logger.info("Local Route Guard L1 cache updated.");
+                }
+            }
 
-            logger.info(`System Module updated local cache for channel: ${channel}`);
         } catch (err: any) {
             logger.error(`Failed handling event for channel ${channel}: ${err.message}`);
         }
     }
 }
-
-export default new SystemEventHandler();

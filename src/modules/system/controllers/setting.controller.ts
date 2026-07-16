@@ -5,9 +5,9 @@ import {logger} from "../../../config/logger";
 import {DATA_TYPES, SET_CACHE_SETTINGS, SettingModel} from "../models/setting.model";
 import {DateUtil} from "../../../common/utils/date.util";
 import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
-import {Setting} from "../interfaces/setting";
-import RedisPublisherService from "../../../shared/redis/redis-pub.service";
-import SettingService from "../services/setting.service";
+import {SettingLegacy} from "../interfaces/setting.legacy";
+import RedisPublisherService from "../../../shared/redis/redis-pub.service.legacy";
+import SettingService from "../services/setting.service.legacy";
 import catchAsync from "../../../common/utils/catch-async";
 
 class Controller {
@@ -34,7 +34,7 @@ class Controller {
         }
 
         const PAGINATE = req.app.get("paginate");
-        const SETTINGS: Setting[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
+        const SETTINGS: SettingLegacy[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
 
         res.status(200).json(SETTINGS);
     });
@@ -45,7 +45,7 @@ class Controller {
 
     view = catchAsync(async (req: Request, res: Response): Promise<any> => {
         const ID = req.params.id;
-        const SETTING: Setting = await SettingModel().table()
+        const SETTING: SettingLegacy = await SettingModel().table()
             .where("id", ID)
             .first();
 

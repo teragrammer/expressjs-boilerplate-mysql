@@ -1,12 +1,12 @@
-import {SettingKeyValue} from "../interfaces/setting-key.value";
+import {SettingKeyValue} from "../interfaces/setting-key-value.interface";
 import {InitializerSettingInterface} from "../models/setting.model";
-import {Setting} from "../interfaces/setting";
+import {SettingLegacy} from "../interfaces/setting.legacy";
 import {__ENV} from "../../../config/environment";
-import RedisPublisherService from "../../../shared/redis/redis-pub.service";
-import SettingRepository from "../repositories/setting.repository";
+import RedisPublisherService from "../../../shared/redis/redis-pub.service.legacy";
+import SettingRepository from "../repositories/setting.repository.legacy";
 
-class SettingService {
-    private static instance: SettingService;
+class SettingServiceLegacy {
+    private static instance: SettingServiceLegacy;
 
     private cache?: InitializerSettingInterface;
 
@@ -14,8 +14,8 @@ class SettingService {
     }
 
     static getInstance() {
-        if (!SettingService.instance) SettingService.instance = new SettingService();
-        return SettingService.instance;
+        if (!SettingServiceLegacy.instance) SettingServiceLegacy.instance = new SettingServiceLegacy();
+        return SettingServiceLegacy.instance;
     }
 
     async initializer(): Promise<InitializerSettingInterface> {
@@ -29,13 +29,13 @@ class SettingService {
     }
 
     async value(slug: string[] = [], is_public?: number): Promise<SettingKeyValue> {
-        let settings: Setting[] | undefined = await SettingRepository.getBySlug(slug, is_public);
+        let settings: SettingLegacy[] | undefined = await SettingRepository.getBySlug(slug, is_public);
 
         // values
         return this.parser(settings);
     }
 
-    parser(settings: Setting[] | undefined): SettingKeyValue {
+    parser(settings: SettingLegacy[] | undefined): SettingKeyValue {
         const OBJ_KEY: any = {};
 
         // values
@@ -81,4 +81,4 @@ class SettingService {
     }
 }
 
-export default SettingService.getInstance();
+export default SettingServiceLegacy.getInstance();

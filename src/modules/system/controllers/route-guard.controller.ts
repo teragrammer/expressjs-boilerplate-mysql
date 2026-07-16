@@ -3,10 +3,10 @@ import Joi from "joi";
 import errors from "../../../common/utils/messages";
 import {logger} from "../../../config/logger";
 import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
-import {RouteGuard} from "../interfaces/route.guard";
+import {RouteGuard} from "../interfaces/route-guard.interface";
 import {RouteGuardModel, SET_CACHE_GUARDS} from "../models/route-guard.model";
-import RedisPublisherService from "../../../shared/redis/redis-pub.service";
-import RouteGuardService from "../services/route-guard.service";
+import RedisPublisherService from "../../../shared/redis/redis-pub.service.legacy";
+import RouteGuardService from "../services/route-guard.service.legacy";
 import catchAsync from "../../../common/utils/catch-async";
 
 class Controller {

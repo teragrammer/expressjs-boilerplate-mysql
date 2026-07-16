@@ -1,0 +1,96 @@
+// src/modules/system/services/route-guard.service.ts
+
+import {RedisCache} from "../../../shared/redis/redis-cache";
+import {RouteGuardRepository} from "../repositories/route-guard.repository";
+import {RouteGuardCachePayload} from "../interfaces/route-guard.interface";
+
+export class RouteGuardService {
+    // Made CACHE_KEY public static so it is easily exportable/importable
+    public static readonly CACHE_KEY = "app:route_guards";
+
+    private localCache: RouteGuardCachePayload | null = null;
+    private readonly DEFAULT_TTL = 3600; // 1 Hour
+
+    constructor(
+        private readonly routeGuardRepository: RouteGuardRepository,
+        private readonly redisCache: RedisCache
+    ) {
+    }
+
+    updateLocalMemory(guards: any): void { // Replace 'any' with your actual Route Guard type if applicable
+        this.localCache = guards;
+    }
+
+    /**
+     * Safe getter: Returns deep-frozen route mappings.
+     * Resolves: Local Memory (L1) -> Redis Cache (L2) -> Database (L3)
+     */
+    async getCache(): Promise<Readonly<RouteGuardCachePayload>> {
+        // 1. Check Local Memory Cache (L1)
+        if (this.localCache) {
+            return Object.freeze(this.localCache);
+        }
+
+        // 2. If Redis is connected, attempt to fetch from Redis (L2)
+        if (this.redisCache.isConnected()) {
+            try {
+                const cached = await this.redisCache.get<RouteGuardCachePayload>(RouteGuardService.CACHE_KEY);
+                if (cached) {
+                    this.localCache = cached;
+                    return Object.freeze(this.localCache);
+                }
+            } catch (error) {
+                console.error("Redis error reading route guards, falling back to DB:", error);
+            }
+        }
+
+        // 3. Fallback to Database (L3) and warm caches
+        return Object.freeze(await this.boot());
+    }
+
+    /**
+     * Boots/rebuilds L1 and L2 cache from the DB.
+     */
+    async boot(): Promise<RouteGuardCachePayload> {
+        const freshGuards = await this.initializer();
+
+        // Warm L1 Cache
+        this.localCache = freshGuards;
+
+        // Warm L2 Cache asynchronously to optimize performance
+        if (this.redisCache.isConnected()) {
+            this.redisCache.set(RouteGuardService.CACHE_KEY, freshGuards, this.DEFAULT_TTL).catch((err) => {
+                console.error("Failed to update route guards in Redis:", err);
+            });
+        }
+
+        return freshGuards;
+    }
+
+    /**
+     * Aggregates and restructures database flat rows into optimized lookups.
+     */
+    async initializer(): Promise<RouteGuardCachePayload> {
+        const guards: RouteGuardCachePayload = {};
+        const rows = await this.routeGuardRepository.findRouteGuardsGroupedByRole();
+
+        for (const row of rows) {
+            const {role_slug, route} = row;
+            if (!role_slug) continue;
+
+            if (!guards[role_slug]) {
+                guards[role_slug] = [];
+            }
+            guards[role_slug].push(route);
+        }
+
+        return guards;
+    }
+
+    /**
+     * Resets local state (triggered by pub/sub notifications when route guards change)
+     */
+    clearLocalCache(): void {
+        this.localCache = null;
+    }
+}

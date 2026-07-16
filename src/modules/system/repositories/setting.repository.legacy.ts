@@ -1,18 +1,18 @@
 import {SettingModel} from "../models/setting.model";
-import {Setting} from "../interfaces/setting";
+import {SettingLegacy} from "../interfaces/setting.legacy";
 
-class SettingRepository {
-    private static instance: SettingRepository;
+class SettingRepositoryLegacy {
+    private static instance: SettingRepositoryLegacy;
 
     private constructor() {
     }
 
-    static getInstance(): SettingRepository {
-        if (!SettingRepository.instance) SettingRepository.instance = new SettingRepository();
-        return SettingRepository.instance;
+    static getInstance(): SettingRepositoryLegacy {
+        if (!SettingRepositoryLegacy.instance) SettingRepositoryLegacy.instance = new SettingRepositoryLegacy();
+        return SettingRepositoryLegacy.instance;
     }
 
-    getBySlug(slug: string [] = [], is_public?: number): Promise<Setting[]> {
+    getBySlug(slug: string [] = [], is_public?: number): Promise<SettingLegacy[]> {
         const Q = SettingModel().table()
             .where("is_disabled", 0);
 
@@ -23,4 +23,4 @@ class SettingRepository {
     }
 }
 
-export default SettingRepository.getInstance();
+export default SettingRepositoryLegacy.getInstance();
