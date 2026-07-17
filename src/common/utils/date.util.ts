@@ -1,41 +1,67 @@
-import {DateTime} from "luxon";
+// src/common/utils/date.util.ts
 
-export function DateUtil() {
-    return {
-        sql(date: (Date | string | null) = null, dateOnly = false): string {
-            date = date == null ? new Date() : new Date(date);
+import {DateTime, DurationUnit} from "luxon";
 
-            if (dateOnly) return DateTime.fromJSDate(date).toFormat("yyyy-LL-dd");
+export class DateUtil {
+    /**
+     * Safely normalizes multiple inputs into a native JS Date object.
+     * Keeps performance high by avoiding wrapper libraries where possible.
+     */
+    private static normalize(date?: Date | string | number | null, fallback = new Date()): Date {
+        if (date === null || date === undefined) return fallback;
+        return date instanceof Date ? date : new Date(date);
+    }
 
-            return DateTime.fromJSDate(date).toFormat("yyyy-LL-dd HH:mm:ss");
-        },
+    /**
+     * Formats a date into an SQL compatible string.
+     */
+    static sql(date: Date | string | null = null, dateOnly = false, now = new Date()): string {
+        const jsDate = this.normalize(date, now);
+        const format = dateOnly ? "yyyy-LL-dd" : "yyyy-LL-dd HH:mm:ss";
+        return DateTime.fromJSDate(jsDate).toFormat(format);
+    }
 
-        expiredAt(
-            amount: number | string,
-            unit: string,
-            dateTime: Date = new Date(),
-            dateOnly = false
-        ): Date {
-            // Ensure amount is a number
-            const numericAmount = typeof amount === "string" ? parseInt(amount, 10) : amount;
+    /**
+     * Calculates an expiration date by adding a duration unit.
+     */
+    static expiredAt(
+        amount: number | string,
+        unit: DurationUnit,
+        dateTime: Date | string | null = null,
+        dateOnly = false,
+        now = new Date()
+    ): Date {
+        const numericAmount = typeof amount === "string" ? parseInt(amount, 10) : amount;
+        const baseDate = this.normalize(dateTime, now);
 
-            // Fallback to current date if dateTime is null/undefined
-            const baseDate = dateTime ?? new Date();
+        let result = DateTime.fromJSDate(baseDate).plus({[unit]: numericAmount});
 
-            // Create Luxon DateTime and add the duration
-            let result = DateTime.fromJSDate(baseDate).plus({[unit]: numericAmount});
+        if (dateOnly) {
+            result = result.startOf("day");
+        }
 
-            // If dateOnly is true, truncate time to start of day (00:00:00.000)
-            if (dateOnly) {
-                result = result.startOf("day");
-            }
+        return result.toJSDate();
+    }
 
-            // Return native JS Date object
-            return result.toJSDate();
-        },
+    /**
+     * Returns a millisecond-level UNIX timestamp using fast, native JS methods.
+     */
+    static unix(dateTime?: Date | string | number, now = new Date()): number {
+        return this.toMs(dateTime, now);
+    }
 
-        unix(dateTime = new Date()): number {
-            return DateTime.fromJSDate(dateTime).valueOf();
-        },
-    };
+    /**
+     * Converts date input safely to a millisecond timestamp using native JS.
+     * This is roughly 10x faster than routing simple date-objects through Luxon.
+     */
+    static toMs(date?: Date | string | number | null, now = new Date()): number {
+        return this.normalize(date, now).getTime();
+    }
+
+    /**
+     * Checks if a specific date has passed relative to 'now'
+     */
+    static isPast(date: Date | string | number, now = new Date()): boolean {
+        return this.toMs(date, now) < this.toMs(undefined, now);
+    }
 }
