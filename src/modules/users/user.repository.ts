@@ -103,6 +103,15 @@ export class UserRepository {
         return updatedRow ? this.mapToUser(updatedRow) : null;
     }
 
+    async incrementLoginTries(id: number): Promise<User | null> {
+        const [updatedRow] = await this.table
+            .where({id})
+            .increment("login_tries", 1)
+            .returning("*");
+
+        return updatedRow ? this.mapToUser(updatedRow) : null;
+    }
+
     /**
      * Safe Soft Delete (Sets deleted_at instead of wiping record permanently)
      */
