@@ -1,4 +1,5 @@
 // src/modules/system/repositories/route-guard.repository.ts
+
 import {Knex} from "knex";
 import {DBKnex} from "../../../config/knex";
 import {RouteGuardRow} from "../interfaces/route-guard.interface";
