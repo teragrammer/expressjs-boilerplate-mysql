@@ -1,3 +1,5 @@
+// database/migrations/20250313141555_authentication_tokens.ts
+
 import type {Knex} from "knex";
 
 export async function up(knex: Knex): Promise<void> {
