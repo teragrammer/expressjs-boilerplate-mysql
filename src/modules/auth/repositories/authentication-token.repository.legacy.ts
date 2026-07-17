@@ -19,7 +19,7 @@ class AuthenticationTokenRepository {
     deleteExpiredByUserId(userId: number) {
         return AuthenticationTokenModelLegacy().table()
             .where("user_id", userId)
-            .where("expired_at", "<", DateUtil().sql())
+            .where("expired_at", "<", DateUtil.sql())
             .delete();
     }
 
