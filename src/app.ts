@@ -42,10 +42,17 @@ const app = express();
 const settingRepository = new SettingRepository(DBKnex);
 const routeGuardRepository = new RouteGuardRepository(DBKnex);
 
+const securityUtil = new SecurityUtil({
+    bcryptSecret: __ENV.BCRYPT_SECRET,
+    bcryptSaltRounds: Number(__ENV.BCRYPT_SALT_ROUND || 10),
+    cryptoSecret: __ENV.CRYPT0_SECRET,
+    cryptoCipher: __ENV.CRYPT0_CIPHER
+});
+
 // Concrete Redis Cache
 const redisCache = new RedisCache(
     DBRedis,
-    SecurityUtil(),
+    securityUtil,
     logger
 );
 
