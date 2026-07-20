@@ -1,3 +1,5 @@
+// database/migrations/20250313141544_users.ts
+
 import type { Knex } from "knex";
 import {GENDERS, STATUSES} from "../../src/modules/users/user.interface";
 
@@ -15,6 +17,9 @@ export async function up(knex: Knex): Promise<void> {
         table.boolean('is_phone_verified').defaultTo(0).notNullable();
         table.string('email', 180).unique().index().nullable();
         table.boolean('is_email_verified').defaultTo(0).notNullable();
+
+        table.boolean('has_tfa').defaultTo(0).notNullable(); // if two-factor authentication is enabled
+        table.string('tfa_secret', 100).nullable(); // two-factor secret for application
 
         // user type
         table.integer('role_id').unsigned().index().notNullable();
