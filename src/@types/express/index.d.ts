@@ -1,8 +1,8 @@
 // src/@types/express/index.d.ts
 
-import {JwtExtendedPayload} from "../../modules/auth/models/authentication-token.model.legacy";
-import {UserRole} from "../../modules/users/user.legacy";
 import {AuthenticationToken} from "../../modules/auth/interfaces/authentication.token";
+import {JwtExtendedPayload} from "../../modules/auth/interfaces/jwt.interface";
+import {UserRole} from "../../modules/users/user.legacy";
 
 export interface RequestCredentials {
     jwt: JwtExtendedPayload;
@@ -10,33 +10,40 @@ export interface RequestCredentials {
     authentication: () => Promise<AuthenticationToken>;
 }
 
+// DRYs up the duplicate body and query structures, and adds Generics <T>
+// so if you pass a default number, TypeScript knows the return is a number.
+export interface SanitizerHelper {
+    get: <T = any>(key: string, defaults?: T) => T;
+    only: <T extends Record<string, any> = Record<string, any>>(keys: string[], defaults?: Partial<T>) => T;
+    numeric: (key: string, defaults?: number) => number;
+}
+
 export interface RequestSanitize {
-    body: {
-        get: (key: string, defaults?: any) => any;
-        only: (keys: string[], defaults?: Record<string, any> | undefined) => Record<string, any>;
-        numeric: (key: string, defaults?: any) => any;
-    },
-    query: {
-        get: (key: string, defaults?: any) => any;
-        only: (keys: string[], defaults?: Record<string, any> | undefined) => Record<string, any>;
-        numeric: (key: string, defaults?: any) => any;
-    },
-    data?: any,
+    body: SanitizerHelper;
+    query: SanitizerHelper;
+    data?: any;
 }
 
 export interface ResponseFailed {
     message: (status: number, message?: string, code?: string) => any;
-    fields: (status: number, errors: any) => any;
+    fields: (status: number, errors: Record<string, any> | any) => any;
 }
 
+export interface RequestPagination {
+    offset: number;
+    perPage: number;
+}
+
+// Explicitly declare merging on the Express module
 declare global {
     namespace Express {
-        interface Request {
+        export interface Request {
             credentials: RequestCredentials;
             sanitize: RequestSanitize;
+            pagination: RequestPagination;
         }
 
-        interface Response {
+        export interface Response {
             failed: ResponseFailed;
         }
     }
