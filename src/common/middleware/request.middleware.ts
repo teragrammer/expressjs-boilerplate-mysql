@@ -1,101 +1,83 @@
+// src/common/middleware/request.middleware.ts
+
 import {NextFunction, Request, Response} from "express";
 import * as xss from "xss";
+import {SanitizerHelper} from "../../@types/express";
 
-const TRIMMED = (object: any) => {
-    return object !== null && typeof object === "string" ? object.trim() : object;
+// Unified, single-pass string sanitizer
+const sanitizeString = (value: unknown): any => {
+    if (typeof value !== "string") return value;
+
+    // Chain: Clean XSS (stripping all tags) -> Trim -> Check Empty
+    const cleaned = xss.filterXSS(value, {
+        whiteList: {}, // No tags are allowed
+        stripIgnoreTag: true, // Instead of escaping unlisted tags, completely discard them
+    }).trim();
+
+    return cleaned === "" ? null : cleaned;
 };
 
-const EMPTY_TO_NULL = (object: any) => {
-    return object === "" ? null : object;
+// Stronger type-safe number conversion
+const convertToNumber = (value: unknown, defaultValue = 0): number => {
+    if (typeof value === "number" && !isNaN(value)) return value;
+    if (typeof value === "string" && value.trim() !== "") {
+        const parsed = Number(value);
+        return !isNaN(parsed) ? parsed : defaultValue;
+    }
+    return defaultValue;
 };
 
-const CONVERT_TO_NUMBER = (object: any, defaults: any = 0): any => {
-    if (!isNaN(object) && typeof object === "number") return object;
-    return !isNaN(object) && typeof object === "string" && object !== "" && object !== null ? Number(object) : defaults;
-};
+// Factory function to generate sanitizers for body, query, etc.
+const createSanitizer = (source: Record<string, any>): SanitizerHelper => ({
+    get: <T = any>(key: string, defaults?: T): T => {
+        return key in source ? sanitizeString(source[key]) : (defaults as T);
+    },
 
-const ONLY = (inputs: any, keys: string[], defaults: Record<string, any> | undefined = undefined): Record<string, any> => {
-    // If the body exists, filter it based on the given keys
-    if (inputs && Array.isArray(keys)) {
+    // Using a type cast (as any) here is safe because we are dynamically
+    // building the object at runtime, but we guarantee it matches shape T.
+    only: <T extends Record<string, any> = Record<string, any>>(
+        keys: string[],
+        defaults?: Partial<T>
+    ): T => {
+        if (!source || !Array.isArray(keys)) return {} as T;
+
         return keys.reduce((result, key) => {
-            if (key in inputs) {
-                const INPUT = inputs[key];
-
-                result[key] = xss.filterXSS(INPUT);
-                result[key] = TRIMMED(INPUT);
-                result[key] = EMPTY_TO_NULL(INPUT);
+            if (key in source) {
+                result[key] = sanitizeString(source[key]);
             } else if (defaults && key in defaults) {
                 result[key] = defaults[key];
             }
-
             return result;
-        }, {} as Record<string, any>);
+        }, {} as Record<string, any>) as T;
+    },
+
+    numeric: (key: string, defaults = 0): number => {
+        return key in source ? convertToNumber(source[key], defaults) : defaults;
     }
-
-    return {};
-};
-
-const GET = (inputs: any, key: string, defaults: any = null) => {
-    if (key in inputs) {
-        const INPUT = inputs[key];
-        const result: Record<string, any> = {};
-
-        result[key] = xss.filterXSS(INPUT);
-        result[key] = TRIMMED(INPUT);
-        result[key] = EMPTY_TO_NULL(INPUT);
-
-        return result[key];
-    }
-
-    return defaults;
-};
+});
 
 const requestHandler = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
-    // sanitize inputs from query or body
+    // DRY mapping using our factory helper
     req.sanitize = {
-        body: {
-            get: function (key: string, defaults: any = null) {
-                return GET(req.body, key, defaults);
-            },
-            only: function (keys: string[], defaults: Record<string, any> | undefined = undefined): Record<string, any> {
-                return ONLY(req.body, keys, defaults);
-            },
-            numeric: function (key: string, defaults: any = 0): any {
-                if (key in req.body) return CONVERT_TO_NUMBER(req.body[key], defaults);
-                return defaults;
-            },
-        },
-
-        query: {
-            get: function (key: string, defaults: any = null) {
-                return GET(req.query, key, defaults);
-            },
-            only: function (keys: string[], defaults: Record<string, any> | undefined = undefined): Record<string, any> {
-                return ONLY(req.query, keys, defaults);
-            },
-            numeric: function (key: string, defaults: any = 0): any {
-                if (key in req.query) return CONVERT_TO_NUMBER(req.query[key], defaults);
-                return defaults;
-            },
-        },
+        body: createSanitizer(req.body || {}),
+        query: createSanitizer(req.query || {})
     };
 
-    // pagination helper
-    req.app.set("paginate", () => {
-        let perPage: any = req.query.per_page || 10;
-        let page: any = req.query.page || 1;
+    // Safe pagination: Store calculations directly on the request object.
+    // This avoids global state pollution and prevents race conditions.
+    const rawPerPage = req.query.per_page;
+    const rawPage = req.query.page;
 
-        if (isNaN(perPage)) perPage = 10;
-        if (isNaN(page)) page = 1;
+    const perPage = convertToNumber(rawPerPage, 10);
+    const page = convertToNumber(rawPage, 1);
 
-        if (page < 1) page = 1;
-        let offset = (page - 1) * perPage;
+    const validatedPage = page < 1 ? 1 : page;
+    const validatedPerPage = perPage < 1 ? 10 : perPage;
 
-        return {
-            offset,
-            perPage,
-        };
-    });
+    req.pagination = {
+        offset: (validatedPage - 1) * validatedPerPage,
+        perPage: validatedPerPage,
+    };
 
     next();
 };
