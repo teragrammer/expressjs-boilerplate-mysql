@@ -1,41 +1,51 @@
+// src/common/middleware/authentication.middleware.ts
+
 import {NextFunction, Request, Response} from "express";
-import errors from "../utils/messages";
-import {AuthenticationToken} from "../../modules/auth/interfaces/authentication.token";
-import {AuthenticationTokenModelLegacy, JwtExtendedPayload} from "../../modules/auth/models/authentication-token.model.legacy";
-import {UserLegacy} from "../../modules/users/user.legacy";
-import AuthenticationTokenService from "../../modules/auth/services/authentication-token.service.legacy";
-import UserRepository from "../../modules/users/user.repository.legacy";
+import {JwtExtendedPayload} from "../../modules/auth/interfaces/jwt.interface";
+import {AppError} from "../utils/errors";
+
+// 🧠 IMPORT from your isolated container instead of hardcoding instantiations here!
+import {authService, tokenService, userService} from "../../config/container";
 
 export function AuthenticationMiddleware(isHalt = true): any {
-    const USER = async (payload: JwtExtendedPayload): Promise<UserLegacy> =>
-        UserRepository.byId(payload.uid);
-
-    const AUTHENTICATION = (payload: JwtExtendedPayload): Promise<AuthenticationToken> =>
-        AuthenticationTokenModelLegacy().table().where("id", payload.tid).first();
-
     return async function (req: Request, res: Response, next: NextFunction) {
-        const AUTH_HEADER = req.headers.authorization;
-        if (!AUTH_HEADER) return res.status(401).json({
-            code: "AUTH_HEADER",
-            message: errors.INVALID_AUTH_TOKEN.message,
-        });
-        const TOKEN: string = AUTH_HEADER.startsWith("Bearer ") ? AUTH_HEADER.slice(7) : AUTH_HEADER;
+        try {
+            // Extract and validate authorization header structure
+            const authHeader = req.headers.authorization;
+            if (!authHeader || !authHeader.startsWith("Bearer ")) {
+                if (isHalt) {
+                    return next(new AppError("Authorization token missing or malformed", "UNAUTHORIZED", 401));
+                }
+                return next(); // Keeps req.credentials clean/undefined instead of crashing on null
+            }
 
-        const PAYLOAD: boolean | JwtExtendedPayload = await AuthenticationTokenService.validate(TOKEN);
-        if (PAYLOAD === false && isHalt) return res.status(401).json({
-            code: "AUTH_EXPIRED",
-            message: errors.EXPIRED_AUTH_TOKEN.message,
-        });
+            const token = authHeader.split(" ")[1];
 
-        if (PAYLOAD !== false) {
-            const PAYLOAD_CONVERTED = PAYLOAD as JwtExtendedPayload;
+            // Decode and parse token signature
+            let payload: JwtExtendedPayload;
+            try {
+                payload = tokenService.verifyToken(token) as JwtExtendedPayload;
+            } catch (error) {
+                if (isHalt) {
+                    return next(new AppError("Invalid or expired authentication token", "INVALID_TOKEN", 401));
+                }
+                return next();
+            }
+
+            // Bind dynamic lazy promises checking fully structured DB returns
             req.credentials = {
-                jwt: PAYLOAD_CONVERTED,
-                user: async () => USER(PAYLOAD_CONVERTED),
-                authentication: async () => AUTHENTICATION(PAYLOAD_CONVERTED),
+                jwt: payload,
+                user: async () => {
+                    return await userService.findById(payload.uid);
+                },
+                authentication: async () => {
+                    return await authService.findAuthenticationToken(payload);
+                }
             };
-        }
 
-        next();
+            return next();
+        } catch (err) {
+            return next(err);
+        }
     };
 }
