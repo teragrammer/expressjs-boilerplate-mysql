@@ -18,6 +18,8 @@ export interface UserRow {
     is_phone_verified: number; // 0 or 1 at database layer
     email: string | null;
     is_email_verified: number; // 0 or 1 at database layer
+    has_tfa: number; // 0 or 1 at database layer
+    tfa_secret: string | null;
     role_id: number;
     username: string | null;
     password: string | null;
@@ -42,6 +44,8 @@ export interface User {
     is_phone_verified: boolean;
     email: string | null;
     is_email_verified: boolean;
+    has_tfa: boolean;
+    tfa_secret: string | null;
     role_id: number;
     username: string | null;
     password?: string | null; // Optionalized when querying to safely exclude sensitive passwords
@@ -74,6 +78,8 @@ export interface CreateUserDTO {
 export type UpdateUserDTO = Partial<CreateUserDTO> & {
     is_phone_verified?: boolean;
     is_email_verified?: boolean;
+    has_tfa?: boolean;
+    tfa_secret?: string | null;
     login_tries?: number;
     failed_login_expired_at?: Date | null;
 };
