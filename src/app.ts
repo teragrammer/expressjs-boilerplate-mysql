@@ -1,83 +1,40 @@
 // src/app.ts
 
-import express, {NextFunction, Request, Response} from "express";
+import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import hpp from "hpp";
 import compression from "compression";
-import {express as useragent} from "express-useragent";
+import { express as useragent } from "express-useragent";
 
 import v1 from "./routes/v1";
-import {logger} from "./config/logger";
-import {__ENV} from "./config/environment";
+import { logger } from "./config/logger";
+import { __ENV } from "./config/environment";
 import errors from "./common/utils/messages";
 
 import requestHandler from "./common/middleware/request.middleware";
 import responseHandler from "./common/middleware/response.middleware";
-import {errorHandler} from "./common/middleware/error.middleware";
+import { errorHandler } from "./common/middleware/error.middleware";
 
-// Concrete Database Repositories
-import {DBKnex} from "./config/knex";
-import {SettingRepository} from "./modules/system/repositories/setting.repository";
+// Service & Event classes (for public static references like CACHE_KEY)
+import { SettingService } from "./modules/system/services/setting.service";
+import { RouteGuardService } from "./modules/system/services/route-guard.service";
 
-// Concrete Redis Clients (Cache & Subscriber)
-import {RedisCache} from "./shared/redis/redis-cache";
-import {RedisSubscriber} from "./shared/redis/redis-subscriber";
-
-// Refactored Concrete Services
-import {SettingService} from "./modules/system/services/setting.service";
-import {RouteGuardService} from "./modules/system/services/route-guard.service";
-
-// Cache Channel Identifiers
-import {RouteGuardRepository} from "./modules/system/repositories/route-guard.repository";
-import {DBRedis} from "./config/redis";
-import {SecurityUtil} from "./common/utils/security.util";
-import {SystemEventHandler} from "./modules/system/events/system.event";
+// Import Singleton DI instances from the dedicated container
+import {
+    settingService,
+    routeGuardService,
+    redisSubscriber,
+    systemEventHandler
+} from "./config/container";
 
 const app = express();
-
-// ---------------------------------------------------------
-// Instantiation (Dependency Injection container wiring)
-// ---------------------------------------------------------
-const settingRepository = new SettingRepository(DBKnex);
-const routeGuardRepository = new RouteGuardRepository(DBKnex);
-
-const securityUtil = new SecurityUtil({
-    bcryptSecret: __ENV.BCRYPT_SECRET,
-    bcryptSaltRounds: Number(__ENV.BCRYPT_SALT_ROUND || 10),
-    cryptoSecret: __ENV.CRYPT0_SECRET,
-    cryptoCipher: __ENV.CRYPT0_CIPHER
-});
-
-// Concrete Redis Cache
-const redisCache = new RedisCache(
-    DBRedis,
-    securityUtil,
-    logger
-);
-
-// New Concrete Redis Subscriber
-const redisSubscriber = new RedisSubscriber(
-    DBRedis,
-    logger
-);
-
-// Inject instances into concrete services
-export const settingService = new SettingService(settingRepository, redisCache);
-export const routeGuardService = new RouteGuardService(routeGuardRepository, redisCache);
-
-// Instantiate the handler alongside services
-export const systemEventHandler = new SystemEventHandler(
-    redisCache,
-    settingService,
-    routeGuardService
-);
 
 // ---------------------------------------------------------
 // Global Middleware Stack Setup
 // ---------------------------------------------------------
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 
 app.use(helmet());
 app.use(hpp());
@@ -136,14 +93,14 @@ export async function bootstrap(): Promise<void> {
     try {
         logger.info("Initializing system modules...");
 
-        // Warm database-to-cache in parallel
+        // Warm database-to-cache in parallel using the container instances
         await Promise.all([
             settingService.boot(),
             routeGuardService.boot()
         ]);
         logger.info("System settings and route guards successfully cached.");
 
-        // Safe setup of Redis Pub/Sub cluster triggers using the new Subscriber class
+        // Safe setup of Redis Pub/Sub cluster triggers using the Subscriber instance
         if (redisSubscriber.isConnected()) {
 
             // Subscribe to settings change event and trigger local memory eviction
