@@ -3,6 +3,7 @@
 export interface AuthenticationToken {
     id: number;
     user_id: number | null;
+    tries?: number;
     expired_at: Date | string | null;
     ip: string | null;
     browser: string | null;
