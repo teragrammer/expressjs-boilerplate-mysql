@@ -30,7 +30,7 @@ export class AuthenticationTokenRepository {
     public async create(data: CreateAuthenticationTokenInput): Promise<AuthenticationToken> {
         const [insertedToken] = await this.query()
             .insert(data)
-            .returning("*"); // Fully compatible with PostgreSQL/SQLite. For MySQL, fallback or manual lookup may be needed.
+            .returning("*");
 
         return insertedToken;
     }
@@ -63,11 +63,35 @@ export class AuthenticationTokenRepository {
             .where({id})
             .update({
                 ...data,
-                updated_at: this.db.fn.now() // Dynamically handles SQL-native date updates
+                updated_at: this.db.fn.now()
             })
             .returning("*");
 
         return updatedToken || null;
+    }
+
+    /**
+     * Atomically increments the retry count and updates the timestamp.
+     */
+    public async incrementTries(id: number): Promise<void> {
+        await this.query()
+            .where({id})
+            .update({
+                tries: this.db.raw("tries + 1"),
+                updated_at: this.db.fn.now()
+            });
+    }
+
+    /**
+     * Explicitly invalidates a token by marking its expired_at timestamp.
+     */
+    public async invalidate(id: number): Promise<void> {
+        await this.query()
+            .where({id})
+            .update({
+                expired_at: this.db.fn.now(),
+                updated_at: this.db.fn.now()
+            });
     }
 
     /**
@@ -83,7 +107,6 @@ export class AuthenticationTokenRepository {
 
     /**
      * Revokes (deletes) all active tokens linked to a specific user.
-     * Essential for security workflows like password resets, forcing user logout everywhere.
      */
     public async deleteAllByUserId(userId: number): Promise<number> {
         return this.query()
@@ -93,7 +116,6 @@ export class AuthenticationTokenRepository {
 
     /**
      * Automatically purges obsolete or expired session tokens from the table.
-     * Prevents system scaling bottlenecks and table bloat.
      */
     public async purgeExpiredTokens(): Promise<number> {
         return this.query()
