@@ -122,6 +122,10 @@ export class AuthService {
             this.handleFailedLogin();
         }
 
+        // purge expired tokens
+        await this.authenticationTokenRepository.purgeExpiredTokensByUserId(user.id);
+
+        // generate a JWT token
         const token = this.tokenService.generateToken({
             uid: user.id,
             tid: 0,
