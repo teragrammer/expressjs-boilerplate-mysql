@@ -1,19 +1,30 @@
-// src/modules/role/role.interface.ts
+// src/modules/roles/role.interface.ts
 
-export interface Role {
-    id: number; // Synchronized with table.increments('id')
+// The raw row pulled from Knex DB
+export interface RoleRow {
+    id: number;
     name: string;
     slug: string;
     description: string | null;
-    is_public: boolean;
+    is_public: number; // 0 or 1 in standard DB driver queries
+    is_bypass_authorization: number; // 0 or 1
+    created_at: Date | null;
+    updated_at: Date | null;
+}
+
+// Clean domain model used throughout your Express controllers and services
+export interface Role {
+    id: number;
+    name: string;
+    slug: string;
+    description: string | null;
+    is_public: boolean; // Map to true native booleans
     is_bypass_authorization: boolean;
-    created_at: Date;
-    updated_at: Date;
+    created_at: Date | null;
+    updated_at: Date | null;
 }
 
 // Data Transfer Objects (DTOs)
-// We omit database-generated values like 'id', 'created_at', and 'updated_at' for creation.
-// We make boolean fields optional because they have database-level defaults (0 / false).
 export interface CreateRoleDTO {
     name: string;
     slug: string;
