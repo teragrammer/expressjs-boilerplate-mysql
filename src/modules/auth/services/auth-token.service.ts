@@ -1,4 +1,5 @@
 // src/services/token.service.ts
+
 import jwt from "jsonwebtoken";
 import {__ENV} from "../../../config/environment";
 import {AppError} from "../../../common/utils/errors";
@@ -7,15 +8,15 @@ import {JwtExtendedPayload} from "../interfaces/jwt.interface";
 
 export class TokenService {
     private readonly secret: string;
-    private readonly expiration: number;
+    private readonly expiration: string | number;
 
-    // We inject values with defaults from our environment config to make testing a breeze
     constructor(
         secret: string = __ENV.JWT_SECRET,
-        expiration: number = __ENV.JWT_EXPIRATION_DAYS
+        expiration: string | number = __ENV.JWT_EXPIRATION_DAYS || "7d"
     ) {
         this.secret = secret;
-        this.expiration = expiration;
+        // If a numeric string or plain integer is used, ensure correct formatting context
+        this.expiration = typeof expiration === "number" ? `${expiration}d` : expiration;
     }
 
     /**
@@ -23,9 +24,8 @@ export class TokenService {
      */
     public generateToken(payload: JwtExtendedPayload): string {
         try {
-            // Use the injected secret and expiration values
             return jwt.sign(payload, this.secret, {
-                expiresIn: this.expiration,
+                expiresIn: this.expiration as any,
             });
         } catch (error: any) {
             throw new AppError(
@@ -38,7 +38,6 @@ export class TokenService {
 
     /**
      * Verifies and decodes an incoming JWT string
-     * Throws explicit expired or invalid AppErrors for your global error handler to intercept
      */
     public verifyToken(token: string): JwtExtendedPayload {
         try {
