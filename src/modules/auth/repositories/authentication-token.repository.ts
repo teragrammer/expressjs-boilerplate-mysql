@@ -83,18 +83,6 @@ export class AuthenticationTokenRepository {
     }
 
     /**
-     * Explicitly invalidates a token by marking its expired_at timestamp.
-     */
-    public async invalidate(id: number): Promise<void> {
-        await this.query()
-            .where({id})
-            .update({
-                expired_at: this.db.fn.now(),
-                updated_at: this.db.fn.now()
-            });
-    }
-
-    /**
      * Deletes a single token record by its primary ID.
      */
     public async deleteById(id: number): Promise<boolean> {
@@ -117,8 +105,9 @@ export class AuthenticationTokenRepository {
     /**
      * Automatically purges obsolete or expired session tokens from the table.
      */
-    public async purgeExpiredTokens(): Promise<number> {
+    public async purgeExpiredTokensByUserId(userId: number): Promise<number> {
         return this.query()
+            .where({user_id: userId})
             .where("expired_at", "<", this.db.fn.now())
             .del();
     }
