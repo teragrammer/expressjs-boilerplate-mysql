@@ -43,7 +43,7 @@ class Controller {
         });
 
         const RECOVERY: PasswordRecovery = await PasswordRecoveryModel().table().where("send_to", SEND_TO.value).first();
-        if (RECOVERY && RECOVERY.next_resend_at && DateUtil().unix(new Date(RECOVERY.next_resend_at)) > DateUtil().unix()) {
+        if (RECOVERY && RECOVERY.next_resend_at && DateUtil.unix(new Date(RECOVERY.next_resend_at)) > DateUtil.unix()) {
             return res.status(400).json({
                 code: errors.TRY_RESEND.code,
                 message: errors.TRY_RESEND.message,
@@ -60,8 +60,8 @@ class Controller {
             type: DATA.type,
             send_to: SEND_TO.value,
             code: await SecurityUtil().hash(CODE),
-            next_resend_at: DateUtil().expiredAt(NEXT_RESEND_MINUTES, "minutes"),
-            expired_at: DateUtil().expiredAt(CODE_EXPIRATION_MINUTES, "minutes"),
+            next_resend_at: DateUtil.expiredAt(NEXT_RESEND_MINUTES, "minutes"),
+            expired_at: DateUtil.expiredAt(CODE_EXPIRATION_MINUTES, "minutes"),
         });
 
         return res.status(200).send();
@@ -92,15 +92,15 @@ class Controller {
             let isExceedTries = true;
 
             if (RECOVERY.next_try_at) {
-                const NEXT_TRY_AT = DateUtil().unix(new Date(RECOVERY.next_try_at));
-                const CURRENT_TIME = DateUtil().unix();
+                const NEXT_TRY_AT = DateUtil.unix(new Date(RECOVERY.next_try_at));
+                const CURRENT_TIME = DateUtil.unix();
 
                 if (NEXT_TRY_AT <= CURRENT_TIME) isExceedTries = false;
             } else {
                 await PasswordRecoveryModel().table()
                     .where("id", RECOVERY.id)
                     .update({
-                        next_try_at: DateUtil().expiredAt(NEXT_TRY_MINUTES, "minutes"),
+                        next_try_at: DateUtil.expiredAt(NEXT_TRY_MINUTES, "minutes"),
                     });
             }
 
@@ -139,7 +139,7 @@ class Controller {
         // change the user password to current recovery code
         await UserModel().table().where(SEND_TO.name, RECOVERY.send_to).update({
             password: await SecurityUtil().hash(DATA.code),
-            updated_at: DateUtil().sql(),
+            updated_at: DateUtil.sql(),
         });
 
         res.status(200).json({
