@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it, vi} from "vitest";
 import {NextFunction, Request, Response} from "express";
 // 4. Safe imports now that all underlying utilities and services are securely mocked
 import {loginSchema} from "../../../../src/modules/auth/validations/login.schema";
-import AuthenticationController from "../../../../src/modules/auth/controllers/authentication.controller";
+import {AuthenticationController} from "../../../../src/modules/auth/controllers/authentication.controller";
 
 // 1. Use vi.hoisted to instantiate isolated spies that survive Vitest's module loading phase safely
 const {mockLogin, mockLogout} = vi.hoisted(() => {
