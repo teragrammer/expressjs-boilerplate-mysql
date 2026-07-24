@@ -13,10 +13,10 @@ const securityUtil = new SecurityUtil({
     bcryptSaltRounds: Number(__ENV.BCRYPT_SALT_ROUND || 10)
 });
 
-class Controller {
-    private readonly authService = new AuthService(securityUtil);
+const authService = new AuthService(securityUtil);
 
-    create = catchAsync(async (req: Request, res: Response): Promise<void> => {
+export class RegisterController {
+    static create = catchAsync(async (req: Request, res: Response): Promise<void> => {
         // Sanitize input
         const rawData = req.sanitize.body.only([
             "first_name",
@@ -31,12 +31,9 @@ class Controller {
         const validatedData = await registerSchema.validateAsync(rawData, {abortEarly: false});
 
         // Delegate to Business Service
-        const result = await this.authService.register(validatedData);
+        const result = await authService.register(validatedData);
 
         // Send HTTP response
         res.status(201).json(result);
     });
 }
-
-const RegisterController = new Controller();
-export default RegisterController;
