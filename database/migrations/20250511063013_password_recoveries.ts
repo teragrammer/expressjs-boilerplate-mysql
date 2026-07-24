@@ -1,26 +1,28 @@
+// database/migrations/20250511063013_password_recoveries.ts
+
 import type {Knex} from "knex";
-import {TYPES} from "../../src/modules/auth/models/password-recovery.model";
+import {TYPES} from "../../src/modules/auth/interfaces/password.recovery.interface";
 
 export async function up(knex: Knex): Promise<void> {
-    return knex.schema.createTable('password_recoveries', table => {
-        table.increments('id').primary();
+    await knex.schema.createTable("password_recoveries", (table) => {
+        table.increments("id").primary();
 
-        table.enum('type', TYPES).defaultTo(TYPES[0]).notNullable();
-        table.string('send_to', 100).index().unique().notNullable();
-        table.string('code', 100).notNullable();
+        // Pass as readonly array to enum builder
+        table.enum("type", [...TYPES]).notNullable();
+        table.string("send_to", 100).notNullable().unique().index();
+        table.string("code", 100).notNullable();
 
-        table.dateTime('next_resend_at').index().notNullable();
-        table.dateTime('expired_at').index().notNullable();
+        table.timestamp("next_resend_at", {useTz: true}).notNullable().index();
+        table.timestamp("expired_at", {useTz: true}).notNullable().index();
 
-        table.integer('tries').defaultTo(0).notNullable();
-        table.dateTime('next_try_at').index().nullable();
+        table.integer("tries").notNullable().defaultTo(0);
+        table.timestamp("next_try_at", {useTz: true}).nullable().index();
 
-        table.dateTime('created_at').index().defaultTo(knex.fn.now()).nullable();
-        table.dateTime('updated_at').defaultTo(knex.fn.now()).nullable();
+        // Standard created_at and updated_at handled cleanly
+        table.timestamps(true, true);
     });
 }
 
 export async function down(knex: Knex): Promise<void> {
-    return knex.schema.dropTable('password_recoveries');
+    await knex.schema.dropTableIfExists("password_recoveries");
 }
-
