@@ -1,14 +1,13 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {Request, Response} from "express";
-// 3. Import the controller after mocks are prepared
-import RegisterController from "../../../../src/modules/auth/controllers/register.controller";
+import {RegisterController} from "../../../../src/modules/auth/controllers/register.controller";
 
-// 1. Hoist the mock function so it is available before imports are executed
+// Hoist the mock function so it is available before imports are executed
 const {mockRegister} = vi.hoisted(() => ({
     mockRegister: vi.fn(),
 }));
 
-// 2. Mock ONLY the AuthService (The single direct dependency of the controller)
+// Mock ONLY the AuthService (The single direct dependency of the controller)
 vi.mock("../../../../src/modules/auth/services/auth.service", () => ({
     AuthService: function () {
         return {
