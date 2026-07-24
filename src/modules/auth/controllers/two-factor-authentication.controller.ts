@@ -17,13 +17,10 @@ const securityUtil = new SecurityUtil({
     bcryptSaltRounds: Number(__ENV.BCRYPT_SALT_ROUND || 10)
 });
 
-class Controller {
-    constructor(
-        private readonly tfaService = new TwoFactorAuthenticationService(securityUtil)
-    ) {
-    }
+const tfaService = new TwoFactorAuthenticationService(securityUtil);
 
-    send = catchAsync(async (req: Request, res: Response): Promise<void> => {
+export class TwoFactorAuthenticationController {
+    static send = catchAsync(async (req: Request, res: Response): Promise<void> => {
         const {jwt} = req.credentials;
         const TFA_CLEARED = true; // true means user is already fully authenticated
 
@@ -45,7 +42,7 @@ class Controller {
         }
 
         // 2. Process Token Engine Rules via Service
-        const {id, nextTry, plainCode} = await this.tfaService.sendOtpWorkflow(jwt.tid);
+        const {id, nextTry, plainCode} = await tfaService.sendOtpWorkflow(jwt.tid);
 
         // 3. Side Effects: Trigger Communications
         const settings = await settingService.getCache();
@@ -71,7 +68,7 @@ class Controller {
         res.status(200).json({id, next_try: nextTry});
     });
 
-    validate = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    static validate = catchAsync(async (req: Request, res: Response): Promise<void> => {
         const {jwt} = req.credentials;
         const TFA_CLEARED = true;
 
@@ -95,7 +92,7 @@ class Controller {
         );
 
         // 3. Process Validation & Regenerate Token via Service Layer
-        const token = await this.tfaService.verifyOtpWorkflow(
+        const token = await tfaService.verifyOtpWorkflow(
             jwt.tid,
             validatedData.code,
             await req.credentials.user(),
@@ -110,6 +107,3 @@ class Controller {
         res.status(200).json({token});
     });
 }
-
-const TwoFactorAuthenticationController = new Controller();
-export default TwoFactorAuthenticationController;
