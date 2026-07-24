@@ -1,4 +1,5 @@
 // src/modules/users/user.repository.ts
+
 import {Knex} from "knex";
 import {DBKnex} from "../../config/knex";
 import {CreateUserDTO, UpdateUserDTO, User, UserRow} from "./user.interface";
@@ -27,6 +28,7 @@ export class UserRepository {
             ...row,
             is_phone_verified: Boolean(row.is_phone_verified),
             is_email_verified: Boolean(row.is_email_verified),
+            has_tfa: Boolean(row.has_tfa),
         };
     }
 
