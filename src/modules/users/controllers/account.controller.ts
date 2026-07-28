@@ -96,7 +96,7 @@ class Controller {
             if (typeof DATA.current_password !== "undefined") delete DATA.current_password;
             if (typeof DATA.new_password !== "undefined") delete DATA.new_password;
 
-            DATA.updated_at = DateUtil().sql();
+            DATA.updated_at = DateUtil.sql();
             const RESULT = await UserModel().table()
                 .where("id", ACCOUNT.id)
                 .where("status", "Activated")
