@@ -1,15 +1,15 @@
 import {AuthenticationTokenModelLegacy} from "../models/authentication-token.model.legacy";
 import {DateUtil} from "../../../common/utils/date.util";
 
-class AuthenticationTokenRepository {
-    private static instance: AuthenticationTokenRepository;
+class AuthenticationTokenRepositoryLegacy {
+    private static instance: AuthenticationTokenRepositoryLegacy;
 
     constructor() {
     }
 
-    static getInstance(): AuthenticationTokenRepository {
-        if (!AuthenticationTokenRepository.instance) AuthenticationTokenRepository.instance = new AuthenticationTokenRepository();
-        return AuthenticationTokenRepository.instance;
+    static getInstance(): AuthenticationTokenRepositoryLegacy {
+        if (!AuthenticationTokenRepositoryLegacy.instance) AuthenticationTokenRepositoryLegacy.instance = new AuthenticationTokenRepositoryLegacy();
+        return AuthenticationTokenRepositoryLegacy.instance;
     }
 
     insert(data: any) {
@@ -30,4 +30,4 @@ class AuthenticationTokenRepository {
     }
 }
 
-export default AuthenticationTokenRepository.getInstance();
+export default AuthenticationTokenRepositoryLegacy.getInstance();
