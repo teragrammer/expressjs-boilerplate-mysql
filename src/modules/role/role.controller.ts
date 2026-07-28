@@ -55,7 +55,7 @@ class Controller {
         }), DATA, res)) return;
 
         try {
-            DATA.created_at = DateUtil().sql();
+            DATA.created_at = DateUtil.sql();
             const RESULT = await RoleModel().table()
                 .returning("id")
                 .insert(DATA);
@@ -83,7 +83,7 @@ class Controller {
         }), DATA, res)) return;
 
         try {
-            DATA.updated_at = DateUtil().sql();
+            DATA.updated_at = DateUtil.sql();
             const RESULT: number = await RoleModel().table()
                 .where("id", ID)
                 .update(DATA);
