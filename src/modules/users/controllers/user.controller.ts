@@ -93,7 +93,7 @@ class Controller {
         try {
             const PASSWORD = req.sanitize.body.get("password");
             if (PASSWORD !== null) DATA.password = await SecurityUtil().hash(PASSWORD);
-            DATA.created_at = DateUtil().sql();
+            DATA.created_at = DateUtil.sql();
 
             const RESULT = await UserModel().table()
                 .returning("id")
@@ -148,7 +148,7 @@ class Controller {
         try {
             const PASSWORD = req.sanitize.body.get("password");
             if (PASSWORD !== null) DATA.password = await SecurityUtil().hash(PASSWORD);
-            DATA.updated_at = DateUtil().sql();
+            DATA.updated_at = DateUtil.sql();
 
             const RESULT = await UserModel().table()
                 .where("id", ID)
