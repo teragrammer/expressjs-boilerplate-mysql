@@ -1,11 +1,13 @@
+// src/routes/v1.ts
+
 import {Router} from "express";
 import {AuthenticationMiddleware} from "../common/middleware/authentication.middleware";
 import {AuthorizationMiddleware} from "../common/middleware/authorization.middleware";
 import {TwoFactorAuthenticationMiddleware} from "../common/middleware/two-factor-authentication.middleware";
-import RegisterController from "../modules/auth/controllers/register.controller";
-import AuthenticationController from "../modules/auth/controllers/authentication.controller";
-import TwoFactorAuthenticationController from "../modules/auth/controllers/two-factor-authentication.controller";
-import PasswordRecoveryController from "../modules/auth/controllers/password-recovery.controller";
+import {RegisterController} from "../modules/auth/controllers/register.controller";
+import {AuthenticationController} from "../modules/auth/controllers/authentication.controller";
+import {PasswordRecoveryController} from "../modules/auth/controllers/password-recovery.controller";
+import {TwoFactorAuthenticationController} from "../modules/auth/controllers/two-factor-authentication.controller";
 import AccountController from "../modules/users/controllers/account.controller";
 import SettingController from "../modules/system/controllers/setting.controller";
 import RoleController from "../modules/role/role.controller";
