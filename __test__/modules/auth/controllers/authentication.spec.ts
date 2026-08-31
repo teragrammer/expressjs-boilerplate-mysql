@@ -1,53 +1,45 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {NextFunction, Request, Response} from "express";
-// 4. Safe imports now that all underlying utilities and services are securely mocked
+
 import {loginSchema} from "../../../../src/modules/auth/validations/login.schema";
 import {AuthenticationController} from "../../../../src/modules/auth/controllers/authentication.controller";
 
-// 1. Use vi.hoisted to instantiate isolated spies that survive Vitest's module loading phase safely
-const {mockLogin, mockLogout} = vi.hoisted(() => {
-    return {
-        mockLogin: vi.fn(),
-        mockLogout: vi.fn()
-    };
-});
+const {mockLogin, mockLogout} = vi.hoisted(() => ({
+    mockLogin: vi.fn(),
+    mockLogout: vi.fn(),
+}));
 
-// 2. Mock catchAsync to explicitly return the promise chain so 'await' works correctly in tests
-vi.mock("../../../../src/common/utils/catch-async", () => {
-    return {
-        default: (fn: any) => (req: any, res: any, next: any) =>
-            Promise.resolve(fn(req, res, next)).catch(next)
-    };
-});
+vi.mock("../../../../src/common/utils/catch-async", () => ({
+    default: (fn: any) => (req: any, res: any, next: any) =>
+        Promise.resolve(fn(req, res, next)).catch(next),
+}));
 
-// 3. Comprehensive mock of AuthService
-vi.mock("../../../../src/modules/auth/services/auth.service", () => {
-    return {
-        AuthService: vi.fn(class {
-            login = mockLogin;
-            logout = mockLogout;
-        })
-    };
-});
+/**
+ * Mock the AuthService singleton used by the controller.
+ */
+vi.mock("../../../../src/modules/auth/services/auth.service", () => ({
+    authService: {
+        login: mockLogin,
+        logout: mockLogout,
+    },
+}));
 
-// Mock the Joi schema validation
-vi.mock("../../../../src/modules/auth/validations/login.schema", () => {
-    return {
-        loginSchema: {
-            validateAsync: vi.fn(),
-        },
-    };
-});
+vi.mock("../../../../src/modules/auth/validations/login.schema", () => ({
+    loginSchema: {
+        validateAsync: vi.fn(),
+    },
+}));
 
-describe("Authentication Controller", () => {
-    let req: Partial<Request> & { sanitize?: any; credentials?: any };
+describe("AuthenticationController", () => {
+    let req: Partial<Request> & {
+        sanitize?: any;
+        credentials?: any;
+    };
     let res: Partial<Response>;
     let next: NextFunction;
 
     beforeEach(() => {
-        mockLogin.mockClear();
-        mockLogout.mockClear();
-        vi.mocked(loginSchema.validateAsync).mockClear();
+        vi.clearAllMocks();
 
         res = {
             status: vi.fn().mockReturnThis(),
@@ -61,7 +53,10 @@ describe("Authentication Controller", () => {
             sanitize: {
                 body: {
                     get: vi.fn(),
-                    only: vi.fn().mockReturnValue({username: "testuser", password: "password123"}),
+                    only: vi.fn().mockReturnValue({
+                        username: "testuser",
+                        password: "password123",
+                    }),
                     numeric: vi.fn(),
                 },
                 query: {
@@ -83,95 +78,147 @@ describe("Authentication Controller", () => {
     });
 
     describe("login()", () => {
-        it("should successfully sanitize, validate, and log in a user (Happy Path)", async () => {
-            const mockToken = {token: "eyMockJwtToken"};
-
-            vi.mocked(loginSchema.validateAsync).mockResolvedValue({
+        it("should successfully sanitize, validate, and log in a user", async () => {
+            const validatedData = {
                 username: "testuser",
                 password: "password123",
-            });
+            };
+
+            const mockToken = {
+                token: "eyMockJwtToken",
+            };
+
+            vi.mocked(loginSchema.validateAsync).mockResolvedValue(validatedData);
             mockLogin.mockResolvedValue(mockToken);
 
-            await AuthenticationController.login(req as Request, res as Response, next);
-
-            expect(req.sanitize?.body.only).toHaveBeenCalledWith(["username", "password"]);
-            expect(loginSchema.validateAsync).toHaveBeenCalledWith(
-                {username: "testuser", password: "password123"},
-                {abortEarly: false}
+            await AuthenticationController.login(
+                req as Request,
+                res as Response,
+                next,
             );
-            expect(mockLogin).toHaveBeenCalledWith({
-                username: "testuser",
-                password: "password123",
-            });
+
+            expect(req.sanitize?.body.only).toHaveBeenCalledWith([
+                "username",
+                "password",
+            ]);
+
+            expect(loginSchema.validateAsync).toHaveBeenCalledWith(
+                validatedData,
+                {abortEarly: false},
+            );
+
+            expect(mockLogin).toHaveBeenCalledWith(validatedData);
+
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith(mockToken);
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should route validation failures to catchAsync error boundary (Edge Case)", async () => {
-            const mockValidationError = new Error("Validation Error: 'password' is required");
-            vi.mocked(loginSchema.validateAsync).mockRejectedValue(mockValidationError);
+        it("should route validation failures to the error boundary", async () => {
+            const validationError = new Error(
+                "Validation Error: 'password' is required",
+            );
 
-            await AuthenticationController.login(req as Request, res as Response, next);
+            vi.mocked(loginSchema.validateAsync).mockRejectedValue(
+                validationError,
+            );
 
-            expect(next).toHaveBeenCalledWith(mockValidationError);
+            await AuthenticationController.login(
+                req as Request,
+                res as Response,
+                next,
+            );
+
+            expect(next).toHaveBeenCalledWith(validationError);
+            expect(mockLogin).not.toHaveBeenCalled();
             expect(res.status).not.toHaveBeenCalled();
         });
 
-        it("should forward business layer login failures down the pipeline (Edge Case)", async () => {
-            vi.mocked(loginSchema.validateAsync).mockResolvedValue({
+        it("should forward business layer login failures", async () => {
+            const validatedData = {
                 username: "nonexistent",
                 password: "wrongpassword",
-            });
+            };
 
-            const mockAuthError = new Error("Invalid credentials payload.");
-            mockLogin.mockRejectedValue(mockAuthError);
+            const authError = new Error("Invalid credentials payload.");
 
-            await AuthenticationController.login(req as Request, res as Response, next);
+            vi.mocked(loginSchema.validateAsync).mockResolvedValue(
+                validatedData,
+            );
+            mockLogin.mockRejectedValue(authError);
 
-            expect(next).toHaveBeenCalledWith(mockAuthError);
+            await AuthenticationController.login(
+                req as Request,
+                res as Response,
+                next,
+            );
+
+            expect(mockLogin).toHaveBeenCalledWith(validatedData);
+            expect(next).toHaveBeenCalledWith(authError);
             expect(res.status).not.toHaveBeenCalled();
         });
 
-        it("should safely intercept errors via catchAsync if sanitize middleware is missing entirely (Security Edge Case)", async () => {
-            // Delete sanitize object completely to simulate a middleware failure or omission
+        it("should forward errors when sanitize middleware is missing", async () => {
             delete req.sanitize;
 
-            await AuthenticationController.login(req as Request, res as Response, next);
+            await AuthenticationController.login(
+                req as Request,
+                res as Response,
+                next,
+            );
 
             expect(next).toHaveBeenCalledWith(expect.any(TypeError));
             expect(res.status).not.toHaveBeenCalled();
+            expect(mockLogin).not.toHaveBeenCalled();
         });
     });
 
     describe("logout()", () => {
-        it("should invalidate and terminate an active JWT token session securely (Happy Path)", async () => {
+        it("should invalidate an active JWT token session", async () => {
             mockLogout.mockResolvedValue(undefined);
 
-            await AuthenticationController.logout(req as Request, res as Response, next);
+            await AuthenticationController.logout(
+                req as Request,
+                res as Response,
+                next,
+            );
 
             expect(mockLogout).toHaveBeenCalledWith(45);
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.send).toHaveBeenCalled();
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should pass logout errors to catchAsync when token removal fails (Edge Case)", async () => {
-            const mockLogoutError = new Error("Database transaction aborted during token termination.");
-            mockLogout.mockRejectedValue(mockLogoutError);
+        it("should pass logout errors to the error boundary", async () => {
+            const logoutError = new Error(
+                "Database transaction aborted during token termination.",
+            );
 
-            await AuthenticationController.logout(req as Request, res as Response, next);
+            mockLogout.mockRejectedValue(logoutError);
 
-            expect(next).toHaveBeenCalledWith(mockLogoutError);
+            await AuthenticationController.logout(
+                req as Request,
+                res as Response,
+                next,
+            );
+
+            expect(mockLogout).toHaveBeenCalledWith(45);
+            expect(next).toHaveBeenCalledWith(logoutError);
             expect(res.status).not.toHaveBeenCalled();
         });
 
-        it("should cleanly intercept and pipe failures if credentials context properties are missing (Security Edge Case)", async () => {
-            // Simulate missing middleware attachment scenario on sensitive credentials paths
-            req.credentials = undefined as any;
+        it("should forward errors when credentials context is missing", async () => {
+            req.credentials = undefined;
 
-            await AuthenticationController.logout(req as Request, res as Response, next);
+            await AuthenticationController.logout(
+                req as Request,
+                res as Response,
+                next,
+            );
 
             expect(next).toHaveBeenCalledWith(expect.any(TypeError));
             expect(res.status).not.toHaveBeenCalled();
+            expect(mockLogout).not.toHaveBeenCalled();
         });
     });
 });
