@@ -5,7 +5,7 @@ import {validateCompositeUnique} from "../../../shared/validations/database/uniq
 export const registerSchema = Joi.object({
     first_name: Joi.string().trim().min(2).max(100).required(),
     middle_name: Joi.string().trim().min(2).max(100).allow(null, ""),
-    last_name: Joi.string().trim().min(1).max(100).required(),
+    last_name: Joi.string().trim().min(2).max(100).required(),
 
     // Security/Performance optimization: uniquely validate via async external extensions
     username: Joi.string()
