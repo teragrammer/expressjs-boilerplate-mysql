@@ -9,10 +9,8 @@ const {mockRegister} = vi.hoisted(() => ({
 
 // Mock ONLY the AuthService (The single direct dependency of the controller)
 vi.mock("../../../../src/modules/auth/services/auth.service", () => ({
-    AuthService: function () {
-        return {
-            register: mockRegister,
-        };
+    authService: {
+        register: mockRegister,
     },
 }));
 
