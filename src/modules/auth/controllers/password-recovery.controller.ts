@@ -2,11 +2,11 @@
 
 import {Request, Response} from "express";
 import catchAsync from "../../../common/utils/catch-async";
-import Joi from "../../../shared/validations";
 import {PasswordRecoveryService} from "../services/password-recovery.service";
-import {RECOVERY_EMAIL, TYPES} from "../interfaces/password.recovery.interface";
 import {SecurityUtil} from "../../../common/utils/security.util";
 import {__ENV} from "../../../config/environment";
+import {passwordRecoverySendSchema} from "../validations/password-recovery-send.schema";
+import {passwordRecoveryValidateSchema} from "../validations/password-recovery-validate.schema";
 
 const securityUtil = new SecurityUtil({
     bcryptSecret: __ENV.BCRYPT_SECRET,
@@ -25,16 +25,7 @@ export class PasswordRecoveryController {
         const rawData = req.sanitize.body.only(["type", "send_to"]);
 
         // Validate payload structure with conditional email/phone checks
-        const schema = Joi.object({
-            type: Joi.string().valid(...TYPES).required(),
-            send_to: Joi.string().required().when("type", {
-                is: RECOVERY_EMAIL,
-                then: Joi.string().email().max(100),
-                otherwise: Joi.string().min(1).max(18).phone(),
-            }),
-        });
-
-        const validatedData = await schema.validateAsync(rawData, {abortEarly: false});
+        const validatedData = await passwordRecoverySendSchema.validateAsync(rawData, {abortEarly: false});
 
         const result = await recoveryService.sendRecoveryCode(
             validatedData.type,
@@ -55,18 +46,7 @@ export class PasswordRecoveryController {
         // Sanitize body payload
         const rawData = req.sanitize.body.only(["type", "send_to", "code", "new_password"]);
 
-        const schema = Joi.object({
-            type: Joi.string().valid(...TYPES).required(),
-            send_to: Joi.string().required().when("type", {
-                is: RECOVERY_EMAIL,
-                then: Joi.string().email().max(100),
-                otherwise: Joi.string().min(1).max(18).phone(),
-            }),
-            code: Joi.string().length(6).required(),
-            new_password: Joi.string().min(8).max(100).required(),
-        });
-
-        const validatedData = await schema.validateAsync(rawData, {abortEarly: false});
+        const validatedData = await passwordRecoveryValidateSchema.validateAsync(rawData, {abortEarly: false});
 
         await recoveryService.resetPassword(
             validatedData.type,
