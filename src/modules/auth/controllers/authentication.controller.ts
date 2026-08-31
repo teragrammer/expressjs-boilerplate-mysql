@@ -3,17 +3,7 @@
 import {Request, Response} from "express";
 import catchAsync from "../../../common/utils/catch-async";
 import {loginSchema} from "../validations/login.schema";
-import {AuthService} from "../services/auth.service";
-import {SecurityUtil} from "../../../common/utils/security.util"; // Import SecurityUtil
-import {__ENV} from "../../../config/environment";
-
-// Instantiate the SecurityUtil instance first
-const securityUtil = new SecurityUtil({
-    bcryptSecret: __ENV.BCRYPT_SECRET,
-    bcryptSaltRounds: Number(__ENV.BCRYPT_SALT_ROUND || 10)
-});
-
-const authService = new AuthService(securityUtil);
+import {authService} from "../services/auth.service";
 
 export class AuthenticationController {
     static login = catchAsync(async (req: Request, res: Response) => {
