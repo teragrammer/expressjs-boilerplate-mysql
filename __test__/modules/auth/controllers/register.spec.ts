@@ -1,132 +1,143 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
-import {Request, Response} from "express";
-import {RegisterController} from "../../../../src/modules/auth/controllers/register.controller";
+import {NextFunction, Request, Response} from "express";
 
-// Hoist the mock function so it is available before imports are executed
+import {RegisterController} from "../../../../src/modules/auth/controllers/register.controller";
+import {AuthService} from "../../../../src/modules/auth/services/auth.service";
+
 const {mockRegister} = vi.hoisted(() => ({
     mockRegister: vi.fn(),
 }));
 
-// Mock ONLY the AuthService (The single direct dependency of the controller)
-vi.mock("../../../../src/modules/auth/services/auth.service", () => ({
-    authService: {
-        register: mockRegister,
-    },
+vi.mock("../../../../src/common/utils/catch-async", () => ({
+    default: (fn: any) => (req: any, res: any, next: any) =>
+        Promise.resolve(fn(req, res, next)).catch(next),
 }));
 
-// Mock the validation schema
-const mockValidateAsync = vi.fn();
-vi.mock("../../../../src/modules/auth/validations/register.schema", () => ({
-    registerSchema: {
-        validateAsync: (...args: any[]) => mockValidateAsync(...args),
-    },
-}));
+describe("RegisterController", () => {
+    let controller: RegisterController;
 
-describe("RegisterController - create", () => {
-    let req: any;
+    let req: Partial<Request> & {
+        sanitize?: any;
+    };
+
     let res: Partial<Response>;
-    let jsonMock: any;
-    let statusMock: any;
-    let nextMock: any;
+    let next: NextFunction;
 
     beforeEach(() => {
         vi.clearAllMocks();
 
-        jsonMock = vi.fn();
-        statusMock = vi.fn().mockImplementation(() => ({json: jsonMock}));
+        const authService = {
+            register: mockRegister,
+        } as unknown as AuthService;
+
+        controller = new RegisterController(authService);
+
         res = {
-            status: statusMock,
+            status: vi.fn().mockReturnThis(),
+            json: vi.fn().mockReturnThis(),
         };
-        nextMock = vi.fn();
+
+        next = vi.fn();
 
         req = {
-            body: {
+            sanitize: {
+                body: {
+                    only: vi.fn(),
+                    get: vi.fn(),
+                    numeric: vi.fn(),
+                },
+                query: {
+                    only: vi.fn(),
+                    get: vi.fn(),
+                    numeric: vi.fn(),
+                },
+                data: {
+                    first_name: "John",
+                    last_name: "Doe",
+                    username: "johndoe",
+                    password: "password123",
+                    email: "john@example.com",
+                },
+            },
+        };
+    });
+
+    describe("create()", () => {
+        it("should register a user using validated request data", async () => {
+            const validatedData = {
                 first_name: "John",
                 last_name: "Doe",
                 username: "johndoe",
                 password: "password123",
                 email: "john@example.com",
-            },
-            sanitize: {
-                body: {
-                    only: vi.fn().mockReturnValue({
-                        first_name: "John",
-                        last_name: "Doe",
-                        username: "johndoe",
-                        password: "password123",
-                        email: "john@example.com",
-                    }),
-                },
-            },
-        } as any;
-    });
+            };
 
-    it("should successfully sanitize, validate, delegate to AuthService, and return token", async () => {
-        const mockValidatedData = {
-            first_name: "John",
-            last_name: "Doe",
-            username: "johndoe",
-            password: "password123",
-            email: "john@example.com",
-        };
-        mockValidateAsync.mockResolvedValue(mockValidatedData);
-        mockRegister.mockResolvedValue({token: "mocked-jwt-token-string"});
+            const result = {
+                token: "mocked-jwt-token-string",
+            };
 
-        // Execute controller handler
-        RegisterController.create(req as Request, res as Response, nextMock);
+            req.sanitize!.data = validatedData;
 
-        await new Promise(process.nextTick);
+            mockRegister.mockResolvedValue(result);
 
-        // Verify clean request lifecycle boundaries
-        expect(nextMock).not.toHaveBeenCalled();
-        expect(req.sanitize.body.only).toHaveBeenCalledWith([
-            "first_name",
-            "middle_name",
-            "last_name",
-            "username",
-            "password",
-            "email",
-        ]);
+            await controller.create(
+                req as Request,
+                res as Response,
+                next,
+            );
 
-        expect(mockValidateAsync).toHaveBeenCalledWith(mockValidatedData, {abortEarly: false});
+            expect(mockRegister).toHaveBeenCalledWith(validatedData);
 
-        // Ensure work is delegated properly to the business service layer
-        expect(mockRegister).toHaveBeenCalledWith(mockValidatedData);
+            // Validation belongs to the validation middleware,
+            // not the controller.
+            expect(req.sanitize!.body.only).not.toHaveBeenCalled();
 
-        expect(statusMock).toHaveBeenCalledWith(201);
-        expect(jsonMock).toHaveBeenCalledWith({token: "mocked-jwt-token-string"});
-    });
+            expect(res.status).toHaveBeenCalledWith(201);
+            expect(res.json).toHaveBeenCalledWith(result);
+            expect(next).not.toHaveBeenCalled();
+        });
 
-    it("should call next with validation error when schema verification fails", async () => {
-        const validationError = new Error("Schema validation failed");
-        mockValidateAsync.mockRejectedValue(validationError);
+        it("should forward business logic exceptions to next middleware", async () => {
+            const validatedData = {
+                first_name: "John",
+                last_name: "Doe",
+                username: "johndoe",
+                password: "password123",
+                email: "john@example.com",
+            };
 
-        RegisterController.create(req as Request, res as Response, nextMock);
+            const businessError = new Error(
+                "Email address already registered",
+            );
 
-        await new Promise(process.nextTick);
+            req.sanitize!.data = validatedData;
 
-        expect(nextMock).toHaveBeenCalledWith(validationError);
-        expect(mockRegister).not.toHaveBeenCalled();
-    });
+            mockRegister.mockRejectedValue(businessError);
 
-    it("should forward business logic exceptions from AuthService to next middleware", async () => {
-        const mockValidatedData = {
-            first_name: "John",
-            last_name: "Doe",
-            username: "johndoe",
-            password: "password123",
-            email: "john@example.com",
-        };
-        mockValidateAsync.mockResolvedValue(mockValidatedData);
+            await controller.create(
+                req as Request,
+                res as Response,
+                next,
+            );
 
-        const businessError = new Error("Email address already registered");
-        mockRegister.mockRejectedValue(businessError);
+            expect(mockRegister).toHaveBeenCalledWith(validatedData);
+            expect(next).toHaveBeenCalledWith(businessError);
+            expect(res.status).not.toHaveBeenCalled();
+            expect(res.json).not.toHaveBeenCalled();
+        });
 
-        RegisterController.create(req as Request, res as Response, nextMock);
+        it("should forward errors when sanitize context is missing", async () => {
+            delete req.sanitize;
 
-        await new Promise(process.nextTick);
+            await controller.create(
+                req as Request,
+                res as Response,
+                next,
+            );
 
-        expect(nextMock).toHaveBeenCalledWith(businessError);
-        expect(statusMock).not.toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(expect.any(TypeError));
+            expect(mockRegister).not.toHaveBeenCalled();
+            expect(res.status).not.toHaveBeenCalled();
+        });
     });
 });
