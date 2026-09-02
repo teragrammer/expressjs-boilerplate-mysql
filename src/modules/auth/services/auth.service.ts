@@ -17,14 +17,12 @@ import {AuthenticationToken} from "../interfaces/authentication.token";
 import {settingService} from "../../../config/container";
 import {__ENV} from "../../../config/environment";
 
-const securityUtil = new SecurityUtil({
-    bcryptSecret: __ENV.BCRYPT_SECRET,
-    bcryptSaltRounds: Number(__ENV.BCRYPT_SALT_ROUND || 10),
-});
-
 export class AuthService {
     constructor(
-        private readonly securityUtil: SecurityUtil,
+        private readonly securityUtil: SecurityUtil = new SecurityUtil({
+            bcryptSecret: __ENV.BCRYPT_SECRET,
+            bcryptSaltRounds: Number(__ENV.BCRYPT_SALT_ROUND || 10),
+        }),
         private readonly authenticationTokenRepository = new AuthenticationTokenRepository(),
         private readonly roleService = new RoleService(),
         private readonly userService = new UserService(),
@@ -175,5 +173,3 @@ export class AuthService {
         return session;
     }
 }
-
-export const authService = new AuthService(securityUtil);
