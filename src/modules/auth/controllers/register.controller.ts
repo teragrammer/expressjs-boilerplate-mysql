@@ -1,27 +1,19 @@
 // src/modules/auth/controllers/register.controller.ts
 
 import {Request, Response} from "express";
-import {registerSchema} from "../validations/register.schema";
 import catchAsync from "../../../common/utils/catch-async";
-import {authService} from "../services/auth.service";
+import {AuthService} from "../services/auth.service";
+import {RegisterInput} from "../interfaces/register-input.interface";
 
 export class RegisterController {
-    static create = catchAsync(async (req: Request, res: Response): Promise<void> => {
-        // Sanitize input
-        const rawData = req.sanitize.body.only([
-            "first_name",
-            "middle_name",
-            "last_name",
-            "username",
-            "password",
-            "email"
-        ]);
+    constructor(
+        private readonly authService: AuthService,
+    ) {
+    }
 
-        // Validate input
-        const validatedData = await registerSchema.validateAsync(rawData, {abortEarly: false});
-
+    create = catchAsync(async (req: Request, res: Response): Promise<void> => {
         // Delegate to Business Service
-        const result = await authService.register(validatedData);
+        const result = await this.authService.register(req.sanitize.data as unknown as RegisterInput);
 
         // Send HTTP response
         res.status(201).json(result);
