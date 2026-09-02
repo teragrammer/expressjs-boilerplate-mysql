@@ -21,7 +21,7 @@ export interface SanitizerHelper {
 export interface RequestSanitize {
     body: SanitizerHelper;
     query: SanitizerHelper;
-    data?: any;
+    data?: Record<string, unknown>;
 }
 
 export interface ResponseFailed {
