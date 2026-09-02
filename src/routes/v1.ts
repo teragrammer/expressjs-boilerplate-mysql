@@ -4,28 +4,20 @@ import {Router} from "express";
 import {AuthenticationMiddleware} from "../common/middleware/authentication.middleware";
 import {AuthorizationMiddleware} from "../common/middleware/authorization.middleware";
 import {TwoFactorAuthenticationMiddleware} from "../common/middleware/two-factor-authentication.middleware";
-import {RegisterController} from "../modules/auth/controllers/register.controller";
 import {AuthenticationController} from "../modules/auth/controllers/authentication.controller";
-import {PasswordRecoveryController} from "../modules/auth/controllers/password-recovery.controller";
-import {TwoFactorAuthenticationController} from "../modules/auth/controllers/two-factor-authentication.controller";
 import AccountController from "../modules/users/controllers/account.controller";
 import SettingController from "../modules/system/controllers/setting.controller";
 import RoleController from "../modules/role/role.controller";
 import UserController from "../modules/users/controllers/user.controller";
 import RouteGuardController from "../modules/system/controllers/route-guard.controller";
+import {AuthService} from "../modules/auth/services/auth.service";
 
-const router = Router();
+const authenticationController = new AuthenticationController(new AuthService());
 
 export default () => {
-    router.post("/register", RegisterController.create);
-    router.post("/login", AuthenticationController.login);
-    router.get("/logout", [AuthenticationMiddleware()], AuthenticationController.logout);
+    const router = Router();
 
-    router.get("/tfa/send", [AuthenticationMiddleware()], TwoFactorAuthenticationController.send);
-    router.post("/tfa/validate", [AuthenticationMiddleware()], TwoFactorAuthenticationController.validate);
-
-    router.post("/password-recovery/send", PasswordRecoveryController.send);
-    router.post("/password-recovery/validate", PasswordRecoveryController.validate);
+    router.use("/auth", authRoutes());
 
     router.put("/account/information", [AuthenticationMiddleware(), TwoFactorAuthenticationMiddleware()], AccountController.information);
     router.put("/account/password", [AuthenticationMiddleware(), TwoFactorAuthenticationMiddleware()], AccountController.password);
@@ -55,4 +47,8 @@ export default () => {
     router.delete("/users/:id", [AuthenticationMiddleware(), AuthorizationMiddleware("users:delete")], UserController.delete);
 
     return router;
+}
+
+function authRoutes(): import("express-serve-static-core").RequestHandler<{}, any, any, import("qs").ParsedQs, Record<string, any>> {
+    throw new Error("Function not implemented.");
 }
