@@ -1,13 +1,7 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {NextFunction, Request, Response} from "express";
 import Joi from "joi";
-
-import validate from "../../../src/common/middleware/validate.middleware";
-
-vi.mock("../../../src/common/utils/catch-async", () => ({
-    default: (fn: any) => (req: any, res: any, next: any) =>
-        Promise.resolve(fn(req, res, next)).catch(next),
-}));
+import {validate} from "../../../src/common/middleware/validate.middleware";
 
 describe("validate middleware", () => {
     let req: Partial<Request> & {
@@ -16,6 +10,24 @@ describe("validate middleware", () => {
 
     let res: Partial<Response>;
     let next: NextFunction;
+
+    const getNextError = (): unknown => {
+        const mock = next as unknown as ReturnType<typeof vi.fn>;
+        return mock.mock.calls[0]?.[0];
+    };
+
+    const expectValidationError = (): void => {
+        expect(next).toHaveBeenCalledOnce();
+
+        const error = getNextError();
+
+        expect(error).toBeInstanceOf(Error);
+        expect(error).toMatchObject({
+            statusCode: 422,
+        });
+
+        expect(req.sanitize.data).toBeUndefined();
+    };
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -38,7 +50,7 @@ describe("validate middleware", () => {
 
         res = {};
 
-        next = vi.fn();
+        next = vi.fn() as unknown as NextFunction;
     });
 
     describe("successful validation", () => {
@@ -148,7 +160,7 @@ describe("validate middleware", () => {
     });
 
     describe("validation failures", () => {
-        it("should forward Joi validation errors to next", async () => {
+        it("should convert Joi validation errors into a 422 AppError", async () => {
             const schema = Joi.object({
                 username: Joi.string().required(),
                 password: Joi.string().required(),
@@ -169,21 +181,7 @@ describe("validate middleware", () => {
                 next,
             );
 
-            expect(req.sanitize.body.only).toHaveBeenCalledWith([
-                "username",
-                "password",
-            ]);
-
-            expect(next).toHaveBeenCalledOnce();
-
-            const [error] = (
-                next as ReturnType<typeof vi.fn>
-            ).mock.calls[0];
-
-            expect(error).toBeInstanceOf(Joi.ValidationError);
-            expect(error.details).toHaveLength(1);
-
-            expect(req.sanitize.data).toBeUndefined();
+            expectValidationError();
         });
 
         it("should forward sanitization errors to next", async () => {
@@ -212,13 +210,12 @@ describe("validate middleware", () => {
 
             expect(next).toHaveBeenCalledOnce();
             expect(next).toHaveBeenCalledWith(sanitizeError);
-
             expect(req.sanitize.data).toBeUndefined();
         });
     });
 
     describe("Joi configuration", () => {
-        it("should validate with abortEarly disabled", async () => {
+        it("should validate with abortEarly disabled and stripUnknown enabled", async () => {
             const schema = Joi.object({
                 username: Joi.string().required(),
                 password: Joi.string().required(),
@@ -243,19 +240,16 @@ describe("validate middleware", () => {
             );
 
             expect(validateAsync).toHaveBeenCalledOnce();
+
             expect(validateAsync).toHaveBeenCalledWith(
                 {},
                 {
                     abortEarly: false,
+                    stripUnknown: true,
                 },
             );
 
-            expect(next).toHaveBeenCalledOnce();
-            expect(next).toHaveBeenCalledWith(
-                expect.any(Joi.ValidationError),
-            );
-
-            expect(req.sanitize.data).toBeUndefined();
+            expectValidationError();
         });
     });
 });
