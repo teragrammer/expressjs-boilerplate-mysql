@@ -1,6 +1,6 @@
-import {Router} from "express";
+// src/modules/auth/routes.ts
 
-import validate from "../../common/middleware/validate.middleware";
+import {Router} from "express";
 
 import {loginSchema} from "./validations/login.schema";
 import {AuthenticationController} from "./controllers/authentication.controller";
@@ -9,10 +9,18 @@ import {RegisterController} from "./controllers/register.controller";
 import {TwoFactorAuthenticationController} from "./controllers/two-factor-authentication.controller";
 import {PasswordRecoveryController} from "./controllers/password-recovery.controller";
 import {AuthenticationMiddleware} from "../../common/middleware/authentication.middleware";
+import {verifyOtpSchema} from "./validations/two-factor-authentication.validation";
+import {validate} from "../../common/middleware/validate.middleware";
+import {twoFactorAuthenticationService} from "../../config/container";
 
 const authenticationController = new AuthenticationController(
     new AuthService(),
 );
+
+const twoFactorAuthenticationController =
+    new TwoFactorAuthenticationController(
+        twoFactorAuthenticationService,
+    );
 
 export default () => {
     const router = Router();
@@ -43,13 +51,13 @@ export default () => {
     router.get(
         "/tfa/send",
         AuthenticationMiddleware(),
-        TwoFactorAuthenticationController.send,
+        twoFactorAuthenticationController.send,
     );
 
     router.post(
         "/tfa/validate",
-        AuthenticationMiddleware(),
-        TwoFactorAuthenticationController.validate,
+        [AuthenticationMiddleware(), validate(verifyOtpSchema, ["code"])],
+        twoFactorAuthenticationController.validate,
     );
 
     router.post(
