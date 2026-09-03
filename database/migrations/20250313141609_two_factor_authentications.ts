@@ -9,7 +9,7 @@ export async function up(knex: Knex): Promise<void> {
         // Foreign Key
         table.bigInteger('token_id')
             .unsigned()
-            .nullable()
+            .notNullable()
             .unique();
 
         table.foreign('token_id')
