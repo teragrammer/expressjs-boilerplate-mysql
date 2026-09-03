@@ -3,6 +3,7 @@
 import {AuthenticationToken} from "../../modules/auth/interfaces/authentication.token";
 import {JwtExtendedPayload} from "../../modules/auth/interfaces/jwt.interface";
 import {UserRole} from "../../modules/users/user.legacy";
+import "express-useragent";
 
 export interface RequestCredentials {
     jwt: JwtExtendedPayload;
