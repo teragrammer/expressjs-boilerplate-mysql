@@ -22,7 +22,7 @@ export interface SanitizerHelper {
 export interface RequestSanitize {
     body: SanitizerHelper;
     query: SanitizerHelper;
-    data?: Record<string, unknown>;
+    data?: Record<any, any>;
 }
 
 export interface ResponseFailed {
