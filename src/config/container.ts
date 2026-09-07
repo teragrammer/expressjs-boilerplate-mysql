@@ -28,6 +28,9 @@ import {TwoFactorAuthenticationService} from "../modules/auth/services/two-facto
 // Event Handlers
 import {SystemEventHandler} from "../modules/system/events/system.event";
 import {SendGridMailService} from "../infrastructure/mail/sendgrid-mail.service";
+import {PasswordRecoveryRepository} from "../modules/auth/repositories/password-recovery.repository";
+import {PasswordRecoveryService} from "../modules/auth/services/password-recovery.service";
+import {UserRepository} from "../modules/users/user.repository";
 
 const securityUtil = new SecurityUtil({
     bcryptSecret: __ENV.BCRYPT_SECRET,
@@ -66,18 +69,29 @@ export const settingService = new SettingService(
     redisCache,
 );
 
+const passwordRecoveryRepository =
+    new PasswordRecoveryRepository(DBKnex);
+
 export const routeGuardService = new RouteGuardService(
     routeGuardRepository,
     redisCache,
 );
 
-export const twoFactorAuthenticationService =
-    new TwoFactorAuthenticationService(
+export const twoFactorAuthenticationService = new TwoFactorAuthenticationService(
+    securityUtil,
+    new TwoFactorAuthenticationRepository(DBKnex),
+    new AuthenticationTokenRepository(DBKnex),
+    tokenService,
+    DateUtil,
+    settingService,
+    mailService,
+);
+
+export const passwordRecoveryService =
+    new PasswordRecoveryService(
         securityUtil,
-        new TwoFactorAuthenticationRepository(DBKnex),
-        new AuthenticationTokenRepository(DBKnex),
-        tokenService,
-        DateUtil,
+        passwordRecoveryRepository,
+        new UserRepository(DBKnex),
         settingService,
         mailService,
     );
