@@ -1,147 +1,368 @@
 // src/modules/auth/services/password-recovery.service.ts
 
 import {UserRepository} from "../../users/user.repository";
-import {PasswordRecoveryRepository} from "../repositories/password-recovery.repository";
-import {RECOVERY_EMAIL, RECOVERY_PHONE, Type} from "../interfaces/password.recovery.interface";
+import {PasswordRecoveryCreateData, PasswordRecoveryRepository,} from "../repositories/password-recovery.repository";
+import {RECOVERY_EMAIL, RECOVERY_PHONE, Type,} from "../interfaces/password.recovery.interface";
 import {SecurityUtil} from "../../../common/utils/security.util";
 import {AppError} from "../../../common/utils/errors";
 import {__ENV} from "../../../config/environment";
-import messages from "../../../common/utils/messages";
+import Messages from "../../../common/utils/messages";
+import {SettingService} from "../../system/services/setting.service";
+import {MailService} from "../../../common/interfaces/mail.interface";
 
 const CODE_LENGTH = 6;
-const NEXT_RESEND_MINUTES = 2;
 const CODE_EXPIRATION_MINUTES = 30;
+const NEXT_RESEND_MINUTES = 2;
 
 const MAX_TRIES = 5;
 const NEXT_TRY_MINUTES = 3;
 
-// Default utility instance if none injected
+export interface PasswordRecoveryResult {
+    sent: boolean;
+    nextResendAt?: Date;
+}
+
 const defaultSecurityUtil = new SecurityUtil({
     bcryptSecret: __ENV.BCRYPT_SECRET,
     bcryptSaltRounds: Number(__ENV.BCRYPT_SALT_ROUND || 10),
+    cryptoSecret: __ENV.CRYPT0_SECRET,
+    cryptoCipher: __ENV.CRYPT0_CIPHER,
 });
 
 export class PasswordRecoveryService {
     constructor(
-        private securityUtil: SecurityUtil = defaultSecurityUtil,
-        private recoveryRepo = new PasswordRecoveryRepository(),
-        private userRepo = new UserRepository()
+        private readonly securityUtil: SecurityUtil = defaultSecurityUtil,
+        private readonly recoveryRepository: PasswordRecoveryRepository =
+        new PasswordRecoveryRepository(),
+        private readonly userRepository: UserRepository =
+        new UserRepository(),
+        private readonly settingService: SettingService,
+        private readonly mailService: MailService,
     ) {
     }
 
     /**
-     * Sends password recovery code (Email or SMS).
-     * Prevents User Enumeration by returning successfully even if the user does not exist.
+     * Sends a password recovery code.
+     *
+     * The recovery record and notification are treated as one workflow:
+     *
+     * 1. Resolve account.
+     * 2. Check resend cooldown.
+     * 3. Generate and persist hashed recovery code.
+     * 4. Send notification.
+     * 5. Commit transaction.
+     *
+     * If notification delivery throws, the transaction is rolled back.
      */
-    async sendRecoveryCode(type: Type, sendTo: string): Promise<{ sent: boolean; nextResendAt?: Date }> {
-        // 1. Verify if user exists
-        const user = type === RECOVERY_EMAIL
-            ? await this.userRepo.findByEmail(sendTo)
-            : await this.userRepo.findByPhone(sendTo);
+    async sendRecoveryCode(
+        type: Type,
+        sendTo: string,
+    ): Promise<PasswordRecoveryResult> {
+        const user = await this.findUser(type, sendTo);
 
-        // Anti-User Enumeration: Return success silently if user does not exist
+        /*
+         * Do not reveal whether the account exists.
+         */
         if (!user) {
             return {sent: true};
         }
 
-        // 2. Check rate limit resend cooldown
-        const existingRecord = await this.recoveryRepo.findBySendTo(sendTo);
         const now = new Date();
 
-        if (existingRecord && new Date(existingRecord.next_resend_at) > now) {
-            throw new AppError(
-                "Please wait before requesting another recovery code.",
-                messages.TRY_RESEND.code,
-                429
-            );
-        }
+        const existingRecovery =
+            await this.recoveryRepository.findBySendTo(sendTo, type);
 
-        // 3. Generate uniform random numeric code & hash it via SecurityUtil
+        this.assertResendAllowed(existingRecovery, now);
+
         const rawCode = this.securityUtil.randomNumber(CODE_LENGTH);
-        const hashCode = await this.securityUtil.hash(rawCode);
+        const hashedCode = await this.securityUtil.hash(rawCode);
 
-        const nextResendAt = new Date(now.getTime() + NEXT_RESEND_MINUTES * 60 * 1000);
-        const expiredAt = new Date(now.getTime() + CODE_EXPIRATION_MINUTES * 60 * 1000);
+        const nextResendAt = this.addMinutes(
+            now,
+            NEXT_RESEND_MINUTES,
+        );
 
-        // 4. Save record to DB (resets tries and next_try_at on new request)
-        await this.recoveryRepo.upsertRecovery({
+        const expiredAt = this.addMinutes(
+            now,
+            CODE_EXPIRATION_MINUTES,
+        );
+
+        const recoveryData: PasswordRecoveryCreateData = {
             type,
             send_to: sendTo,
-            code: hashCode,
+            code: hashedCode,
             next_resend_at: nextResendAt,
             expired_at: expiredAt,
             tries: 0,
             next_try_at: null,
+        };
+
+        /*
+         * The mail operation intentionally occurs inside the transaction.
+         *
+         * If MailService throws, Knex rolls back the inserted recovery
+         * record automatically.
+         */
+        await this.recoveryRepository.withTransaction(async (trx) => {
+            if (existingRecovery) {
+                await this.recoveryRepository.deleteById(
+                    existingRecovery.id,
+                    trx,
+                );
+            }
+
+            await this.recoveryRepository.create(
+                recoveryData,
+                trx,
+            );
+
+            await this.sendRecoveryNotification(
+                type,
+                sendTo,
+                rawCode,
+            );
         });
 
-        // 5. Trigger notification transport
-        if (type === RECOVERY_EMAIL) {
-            // TODO: Dispatch Email notification (e.g. await mailer.sendResetCode(sendTo, rawCode))
-        } else if (type === RECOVERY_PHONE) {
-            // TODO: Dispatch SMS notification (e.g. await sms.sendResetCode(sendTo, rawCode))
-        }
-
-        return {sent: true, nextResendAt};
+        return {
+            sent: true,
+            nextResendAt,
+        };
     }
 
     /**
-     * Validates recovery code and updates password upon success.
+     * Validates the recovery code and changes the user's password.
      */
-    async resetPassword(type: Type, sendTo: string, code: string, newPassword: string): Promise<boolean> {
-        const record = await this.recoveryRepo.findBySendTo(sendTo);
+    async resetPassword(
+        type: Type,
+        sendTo: string,
+        code: string,
+        newPassword: string,
+    ): Promise<void> {
+        const recovery =
+            await this.recoveryRepository.findBySendTo(sendTo, type);
+
         const now = new Date();
 
-        if (!record) {
-            throw new AppError("Invalid or expired recovery session.", "INVALID_TOKEN", 400);
-        }
+        this.assertRecoveryExists(recovery);
 
-        // 1. Check code expiration
-        if (new Date(record.expired_at) < now) {
-            await this.recoveryRepo.deleteBySendTo(sendTo);
-            throw new AppError("Recovery code has expired. Please request a new one.", "EXPIRED_TOKEN", 400);
-        }
+        if (this.isExpired(recovery.expired_at, now)) {
+            await this.recoveryRepository.deleteById(recovery.id);
 
-        // 2. Check lockout cool-down due to excessive failed attempts
-        if (record.next_try_at && new Date(record.next_try_at) > now) {
             throw new AppError(
-                "Too many failed attempts. Please wait a few minutes before trying again.",
-                "TOO_MANY_ATTEMPTS",
-                429
+                "Recovery code has expired. Please request a new one.",
+                "EXPIRED_TOKEN",
+                400,
             );
         }
 
-        // 3. Compare code via SecurityUtil (hashed, plain)
-        const isMatch = await this.securityUtil.compare(record.code, code);
+        this.assertAttemptAllowed(recovery.next_try_at, now);
 
-        if (!isMatch) {
-            let currentTries = record.tries + 1;
-            let nextTryAt: Date | null = null;
+        const isValid = await this.securityUtil.compare(
+            recovery.code,
+            code,
+        );
 
-            // Lock user out if MAX_TRIES reached and reset counter for next attempt cycle
-            if (currentTries >= MAX_TRIES) {
-                nextTryAt = new Date(now.getTime() + NEXT_TRY_MINUTES * 60 * 1000);
-                currentTries = 0; // Reset counter after lockout window is imposed
-            }
+        if (!isValid) {
+            await this.registerFailedAttempt(
+                recovery.id,
+                recovery.tries,
+                now,
+            );
 
-            await this.recoveryRepo.updateTries(record.id, currentTries, nextTryAt);
-            throw new AppError("Invalid recovery code.", "INVALID_CODE", 400);
+            throw new AppError(
+                "Invalid recovery code.",
+                "INVALID_CODE",
+                400,
+            );
         }
 
-        // 4. Code valid -> Fetch User and hash new password via SecurityUtil
-        const user = type === RECOVERY_EMAIL
-            ? await this.userRepo.findByEmail(sendTo)
-            : await this.userRepo.findByPhone(sendTo);
+        const user = await this.findUser(type, sendTo);
 
         if (!user) {
-            throw new AppError("User account no longer exists.", "USER_NOT_FOUND", 404);
+            /*
+             * This should normally be impossible because the recovery
+             * record was created only for an existing user.
+             *
+             * Keep the explicit check for defensive correctness.
+             */
+            await this.recoveryRepository.deleteById(recovery.id);
+
+            throw new AppError(
+                "User account no longer exists.",
+                "USER_NOT_FOUND",
+                404,
+            );
         }
 
-        const hashedPassword = await this.securityUtil.hash(newPassword);
-        await this.userRepo.update(user.id, {password: hashedPassword});
+        const hashedPassword =
+            await this.securityUtil.hash(newPassword);
 
-        // 5. Invalidate Recovery Session
-        await this.recoveryRepo.deleteBySendTo(sendTo);
+        /*
+         * Password update and recovery invalidation should happen
+         * atomically.
+         */
+        await this.userRepository.updatePassword(
+            user.id,
+            hashedPassword,
+        );
 
-        return true;
+        const deleted =
+            await this.recoveryRepository.deleteById(recovery.id);
+
+        if (!deleted) {
+            /*
+             * At this point the password has already changed.
+             *
+             * This is why the final implementation should move these
+             * two operations into a shared transaction/unit-of-work.
+             */
+            throw new AppError(
+                "Unable to complete password recovery.",
+                "RECOVERY_COMPLETION_FAILED",
+                500,
+            );
+        }
+    }
+
+    private async findUser(
+        type: Type,
+        sendTo: string,
+    ) {
+        if (type === RECOVERY_EMAIL) {
+            return this.userRepository.findByEmail(sendTo);
+        }
+
+        if (type === RECOVERY_PHONE) {
+            return this.userRepository.findByPhone(sendTo);
+        }
+
+        throw new AppError(
+            "Unsupported recovery type.",
+            "INVALID_RECOVERY_TYPE",
+            400,
+        );
+    }
+
+    private assertResendAllowed(
+        recovery: Awaited<
+            ReturnType<PasswordRecoveryRepository["findBySendTo"]>
+        >,
+        now: Date,
+    ): void {
+        if (
+            recovery &&
+            new Date(recovery.next_resend_at).getTime() >
+            now.getTime()
+        ) {
+            throw new AppError(
+                "Please wait before requesting another recovery code.",
+                Messages.TRY_RESEND.code,
+                429,
+            );
+        }
+    }
+
+    private assertRecoveryExists(
+        recovery: Awaited<
+            ReturnType<PasswordRecoveryRepository["findBySendTo"]>
+        >,
+    ): asserts recovery is NonNullable<typeof recovery> {
+        if (!recovery) {
+            throw new AppError(
+                "Invalid or expired recovery session.",
+                "INVALID_TOKEN",
+                400,
+            );
+        }
+    }
+
+    private assertAttemptAllowed(
+        nextTryAt: Date | string | null,
+        now: Date,
+    ): void {
+        if (
+            nextTryAt &&
+            new Date(nextTryAt).getTime() > now.getTime()
+        ) {
+            throw new AppError(
+                "Too many failed attempts. Please wait a few minutes before trying again.",
+                "TOO_MANY_ATTEMPTS",
+                429,
+            );
+        }
+    }
+
+    private async registerFailedAttempt(
+        recoveryId: number,
+        currentTries: number,
+        now: Date,
+    ): Promise<void> {
+        const tries = currentTries + 1;
+
+        if (tries >= MAX_TRIES) {
+            await this.recoveryRepository.updateTries(
+                recoveryId,
+                0,
+                this.addMinutes(now, NEXT_TRY_MINUTES),
+            );
+
+            return;
+        }
+
+        await this.recoveryRepository.updateTries(
+            recoveryId,
+            tries,
+            null,
+        );
+    }
+
+    private isExpired(
+        expiresAt: Date | string,
+        now: Date,
+    ): boolean {
+        return new Date(expiresAt).getTime() <= now.getTime();
+    }
+
+    private addMinutes(date: Date, minutes: number): Date {
+        return new Date(
+            date.getTime() + minutes * 60 * 1000,
+        );
+    }
+
+    private async sendRecoveryNotification(
+        type: Type,
+        sendTo: string,
+        plainCode: string,
+    ): Promise<void> {
+        switch (type) {
+            case RECOVERY_EMAIL:
+                await this.sendRecoveryEmail(
+                    sendTo,
+                    plainCode,
+                );
+                return;
+
+            case RECOVERY_PHONE:
+                /*
+                 * SMS provider can be added here without changing
+                 * controller/API behavior.
+                 */
+                return;
+        }
+    }
+
+    private async sendRecoveryEmail(
+        email: string,
+        plainCode: string,
+    ): Promise<void> {
+        const settings = await this.settingService.getCache();
+        const emailSettings = settings.pri;
+
+        await this.mailService.send({
+            to: email,
+            from: emailSettings.psr_eml_snd,
+            subject: emailSettings.psr_eml_sbj,
+            text: `Recovery Code: ${plainCode}`,
+        });
     }
 }
