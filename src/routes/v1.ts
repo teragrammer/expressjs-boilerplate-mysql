@@ -4,15 +4,12 @@ import {Router} from "express";
 import {AuthenticationMiddleware} from "../common/middleware/authentication.middleware";
 import {AuthorizationMiddleware} from "../common/middleware/authorization.middleware";
 import {TwoFactorAuthenticationMiddleware} from "../common/middleware/two-factor-authentication.middleware";
-import {AuthenticationController} from "../modules/auth/controllers/authentication.controller";
 import AccountController from "../modules/users/controllers/account.controller";
 import SettingController from "../modules/system/controllers/setting.controller";
 import RoleController from "../modules/role/role.controller";
 import UserController from "../modules/users/controllers/user.controller";
 import RouteGuardController from "../modules/system/controllers/route-guard.controller";
-import {AuthService} from "../modules/auth/services/auth.service";
-
-const authenticationController = new AuthenticationController(new AuthService());
+import authRoutes from "../modules/auth/routes"
 
 export default () => {
     const router = Router();
@@ -47,8 +44,4 @@ export default () => {
     router.delete("/users/:id", [AuthenticationMiddleware(), AuthorizationMiddleware("users:delete")], UserController.delete);
 
     return router;
-}
-
-function authRoutes(): import("express-serve-static-core").RequestHandler<{}, any, any, import("qs").ParsedQs, Record<string, any>> {
-    throw new Error("Function not implemented.");
 }
