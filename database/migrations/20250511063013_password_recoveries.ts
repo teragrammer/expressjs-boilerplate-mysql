@@ -9,7 +9,12 @@ export async function up(knex: Knex): Promise<void> {
 
         // Pass as readonly array to enum builder
         table.enum("type", [...TYPES]).notNullable();
-        table.string("send_to", 100).notNullable().unique().index();
+
+        table.string("send_to", 100).notNullable();
+
+        table.unique(["type", "send_to"]);
+        table.index(["type", "send_to"]);
+
         table.string("code", 100).notNullable();
 
         table.timestamp("next_resend_at", {useTz: true}).notNullable().index();
