@@ -105,6 +105,26 @@ export class UserRepository {
         return updatedRow ? this.mapToUser(updatedRow) : null;
     }
 
+    async updatePassword(
+        id: number,
+        password: string,
+        trx?: Knex.Transaction,
+    ): Promise<boolean> {
+        const db = trx ?? this.db;
+
+        const updatedRows = await db<UserRow>(USER_TABLE)
+            .where({
+                id,
+            })
+            .whereNull("deleted_at")
+            .update({
+                password,
+                updated_at: db.fn.now(),
+            });
+
+        return updatedRows > 0;
+    }
+
     async incrementLoginTries(id: number): Promise<User | null> {
         const [updatedRow] = await this.table
             .where({id})
