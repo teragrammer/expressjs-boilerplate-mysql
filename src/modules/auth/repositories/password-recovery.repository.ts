@@ -2,58 +2,121 @@
 
 import {Knex} from "knex";
 import {DBKnex} from "../../../config/knex";
-import {PasswordRecovery, Type} from "../interfaces/password.recovery.interface";
+import {PasswordRecovery, Type,} from "../interfaces/password.recovery.interface";
 
 export const PASSWORD_RECOVERIES_TABLE = "password_recoveries";
 
+export interface PasswordRecoveryCreateData {
+    type: Type;
+    send_to: string;
+    code: string;
+    next_resend_at: Date;
+    expired_at: Date;
+    tries?: number;
+    next_try_at?: Date | null;
+}
+
 export class PasswordRecoveryRepository {
-    private readonly db: Knex;
-
-    constructor(db: Knex = DBKnex) {
-        this.db = db;
+    constructor(private readonly db: Knex = DBKnex) {
     }
 
-    private get table() {
-        return this.db<PasswordRecovery>(PASSWORD_RECOVERIES_TABLE);
+    private table(db: Knex = this.db) {
+        return db<PasswordRecovery>(PASSWORD_RECOVERIES_TABLE);
     }
 
-    async findBySendTo(sendTo: string): Promise<PasswordRecovery | null> {
-        const record = await this.table.where({send_to: sendTo}).first();
-        return record || null;
+    async findBySendTo(
+        sendTo: string,
+        type?: Type,
+    ): Promise<PasswordRecovery | null> {
+        const query = this.table();
+
+        query.where({send_to: sendTo});
+
+        if (type) {
+            query.andWhere({type});
+        }
+
+        const record = await query.first();
+
+        return record ?? null;
     }
 
-    async upsertRecovery(data: {
-        type: Type;
-        send_to: string;
-        code: string;
-        next_resend_at: Date;
-        expired_at: Date;
-        tries?: number;
-        next_try_at?: Date | null;
-    }): Promise<PasswordRecovery> {
-        const [record] = await this.table
+    async create(
+        data: PasswordRecoveryCreateData,
+        trx?: Knex.Transaction,
+    ): Promise<PasswordRecovery> {
+        const [record] = await this.table(trx ?? this.db)
             .insert({
                 ...data,
                 tries: data.tries ?? 0,
                 next_try_at: data.next_try_at ?? null,
             })
-            .onConflict("send_to")
-            .merge()
             .returning("*");
 
         return record;
     }
 
-    async updateTries(id: number, tries: number, nextTryAt: Date | null): Promise<void> {
-        await this.table.where({id}).update({
-            tries,
-            next_try_at: nextTryAt,
-            updated_at: new Date(),
-        });
+    async update(
+        id: number,
+        data: Partial<PasswordRecovery>,
+        trx?: Knex.Transaction,
+    ): Promise<PasswordRecovery | null> {
+        const [record] = await this.table(trx ?? this.db)
+            .where({id})
+            .update({
+                ...data,
+                updated_at: new Date(),
+            })
+            .returning("*");
+
+        return record ?? null;
     }
 
-    async deleteBySendTo(sendTo: string): Promise<boolean> {
-        const rows = await this.table.where({send_to: sendTo}).del();
-        return rows > 0;
+    async deleteById(
+        id: number,
+        trx?: Knex.Transaction,
+    ): Promise<boolean> {
+        const deletedRows = await this.table(trx ?? this.db)
+            .where({id})
+            .delete();
+
+        return deletedRows > 0;
+    }
+
+    async deleteBySendTo(
+        sendTo: string,
+        type?: Type,
+        trx?: Knex.Transaction,
+    ): Promise<boolean> {
+        const query = this.table(trx ?? this.db)
+            .where({send_to: sendTo});
+
+        if (type) {
+            query.andWhere({type});
+        }
+
+        const deletedRows = await query.delete();
+
+        return deletedRows > 0;
+    }
+
+    async withTransaction<T>(
+        callback: (trx: Knex.Transaction) => Promise<T>,
+    ): Promise<T> {
+        return this.db.transaction(callback);
+    }
+
+    async updateTries(
+        id: number,
+        tries: number,
+        nextTryAt: Date | null,
+    ): Promise<void> {
+        await this.table()
+            .where({id})
+            .update({
+                tries,
+                next_try_at: nextTryAt,
+                updated_at: new Date(),
+            });
     }
 }
