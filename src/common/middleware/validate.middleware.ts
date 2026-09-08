@@ -6,13 +6,20 @@ import type {ObjectSchema} from "joi";
 import Messages from "../utils/messages";
 import {AppError} from "../utils/errors";
 
-export const validate = (schema: ObjectSchema, fields: string[]) => {
+type SchemaFactory = (req: Request) => ObjectSchema;
+
+export const validate = (schemaOrFactory: ObjectSchema | SchemaFactory, fields: string[]) => {
     return async (
         req: Request,
         _res: Response,
         next: NextFunction,
     ): Promise<void> => {
         try {
+            // Resolve schema dynamically if it's a factory function
+            const schema = typeof schemaOrFactory === "function"
+                ? schemaOrFactory(req)
+                : schemaOrFactory;
+
             const data = req.sanitize.body.only(fields);
 
             req.sanitize.data = await schema.validateAsync(data, {
