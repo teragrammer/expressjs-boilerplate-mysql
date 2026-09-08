@@ -1,4 +1,4 @@
-// src/modules/auth/routes.ts
+// src/modules/auth/account.routes.ts
 
 import {Router} from "express";
 
