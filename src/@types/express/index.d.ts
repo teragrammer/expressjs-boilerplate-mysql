@@ -7,7 +7,7 @@ import "express-useragent";
 
 export interface RequestCredentials {
     jwt: JwtExtendedPayload;
-    user: () => Promise<UserRole>;
+    user: () => Promise<UserRole>; // TODO
     authentication: () => Promise<AuthenticationToken>;
 }
 
