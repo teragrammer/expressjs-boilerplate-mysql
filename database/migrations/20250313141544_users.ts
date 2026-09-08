@@ -1,5 +1,4 @@
 // database/migrations/20250313141544_users.ts
-
 import type { Knex } from "knex";
 import {GENDERS, STATUSES} from "../../src/modules/users/user.interface";
 
