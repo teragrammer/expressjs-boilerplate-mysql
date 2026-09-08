@@ -76,7 +76,7 @@ export class UserRepository {
         return this.mapToUser(newRow);
     }
 
-    async update(id: number, data: UpdateUserDTO): Promise<User | null> {
+    async update(id: number, data: UpdateUserDTO, status?: string): Promise<User | null> {
         const updatePayload: Partial<UserRow> = {
             ...(data.first_name !== undefined && {first_name: data.first_name}),
             ...(data.middle_name !== undefined && {middle_name: data.middle_name}),
@@ -97,8 +97,14 @@ export class UserRepository {
             updated_at: new Date(),
         };
 
-        const [updatedRow] = await this.table
-            .where({id})
+        let query = this.table.where({id});
+
+        // change status
+        if (status !== undefined) {
+            query = query.where("status", status);
+        }
+
+        const [updatedRow] = await query
             .update(updatePayload)
             .returning("*");
 
