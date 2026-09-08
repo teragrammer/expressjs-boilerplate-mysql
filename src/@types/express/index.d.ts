@@ -1,13 +1,13 @@
 // src/@types/express/index.d.ts
 
+import "express-useragent";
 import {AuthenticationToken} from "../../modules/auth/interfaces/authentication.token";
 import {JwtExtendedPayload} from "../../modules/auth/interfaces/jwt.interface";
-import {UserRole} from "../../modules/users/user.legacy";
-import "express-useragent";
+import {User} from "../../modules/users/user.interface";
 
 export interface RequestCredentials {
     jwt: JwtExtendedPayload;
-    user: () => Promise<UserRole>; // TODO
+    user: () => Promise<User>;
     authentication: () => Promise<AuthenticationToken>;
 }
 
