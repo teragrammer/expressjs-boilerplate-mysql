@@ -55,8 +55,7 @@ export class PasswordRecoveryController {
             req: Request,
             res: Response,
         ): Promise<void> => {
-            const data =
-                req.sanitize.data as PasswordRecoveryValidateRequest;
+            const data = req.sanitize.data as PasswordRecoveryValidateRequest;
 
             await this.recoveryService.resetPassword(
                 data.type,

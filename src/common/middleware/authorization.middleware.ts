@@ -4,19 +4,19 @@ import RouteGuardService from "../../modules/system/services/route-guard.service
 
 export function AuthorizationMiddleware(route: string, isHalt = true) {
     return async function (req: Request, res: Response, next: NextFunction) {
-        const CREDENTIALS = req.credentials;
+        const credentials = req.credentials;
 
-        if (!CREDENTIALS && isHalt) return res.status(401).json({
+        if (!credentials && isHalt) return res.status(401).json({
             code: "AUTH_PERM_EXPIRED",
             message: errors.EXPIRED_AUTH_TOKEN.message,
         });
 
-        if (CREDENTIALS && isHalt) {
-            const BYPASS: number | undefined = CREDENTIALS.jwt.bpa;
+        if (credentials && isHalt) {
+            const BYPASS: number | undefined = credentials.jwt.bpa;
             if (BYPASS === 1) return next();
 
             const GUARDS: Record<string, string[]> = await RouteGuardService.getCache();
-            const ROLE: string | undefined = CREDENTIALS.jwt.rol;
+            const ROLE: string | undefined = credentials.jwt.rol;
 
             if (!GUARDS || !ROLE) return res.status(403).json({
                 code: "AUTH_PERM_CACHE",
