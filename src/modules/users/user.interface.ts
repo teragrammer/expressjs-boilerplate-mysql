@@ -1,5 +1,4 @@
 // src/modules/users/user.interface.ts
-
 export const GENDERS = ["Male", "Female", "Other"] as const;
 export type Gender = typeof GENDERS[number];
 
@@ -83,3 +82,12 @@ export type UpdateUserDTO = Partial<CreateUserDTO> & {
     login_tries?: number;
     failed_login_expired_at?: Date | null;
 };
+
+export interface SecurityUserDTO {
+    current_password: string;
+    new_password?: string | null;
+    password?: string | null;
+    username?: string | null;
+    email?: string | null;
+    phone?: string | null;
+}
