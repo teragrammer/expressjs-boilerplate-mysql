@@ -1,5 +1,4 @@
 // src/modules/auth/controllers/two-factor-authentication.controller.ts
-
 import {Request, Response} from "express";
 import catchAsync from "../../../common/utils/catch-async";
 import {TwoFactorAuthenticationService} from "../services/two-factor-authentication.service";
