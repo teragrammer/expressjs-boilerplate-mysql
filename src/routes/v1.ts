@@ -3,13 +3,13 @@
 import {Router} from "express";
 import {AuthenticationMiddleware} from "../common/middleware/authentication.middleware";
 import {AuthorizationMiddleware} from "../common/middleware/authorization.middleware";
-import SettingController from "../modules/system/controllers/setting.controller";
 import RoleController from "../modules/role/role.controller";
 import RouteGuardController from "../modules/system/controllers/route-guard.controller";
 
 import authRoutes from "../modules/auth/routes"
 import accountRoutes from "../modules/users/account.routes"
 import userRoutes from "../modules/users/user.routes";
+import settingRoutes from "../modules/system/setting.routes";
 
 export default () => {
     const router = Router();
@@ -17,13 +17,7 @@ export default () => {
     router.use("/auth", authRoutes());
     router.use("/account", accountRoutes());
     router.use("/users", userRoutes());
-
-    router.get("/settings", [AuthenticationMiddleware(), AuthorizationMiddleware("settings:browse")], SettingController.browse);
-    router.get("/settings/values", [AuthenticationMiddleware()], SettingController.values);
-    router.get("/settings/:id", [AuthenticationMiddleware(), AuthorizationMiddleware("settings:view")], SettingController.view);
-    router.post("/settings", [AuthenticationMiddleware(), AuthorizationMiddleware("settings:create")], SettingController.create);
-    router.put("/settings/:id", [AuthenticationMiddleware(), AuthorizationMiddleware("settings:update")], SettingController.update);
-    router.delete("/settings/:id", [AuthenticationMiddleware(), AuthorizationMiddleware("settings:delete")], SettingController.delete);
+    router.use("/settings", settingRoutes());
 
     router.get("/roles", [AuthenticationMiddleware(), AuthorizationMiddleware("roles:browse")], RoleController.browse);
     router.get("/roles/:id", [AuthenticationMiddleware(), AuthorizationMiddleware("roles:view")], RoleController.view);
