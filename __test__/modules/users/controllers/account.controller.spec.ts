@@ -5,21 +5,14 @@ import {AccountController} from "../../../../src/modules/users/controllers/accou
 import {AccountService} from "../../../../src/modules/users/services/account.service";
 import {User} from "../../../../src/modules/users/user.interface";
 
-const {mockInformation, mockPassword, mockLoggerError} = vi.hoisted(() => ({
+const {mockInformation, mockPassword} = vi.hoisted(() => ({
     mockInformation: vi.fn(),
     mockPassword: vi.fn(),
-    mockLoggerError: vi.fn(),
 }));
 
 vi.mock("../../../../src/common/utils/catch-async", () => ({
     default: (fn: any) => (req: any, res: any, next: any) =>
         Promise.resolve(fn(req, res, next)).catch(next),
-}));
-
-vi.mock("../../../../src/config/logger", () => ({
-    logger: {
-        error: mockLoggerError,
-    },
 }));
 
 describe("AccountController", () => {
@@ -58,36 +51,32 @@ describe("AccountController", () => {
         deleted_at: null,
     };
 
-    const invokeInformation = async () => {
-        await controller.information(
+    type ControllerMethod = "information" | "password";
+
+    const invoke = async (method: ControllerMethod) => {
+        await controller[method](
             req as Request,
             res as Response,
             next,
         );
     };
 
-    const invokePassword = async () => {
-        await controller.password(
-            req as Request,
-            res as Response,
-            next,
-        );
-    };
-
-    const expectServerError = (error: unknown = expect.anything()) => {
-        expect(mockLoggerError).toHaveBeenCalledTimes(1);
-        expect(mockLoggerError).toHaveBeenCalledWith(error);
-
+    const expectSuccessfulResponse = (data: unknown) => {
         expect(res.status).toHaveBeenCalledTimes(1);
-        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.status).toHaveBeenCalledWith(200);
 
         expect(res.json).toHaveBeenCalledTimes(1);
-        expect(res.json).toHaveBeenCalledWith({
-            code: expect.anything(),
-            message: expect.any(String),
-        });
+        expect(res.json).toHaveBeenCalledWith(data);
 
         expect(next).not.toHaveBeenCalled();
+    };
+
+    const expectErrorForwarded = (error: unknown) => {
+        expect(next).toHaveBeenCalledTimes(1);
+        expect(next).toHaveBeenCalledWith(error);
+
+        expect(res.status).not.toHaveBeenCalled();
+        expect(res.json).not.toHaveBeenCalled();
     };
 
     beforeEach(() => {
@@ -150,7 +139,7 @@ describe("AccountController", () => {
             req.sanitize!.data = validatedData;
             mockInformation.mockResolvedValue(token);
 
-            await invokeInformation();
+            await invoke("information");
 
             expect(mockInformation).toHaveBeenCalledTimes(1);
             expect(mockInformation).toHaveBeenCalledWith(
@@ -158,18 +147,9 @@ describe("AccountController", () => {
                 validatedData,
             );
 
-            // Validation belongs to the validation middleware,
-            // not the controller.
             expect(req.sanitize!.body.only).not.toHaveBeenCalled();
 
-            expect(res.status).toHaveBeenCalledTimes(1);
-            expect(res.status).toHaveBeenCalledWith(200);
-
-            expect(res.json).toHaveBeenCalledTimes(1);
-            expect(res.json).toHaveBeenCalledWith(token);
-
-            expect(mockLoggerError).not.toHaveBeenCalled();
-            expect(next).not.toHaveBeenCalled();
+            expectSuccessfulResponse(token);
         });
 
         it("should use the authenticated user's UID instead of a request body ID", async () => {
@@ -185,8 +165,9 @@ describe("AccountController", () => {
 
             mockInformation.mockResolvedValue("new-token");
 
-            await invokeInformation();
+            await invoke("information");
 
+            expect(mockInformation).toHaveBeenCalledTimes(1);
             expect(mockInformation).toHaveBeenCalledWith(
                 42,
                 validatedData,
@@ -199,12 +180,10 @@ describe("AccountController", () => {
                 }),
             );
 
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith("new-token");
-            expect(next).not.toHaveBeenCalled();
+            expectSuccessfulResponse("new-token");
         });
 
-        it("should return a 500 server error when the service throws", async () => {
+        it("should forward service errors to the next middleware", async () => {
             const validatedData = {
                 first_name: "John",
                 middle_name: "Michael",
@@ -219,34 +198,35 @@ describe("AccountController", () => {
             req.sanitize!.data = validatedData;
             mockInformation.mockRejectedValue(serviceError);
 
-            await invokeInformation();
+            await invoke("information");
 
+            expect(mockInformation).toHaveBeenCalledTimes(1);
             expect(mockInformation).toHaveBeenCalledWith(
                 1,
                 validatedData,
             );
 
-            expectServerError(serviceError);
+            expectErrorForwarded(serviceError);
         });
 
-        it("should return 500 when credentials are missing", async () => {
+        it("should forward an error when credentials are missing", async () => {
             delete req.credentials;
 
-            await invokeInformation();
+            await invoke("information");
 
             expect(mockInformation).not.toHaveBeenCalled();
 
-            expectServerError(expect.any(TypeError));
+            expectErrorForwarded(expect.any(TypeError));
         });
 
-        it("should return 500 when sanitize context is missing", async () => {
+        it("should forward an error when sanitize context is missing", async () => {
             delete req.sanitize;
 
-            await invokeInformation();
+            await invoke("information");
 
             expect(mockInformation).not.toHaveBeenCalled();
 
-            expectServerError(expect.any(TypeError));
+            expectErrorForwarded(expect.any(TypeError));
         });
 
         it("should forward an unexpected service result to the response", async () => {
@@ -257,18 +237,15 @@ describe("AccountController", () => {
 
             mockInformation.mockResolvedValue(undefined);
 
-            await invokeInformation();
+            await invoke("information");
 
-            // The controller does not validate the service result.
-            // It simply forwards whatever AccountService returns.
+            expect(mockInformation).toHaveBeenCalledTimes(1);
             expect(mockInformation).toHaveBeenCalledWith(
                 1,
                 req.sanitize!.data,
             );
 
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith(undefined);
-            expect(next).not.toHaveBeenCalled();
+            expectSuccessfulResponse(undefined);
         });
     });
 
@@ -287,7 +264,7 @@ describe("AccountController", () => {
             req.sanitize!.data = validatedData;
             mockPassword.mockResolvedValue(token);
 
-            await invokePassword();
+            await invoke("password");
 
             expect(req.credentials!.user).toHaveBeenCalledTimes(1);
             expect(req.credentials!.user).toHaveBeenCalledWith();
@@ -298,18 +275,9 @@ describe("AccountController", () => {
                 validatedData,
             );
 
-            // Validation belongs to the validation middleware,
-            // not the controller.
             expect(req.sanitize!.body.only).not.toHaveBeenCalled();
 
-            expect(res.status).toHaveBeenCalledTimes(1);
-            expect(res.status).toHaveBeenCalledWith(200);
-
-            expect(res.json).toHaveBeenCalledTimes(1);
-            expect(res.json).toHaveBeenCalledWith(token);
-
-            expect(mockLoggerError).not.toHaveBeenCalled();
-            expect(next).not.toHaveBeenCalled();
+            expectSuccessfulResponse(token);
         });
 
         it("should pass the exact user returned by credentials.user() to the service", async () => {
@@ -329,7 +297,7 @@ describe("AccountController", () => {
 
             mockPassword.mockResolvedValue("new-token");
 
-            await invokePassword();
+            await invoke("password");
 
             expect(req.credentials!.user).toHaveBeenCalledTimes(1);
 
@@ -339,12 +307,10 @@ describe("AccountController", () => {
                 validatedData,
             );
 
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith("new-token");
-            expect(next).not.toHaveBeenCalled();
+            expectSuccessfulResponse("new-token");
         });
 
-        it("should return a 500 server error when the service throws", async () => {
+        it("should forward service errors to the next middleware", async () => {
             const validatedData = {
                 current_password: "WrongPassword123!",
                 new_password: "NewPassword123!",
@@ -357,51 +323,52 @@ describe("AccountController", () => {
             req.sanitize!.data = validatedData;
             mockPassword.mockRejectedValue(serviceError);
 
-            await invokePassword();
+            await invoke("password");
 
             expect(req.credentials!.user).toHaveBeenCalledTimes(1);
 
+            expect(mockPassword).toHaveBeenCalledTimes(1);
             expect(mockPassword).toHaveBeenCalledWith(
                 user,
                 validatedData,
             );
 
-            expectServerError(serviceError);
+            expectErrorForwarded(serviceError);
         });
 
-        it("should return a 500 server error when credentials.user() rejects", async () => {
+        it("should forward credentials.user() errors to the next middleware", async () => {
             const authenticationError = new Error(
                 "Unable to resolve authenticated user",
             );
 
             req.credentials!.user.mockRejectedValue(authenticationError);
 
-            await invokePassword();
+            await invoke("password");
 
             expect(req.credentials!.user).toHaveBeenCalledTimes(1);
             expect(mockPassword).not.toHaveBeenCalled();
 
-            expectServerError(authenticationError);
+            expectErrorForwarded(authenticationError);
         });
 
-        it("should return 500 when credentials are missing", async () => {
+        it("should forward an error when credentials are missing", async () => {
             delete req.credentials;
 
-            await invokePassword();
+            await invoke("password");
 
             expect(mockPassword).not.toHaveBeenCalled();
 
-            expectServerError(expect.any(TypeError));
+            expectErrorForwarded(expect.any(TypeError));
         });
 
-        it("should return 500 when sanitize context is missing", async () => {
+        it("should forward an error when sanitize context is missing", async () => {
             delete req.sanitize;
 
-            await invokePassword();
+            await invoke("password");
 
             expect(mockPassword).not.toHaveBeenCalled();
 
-            expectServerError(expect.any(TypeError));
+            expectErrorForwarded(expect.any(TypeError));
         });
 
         it("should pass undefined sanitized data to the service without performing validation", async () => {
@@ -409,16 +376,15 @@ describe("AccountController", () => {
 
             mockPassword.mockResolvedValue("token");
 
-            await invokePassword();
+            await invoke("password");
 
+            expect(mockPassword).toHaveBeenCalledTimes(1);
             expect(mockPassword).toHaveBeenCalledWith(
                 user,
                 undefined,
             );
 
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith("token");
-            expect(next).not.toHaveBeenCalled();
+            expectSuccessfulResponse("token");
         });
     });
 });

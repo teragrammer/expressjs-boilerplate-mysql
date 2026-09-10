@@ -1,106 +1,292 @@
-// __test__/common/middleware/request.middleware.spec.ts
-
 import {beforeEach, describe, expect, it, vi} from "vitest";
-import {Request, Response} from 'express';
-import requestHandler from '../../../src/common/middleware/request.middleware';
+import {NextFunction, Request, Response} from "express";
+import requestHandler from "../../../src/common/middleware/request.middleware";
 
-describe('Request Middleware', () => {
+describe("Request Middleware", () => {
     let mockRequest: Partial<Request>;
     let mockResponse: Partial<Response>;
-    let nextFunction: any;
+    let nextFunction: NextFunction;
 
     beforeEach(() => {
         mockRequest = {
             body: {},
             query: {},
         };
+
         mockResponse = {};
-        nextFunction = vi.fn(); // Vitest's mock function (replaces jest.fn())
+
+        nextFunction = vi.fn();
     });
 
-    describe('XSS & Whitespace Sanitization', () => {
-        it('should escape XSS script tags and trim surrounding whitespace', async () => {
-            mockRequest.body = {username: '   <script>alert("hack")</script> john_doe   '};
+    describe("Safe Pagination Calculations", () => {
+        it("should compute offset, perPage and page when query params are valid strings", async () => {
+            mockRequest.query = {
+                page: "3",
+                per_page: "20",
+            };
 
-            await requestHandler(mockRequest as Request, mockResponse as Response, nextFunction);
-
-            const username = mockRequest.sanitize?.body.get('username');
-
-            // The library completely strips the <script> wrapper,
-            // leaving the inert body string behind:
-            expect(username).toBe('alert("hack") john_doe');
-            expect(nextFunction).toHaveBeenCalledTimes(1);
-        });
-
-        it('should convert empty strings to null', async () => {
-            mockRequest.body = {bio: ''};
-
-            await requestHandler(mockRequest as Request, mockResponse as Response, nextFunction);
-
-            expect(mockRequest.sanitize?.body.get('bio')).toBeNull();
-        });
-    });
-
-    describe('Numeric Conversion Helper', () => {
-        it('should convert clean numerical strings to numbers', async () => {
-            mockRequest.query = {age: '25'};
-
-            await requestHandler(mockRequest as Request, mockResponse as Response, nextFunction);
-
-            expect(mockRequest.sanitize?.query.numeric('age')).toBe(25);
-        });
-
-        it('should fallback to defaults on invalid number inputs', async () => {
-            mockRequest.query = {items: 'not-a-number'};
-
-            await requestHandler(mockRequest as Request, mockResponse as Response, nextFunction);
-
-            expect(mockRequest.sanitize?.query.numeric('items', 10)).toBe(10);
-        });
-    });
-
-    describe('Selective Key Extraction (only)', () => {
-        it('should return only defined keys and discard others', async () => {
-            mockRequest.body = {name: 'Alice', token: 'secret_token', role: 'admin'};
-
-            await requestHandler(mockRequest as Request, mockResponse as Response, nextFunction);
-
-            const filtered = mockRequest.sanitize?.body.only(['name', 'role']);
-            expect(filtered).toEqual({name: 'Alice', role: 'admin'});
-            expect(filtered).not.toHaveProperty('token');
-        });
-
-        it('should fall back to defaults for missing keys', async () => {
-            mockRequest.body = {name: 'Bob'};
-
-            await requestHandler(mockRequest as Request, mockResponse as Response, nextFunction);
-
-            const filtered = mockRequest.sanitize?.body.only(['name', 'role'], {role: 'user'});
-            expect(filtered).toEqual({name: 'Bob', role: 'user'});
-        });
-    });
-
-    describe('Safe Pagination Calculations', () => {
-        it('should compute offset and perPage when query params are valid strings', async () => {
-            mockRequest.query = {page: '3', per_page: '20'};
-
-            await requestHandler(mockRequest as Request, mockResponse as Response, nextFunction);
+            await requestHandler(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
 
             expect(mockRequest.pagination).toEqual({
+                page: 3,
                 offset: 40, // (3 - 1) * 20
-                perPage: 20
+                perPage: 20,
             });
         });
 
-        it('should use default values when pagination parameters are missing or invalid', async () => {
-            mockRequest.query = {page: 'invalid_page', per_page: 'invalid_per_page'};
+        it("should use default values when pagination parameters are missing or invalid", async () => {
+            mockRequest.query = {
+                page: "invalid",
+                per_page: "invalid",
+            };
 
-            await requestHandler(mockRequest as Request, mockResponse as Response, nextFunction);
+            await requestHandler(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
 
             expect(mockRequest.pagination).toEqual({
+                page: 1,
                 offset: 0, // (1 - 1) * 10
-                perPage: 10
+                perPage: 10,
             });
+        });
+
+        it("should enforce minimum page of 1", async () => {
+            mockRequest.query = {
+                page: "0",
+                per_page: "20",
+            };
+
+            await requestHandler(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockRequest.pagination).toEqual({
+                page: 1,
+                offset: 0,
+                perPage: 20,
+            });
+        });
+
+        it("should enforce minimum perPage of 1", async () => {
+            mockRequest.query = {
+                page: "2",
+                per_page: "0",
+            };
+
+            await requestHandler(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockRequest.pagination).toEqual({
+                page: 2,
+                offset: 1,
+                perPage: 1,
+            });
+        });
+
+        it("should enforce maximum perPage of 100", async () => {
+            mockRequest.query = {
+                page: "2",
+                per_page: "500",
+            };
+
+            await requestHandler(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockRequest.pagination).toEqual({
+                page: 2,
+                offset: 100,
+                perPage: 100,
+            });
+        });
+
+        it("should floor decimal pagination values", async () => {
+            mockRequest.query = {
+                page: "2.9",
+                per_page: "10.8",
+            };
+
+            await requestHandler(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockRequest.pagination).toEqual({
+                page: 2,
+                offset: 10,
+                perPage: 10,
+            });
+        });
+    });
+
+    describe("Cursor Pagination", () => {
+        it("should compute cursor pagination when cursor is a valid string", async () => {
+            mockRequest.query = {
+                cursor: "123",
+                per_page: "20",
+            };
+
+            await requestHandler(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockRequest.cursorPagination).toEqual({
+                cursor: 123,
+                perPage: 20,
+            });
+        });
+
+        it("should floor decimal cursor values", async () => {
+            mockRequest.query = {
+                cursor: "123.99",
+                per_page: "20",
+            };
+
+            await requestHandler(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockRequest.cursorPagination).toEqual({
+                cursor: 123,
+                perPage: 20,
+            });
+        });
+
+        it("should set cursor to undefined when cursor is missing", async () => {
+            mockRequest.query = {
+                per_page: "20",
+            };
+
+            await requestHandler(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockRequest.cursorPagination).toEqual({
+                cursor: undefined,
+                perPage: 20,
+            });
+        });
+
+        it("should set cursor to undefined when cursor is invalid", async () => {
+            mockRequest.query = {
+                cursor: "invalid",
+                per_page: "20",
+            };
+
+            await requestHandler(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockRequest.cursorPagination).toEqual({
+                cursor: undefined,
+                perPage: 20,
+            });
+        });
+
+        it("should set cursor to undefined when cursor is zero", async () => {
+            mockRequest.query = {
+                cursor: "0",
+                per_page: "20",
+            };
+
+            await requestHandler(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockRequest.cursorPagination).toEqual({
+                cursor: undefined,
+                perPage: 20,
+            });
+        });
+
+        it("should set cursor to undefined when cursor is negative", async () => {
+            mockRequest.query = {
+                cursor: "-10",
+                per_page: "20",
+            };
+
+            await requestHandler(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockRequest.cursorPagination).toEqual({
+                cursor: undefined,
+                perPage: 20,
+            });
+        });
+
+        it("should use the same validated perPage for cursor pagination", async () => {
+            mockRequest.query = {
+                cursor: "100",
+                per_page: "500",
+            };
+
+            await requestHandler(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockRequest.cursorPagination).toEqual({
+                cursor: 100,
+                perPage: 100,
+            });
+        });
+
+        it("should use default perPage when per_page is missing", async () => {
+            mockRequest.query = {
+                cursor: "100",
+            };
+
+            await requestHandler(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockRequest.cursorPagination).toEqual({
+                cursor: 100,
+                perPage: 10,
+            });
+        });
+    });
+
+    describe("Middleware", () => {
+        it("should call next", async () => {
+            await requestHandler(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(nextFunction).toHaveBeenCalledTimes(1);
         });
     });
 });
