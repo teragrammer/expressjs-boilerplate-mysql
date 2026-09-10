@@ -2,6 +2,10 @@
 
 export const Messages = {
     VALIDATION_FAILED: {code: "VALIDATION_FAILED", message: "Validation errors were encountered during the process"},
+    INVALID_PATH_PARAM: {
+        code: "INVALID_PATH_PARAM",
+        message: "One or more path parameters are invalid",
+    },
     DUPLICATE_DATA: {code: "DUPLICATE_DATA", message: "The data you've selected is already assigned"},
     DATA_NOT_FOUND: {code: "DATA_NOT_FOUND", message: "The information you are looking for is not available"},
     SERVER_ERROR: {code: "SERVER_ERROR", message: "Whoops something went wrong"},
