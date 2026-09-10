@@ -1,10 +1,9 @@
 // src/modules/users/user.service.ts
-
-import {UserRepository} from "./user.repository";
-import {CreateUserDTO, User} from "./user.interface";
-import {AppError} from "../../common/utils/errors";
-import Messages from "../../common/utils/messages";
-import {SecurityUtil} from "../../common/utils/security.util";
+import {UserRepository} from "../user.repository";
+import {BrowseUsersQuery, BrowseUsersResult, CreateUserDTO, UpdateUserDTO, User} from "../user.interface";
+import {AppError} from "../../../common/utils/errors";
+import Messages from "../../../common/utils/messages";
+import {SecurityUtil} from "../../../common/utils/security.util";
 
 export class UserService {
     // Dependency injection allows passing a mock repository during testing
@@ -15,22 +14,7 @@ export class UserService {
     }
 
     /**
-     * Resolves a user profile by its unique ID for authentication context mapping.
-     */
-    async findById(id: number): Promise<any> {
-        const user = await this.userRepository.findById(id);
-        if (!user) {
-            throw new AppError(
-                Messages.DATA_NOT_FOUND.message,
-                Messages.DATA_NOT_FOUND.code,
-                404
-            );
-        }
-        return user;
-    }
-
-    /**
-     * Handles business logic for creating a user
+     * Handles business logic for creating a user under registration form
      */
     async registerUser(data: CreateUserDTO): Promise<User> {
         // Check if email already exists
@@ -61,7 +45,7 @@ export class UserService {
         return this.userRepository.create(data);
     }
 
-    async create(data: CreateUserDTO): Promise<User> {
+    async createUser(data: CreateUserDTO): Promise<User> {
         if (data.password !== null && typeof data.password !== "undefined") {
             data.password = await this.securityUtil.hash(data.password);
         }
@@ -74,5 +58,51 @@ export class UserService {
         );
 
         return user;
+    }
+
+    async updateUser(id: number, data: UpdateUserDTO): Promise<User> {
+        if (data.password !== null && typeof data.password !== "undefined") {
+            data.password = await this.securityUtil.hash(data.password);
+        }
+
+        const user: User | null = await this.userRepository.update(id, data);
+        if (!user) throw new AppError(
+            Messages.SERVER_ERROR.message,
+            Messages.SERVER_ERROR.code,
+            500
+        );
+
+        return user;
+    }
+
+    async browseUsers(
+        query: BrowseUsersQuery
+    ): Promise<BrowseUsersResult> {
+        return this.userRepository.browse(query);
+    }
+
+    /**
+     * Resolves a user profile by its unique ID for authentication context mapping.
+     */
+    async findById(id: number): Promise<User> {
+        const user: User | null = await this.userRepository.findById(id);
+        if (!user) {
+            throw new AppError(
+                Messages.DATA_NOT_FOUND.message,
+                Messages.DATA_NOT_FOUND.code,
+                404
+            );
+        }
+        return user;
+    }
+
+    async hardDelete(id: number): Promise<void> {
+        if (!await this.userRepository.hardDelete(id)) {
+            throw new AppError(
+                Messages.DELETE_FAILED.message,
+                Messages.DELETE_FAILED.code,
+                500
+            );
+        }
     }
 }
