@@ -1,5 +1,4 @@
 // src/modules/auth/interfaces/jwt.interface.ts
-
 import {JwtPayload} from "jsonwebtoken";
 
 export interface JwtExtendedPayload extends JwtPayload {
