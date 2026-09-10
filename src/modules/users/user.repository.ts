@@ -1,10 +1,36 @@
 // src/modules/users/user.repository.ts
-
 import {Knex} from "knex";
 import {DBKnex} from "../../config/knex";
-import {CreateUserDTO, UpdateUserDTO, User, UserRow} from "./user.interface";
+import {
+    BrowseUsersQuery,
+    BrowseUsersResult,
+    CreateUserDTO,
+    UpdateUserDTO,
+    User,
+    UserRow,
+} from "./user.interface";
 
 export const USER_TABLE = "users";
+
+const USER_PUBLIC_COLUMNS: (keyof UserRow)[] = [
+    "id",
+    "first_name",
+    "middle_name",
+    "last_name",
+    "gender",
+    "address",
+    "phone",
+    "is_phone_verified",
+    "email",
+    "is_email_verified",
+    "has_tfa",
+    "role_id",
+    "username",
+    "status",
+    "comments",
+    "created_at",
+    "updated_at",
+];
 
 export class UserRepository {
     private readonly db: Knex;
@@ -14,11 +40,9 @@ export class UserRepository {
     }
 
     private get table() {
-        // Standard query builder targeting non-soft-deleted rows
         return this.db<UserRow>(USER_TABLE).whereNull("deleted_at");
     }
 
-    // Pure representation that accesses all items (including soft deleted) when needed
     private get rawTable() {
         return this.db<UserRow>(USER_TABLE);
     }
@@ -33,22 +57,34 @@ export class UserRepository {
     }
 
     async findById(id: number): Promise<User | null> {
-        const row = await this.table.where({id}).first();
+        const row = await this.table
+            .where({id})
+            .first();
+
         return row ? this.mapToUser(row) : null;
     }
 
     async findByEmail(email: string): Promise<User | null> {
-        const row = await this.table.where({email}).first();
+        const row = await this.table
+            .where({email})
+            .first();
+
         return row ? this.mapToUser(row) : null;
     }
 
     async findByPhone(phone: string): Promise<User | null> {
-        const row = await this.table.where({phone}).first();
+        const row = await this.table
+            .where({phone})
+            .first();
+
         return row ? this.mapToUser(row) : null;
     }
 
     async findByUsername(username: string): Promise<User | null> {
-        const row = await this.table.where({username}).first();
+        const row = await this.table
+            .where({username})
+            .first();
+
         return row ? this.mapToUser(row) : null;
     }
 
@@ -65,41 +101,85 @@ export class UserRepository {
             is_email_verified: 0,
             role_id: data.role_id,
             username: data.username || null,
-            password: data.password || null, // Ensure hashing is done prior to repository invocation
+            password: data.password || null,
             status: data.status || "Activated",
             login_tries: 0,
             failed_login_expired_at: null,
             comments: data.comments || null,
         };
 
-        const [newRow] = await this.table.insert(insertPayload).returning("*");
+        const [newRow] = await this.table
+            .insert(insertPayload)
+            .returning("*");
+
         return this.mapToUser(newRow);
     }
 
-    async update(id: number, data: UpdateUserDTO, status?: string): Promise<User | null> {
+    async update(
+        id: number,
+        data: UpdateUserDTO,
+        status?: string,
+    ): Promise<User | null> {
         const updatePayload: Partial<UserRow> = {
-            ...(data.first_name !== undefined && {first_name: data.first_name}),
-            ...(data.middle_name !== undefined && {middle_name: data.middle_name}),
-            ...(data.last_name !== undefined && {last_name: data.last_name}),
-            ...(data.gender !== undefined && {gender: data.gender}),
-            ...(data.address !== undefined && {address: data.address}),
-            ...(data.phone !== undefined && {phone: data.phone}),
-            ...(data.is_phone_verified !== undefined && {is_phone_verified: data.is_phone_verified ? 1 : 0}),
-            ...(data.email !== undefined && {email: data.email}),
-            ...(data.is_email_verified !== undefined && {is_email_verified: data.is_email_verified ? 1 : 0}),
-            ...(data.role_id !== undefined && {role_id: data.role_id}),
-            ...(data.username !== undefined && {username: data.username}),
-            ...(data.password !== undefined && {password: data.password}),
-            ...(data.status !== undefined && {status: data.status}),
-            ...(data.login_tries !== undefined && {login_tries: data.login_tries}),
-            ...(data.failed_login_expired_at !== undefined && {failed_login_expired_at: data.failed_login_expired_at}),
-            ...(data.comments !== undefined && {comments: data.comments}),
+            ...(data.first_name !== undefined && {
+                first_name: data.first_name,
+            }),
+            ...(data.middle_name !== undefined && {
+                middle_name: data.middle_name,
+            }),
+            ...(data.last_name !== undefined && {
+                last_name: data.last_name,
+            }),
+            ...(data.gender !== undefined && {
+                gender: data.gender,
+            }),
+            ...(data.address !== undefined && {
+                address: data.address,
+            }),
+            ...(data.phone !== undefined && {
+                phone: data.phone,
+            }),
+            ...(data.is_phone_verified !== undefined && {
+                is_phone_verified: data.is_phone_verified ? 1 : 0,
+            }),
+            ...(data.email !== undefined && {
+                email: data.email,
+            }),
+            ...(data.is_email_verified !== undefined && {
+                is_email_verified: data.is_email_verified ? 1 : 0,
+            }),
+            ...(data.has_tfa !== undefined && {
+                has_tfa: data.has_tfa ? 1 : 0,
+            }),
+            ...(data.tfa_secret !== undefined && {
+                tfa_secret: data.tfa_secret,
+            }),
+            ...(data.role_id !== undefined && {
+                role_id: data.role_id,
+            }),
+            ...(data.username !== undefined && {
+                username: data.username,
+            }),
+            ...(data.password !== undefined && {
+                password: data.password,
+            }),
+            ...(data.status !== undefined && {
+                status: data.status,
+            }),
+            ...(data.login_tries !== undefined && {
+                login_tries: data.login_tries,
+            }),
+            ...(data.failed_login_expired_at !== undefined && {
+                failed_login_expired_at: data.failed_login_expired_at,
+            }),
+            ...(data.comments !== undefined && {
+                comments: data.comments,
+            }),
             updated_at: new Date(),
         };
 
         let query = this.table.where({id});
 
-        // change status
         if (status !== undefined) {
             query = query.where("status", status);
         }
@@ -108,7 +188,87 @@ export class UserRepository {
             .update(updatePayload)
             .returning("*");
 
-        return updatedRow ? this.mapToUser(updatedRow) : null;
+        return updatedRow
+            ? this.mapToUser(updatedRow)
+            : null;
+    }
+
+    /**
+     * Cursor-based user browsing.
+     *
+     * Uses the primary key for stable and efficient pagination:
+     *
+     * WHERE id < cursor
+     * ORDER BY id DESC
+     * LIMIT limit + 1
+     *
+     * No COUNT(*) and no OFFSET are required.
+     */
+    async browse(
+        query: BrowseUsersQuery,
+    ): Promise<BrowseUsersResult> {
+        const {
+            role_id,
+            status,
+            search,
+            cursor,
+            limit,
+        } = query;
+
+        let baseQuery = this.table;
+
+        if (role_id !== undefined) {
+            baseQuery = baseQuery.where("role_id", role_id);
+        }
+
+        if (status !== undefined) {
+            baseQuery = baseQuery.where("status", status);
+        }
+
+        if (cursor !== undefined) {
+            baseQuery = baseQuery.where("id", "<", cursor);
+        }
+
+        if (search) {
+            const keyword = `%${search}%`;
+
+            baseQuery = baseQuery.where((builder) => {
+                builder
+                    .where("first_name", "like", keyword)
+                    .orWhere("middle_name", "like", keyword)
+                    .orWhere("last_name", "like", keyword)
+                    .orWhere("username", "like", keyword)
+                    .orWhere("phone", "like", keyword)
+                    .orWhere("email", "like", keyword);
+            });
+        }
+
+        const rows = await baseQuery
+            .select(USER_PUBLIC_COLUMNS)
+            .orderBy("id", "desc")
+            .limit(limit + 1);
+
+        const hasMore = rows.length > limit;
+
+        const data: User[] = rows
+            .slice(0, limit)
+            .map((row) => ({
+                ...row,
+                is_phone_verified: Boolean(row.is_phone_verified),
+                is_email_verified: Boolean(row.is_email_verified),
+                has_tfa: Boolean(row.has_tfa),
+            })) as User[];
+
+        const nextCursor =
+            hasMore && data.length > 0
+                ? data[data.length - 1].id
+                : null;
+
+        return {
+            data,
+            hasMore,
+            nextCursor,
+        };
     }
 
     async updatePassword(
@@ -119,9 +279,7 @@ export class UserRepository {
         const db = trx ?? this.db;
 
         const updatedRows = await db<UserRow>(USER_TABLE)
-            .where({
-                id,
-            })
+            .where({id})
             .whereNull("deleted_at")
             .update({
                 password,
@@ -131,30 +289,35 @@ export class UserRepository {
         return updatedRows > 0;
     }
 
-    async incrementLoginTries(id: number): Promise<User | null> {
+    async incrementLoginTries(
+        id: number,
+    ): Promise<User | null> {
         const [updatedRow] = await this.table
             .where({id})
             .increment("login_tries", 1)
             .returning("*");
 
-        return updatedRow ? this.mapToUser(updatedRow) : null;
+        return updatedRow
+            ? this.mapToUser(updatedRow)
+            : null;
     }
 
-    /**
-     * Safe Soft Delete (Sets deleted_at instead of wiping record permanently)
-     */
     async softDelete(id: number): Promise<boolean> {
         const deletedRows = await this.table
             .where({id})
-            .update({deleted_at: new Date(), updated_at: new Date()});
+            .update({
+                deleted_at: new Date(),
+                updated_at: new Date(),
+            });
+
         return deletedRows > 0;
     }
 
-    /**
-     * Hard Delete (Only if explicitly required, permanently purges data)
-     */
     async hardDelete(id: number): Promise<boolean> {
-        const deletedRows = await this.rawTable.where({id}).del();
+        const deletedRows = await this.rawTable
+            .where({id})
+            .del();
+
         return deletedRows > 0;
     }
 }
