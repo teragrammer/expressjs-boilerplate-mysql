@@ -1,5 +1,4 @@
 // src/modules/auth/services/two-factor-authentication.service.ts
-
 import {TwoFactorAuthenticationRepository} from "../repositories/two-factor-authentication.repository";
 import {SecurityUtil} from "../../../common/utils/security.util";
 import {DateUtil} from "../../../common/utils/date.util";
@@ -9,8 +8,8 @@ import {TokenService} from "./auth-token.service";
 import {AuthenticationTokenRepository} from "../repositories/authentication-token.repository";
 import {__ENV} from "../../../config/environment";
 import {SettingService} from "../../system/services/setting.service";
-import {UserRole} from "../../users/user.legacy";
 import {MailService} from "../../../common/interfaces/mail.interface";
+import {User} from "../../users/user.interface";
 
 interface SendOtpInput {
     tokenId: number;
@@ -26,7 +25,7 @@ interface SendOtpResult {
 interface VerifyOtpInput {
     tokenId: number;
     code: string;
-    user: UserRole;
+    user: User;
     tfaCleared: boolean;
     meta: {
         ip: string | null;
