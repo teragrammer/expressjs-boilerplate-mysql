@@ -1,5 +1,4 @@
 // src/common/utils/catch-async.ts
-
 import {NextFunction, Request, RequestHandler, Response} from "express";
 
 type AsyncRequestHandler = (req: Request, res: Response, next: NextFunction) => Promise<any>;
