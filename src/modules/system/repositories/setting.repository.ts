@@ -26,16 +26,16 @@ export class SettingRepository {
      */
     async findBySlug(slugs: string[] = [], is_public?: number): Promise<SettingRow[]> {
         // Build base query using 'this.db' via the helper, filtering out disabled settings
-        const query = this.table.where("is_disabled", false);
+        let query = this.table.where("is_disabled", false);
 
         // Safely apply visibility filter if provided
         if (is_public !== undefined) {
-            query.where("is_public", is_public === 1);
+            query = query.where("is_public", is_public === 1);
         }
 
         // Apply slug filter if the array is populated
         if (slugs.length > 0) {
-            query.whereIn("slug", slugs);
+            query = query.whereIn("slug", slugs);
         }
 
         return query;
