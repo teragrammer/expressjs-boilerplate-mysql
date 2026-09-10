@@ -20,7 +20,7 @@ import {RedisSubscriber} from "../shared/redis/redis-subscriber";
 // Services
 import {SettingService} from "../modules/system/services/setting.service";
 import {RouteGuardService} from "../modules/system/services/route-guard.service";
-import {UserService} from "../modules/users/user.service";
+import {UserService} from "../modules/users/services/user.service";
 import {AuthService} from "../modules/auth/services/auth.service";
 import {TokenService} from "../modules/auth/services/auth-token.service";
 import {TwoFactorAuthenticationService} from "../modules/auth/services/two-factor-authentication.service";
