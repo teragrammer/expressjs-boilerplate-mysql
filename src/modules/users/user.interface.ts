@@ -83,11 +83,25 @@ export type UpdateUserDTO = Partial<CreateUserDTO> & {
     failed_login_expired_at?: Date | null;
 };
 
-export interface SecurityUserDTO {
+export interface SecurityAccountDTO {
     current_password: string;
     new_password?: string | null;
     password?: string | null;
     username?: string | null;
     email?: string | null;
     phone?: string | null;
+}
+
+export interface BrowseUsersQuery {
+    role_id?: number;
+    status?: Status;
+    search?: string;
+    cursor?: number;
+    limit: number;
+}
+
+export interface BrowseUsersResult {
+    data: User[];
+    hasMore: boolean;
+    nextCursor: number | null;
 }
