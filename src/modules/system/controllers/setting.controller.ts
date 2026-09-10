@@ -11,62 +11,10 @@ import SettingService from "../services/setting.service.legacy";
 import catchAsync from "../../../common/utils/catch-async";
 
 class Controller {
-    browse = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const Q = SettingModel().table();
-
-        const IS_DISABLED: any = req.sanitize.query.numeric("is_disabled", null);
-        if (IS_DISABLED !== null) Q.where("is_disabled", IS_DISABLED);
-
-        const IS_PUBLIC: any = req.sanitize.query.numeric("is_public", null);
-        if (IS_PUBLIC !== null) Q.where("is_public", IS_PUBLIC);
-
-        const TYPE: any = req.sanitize.query.get("type");
-        if (TYPE !== null) Q.where("type", TYPE);
-
-        const KEYWORD: any = req.sanitize.query.get("search");
-        if (KEYWORD !== null) {
-            Q.where((queryBuilder: any) => {
-                queryBuilder.where("name", "LIKE", `%${KEYWORD}%`)
-                    .orWhere("slug", "LIKE", `%${KEYWORD}%`)
-                    .orWhere("value", "LIKE", `%${KEYWORD}%`)
-                    .orWhere("description", "LIKE", `%${KEYWORD}%`);
-            });
-        }
-
-        const PAGINATE = req.app.get("paginate");
-        const SETTINGS: SettingLegacy[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
-
-        res.status(200).json(SETTINGS);
-    });
-
-    values = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        res.status(200).json((await SettingService.getCache()).pub);
-    });
-
-    view = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const ID = req.params.id;
-        const SETTING: SettingLegacy = await SettingModel().table()
-            .where("id", ID)
-            .first();
-
-        if (!SETTING) return res.status(404).send({
-            code: errors.DATA_NOT_FOUND.code,
-            message: errors.DATA_NOT_FOUND.message,
-        });
-
-        return res.status(200).json(SETTING);
-    });
-
     create = catchAsync(async (req: Request, res: Response): Promise<any> => {
         const DATA = req.sanitize.body.only(["name", "slug", "value", "description", "type", "is_disabled", "is_public"]);
         if (await ExtendJoiUtil().response(Joi.object({
-            name: Joi.string().min(1).max(50).required(),
-            slug: Joi.string().min(1).max(50).required().external(ExtendJoiUtil().unique("settings", "slug")),
-            value: Joi.any(),
-            description: Joi.string().min(1).max(200),
-            type: Joi.string().valid(...DATA_TYPES).required(),
-            is_disabled: Joi.number().valid(0, 1).required(),
-            is_public: Joi.number().valid(0, 1).required(),
+
         }), DATA, res)) return;
 
         try {
@@ -129,6 +77,52 @@ class Controller {
                 message: errors.SERVER_ERROR.message,
             });
         }
+    });
+
+    browse = catchAsync(async (req: Request, res: Response): Promise<any> => {
+        const Q = SettingModel().table();
+
+        const IS_DISABLED: any = req.sanitize.query.numeric("is_disabled", null);
+        if (IS_DISABLED !== null) Q.where("is_disabled", IS_DISABLED);
+
+        const IS_PUBLIC: any = req.sanitize.query.numeric("is_public", null);
+        if (IS_PUBLIC !== null) Q.where("is_public", IS_PUBLIC);
+
+        const TYPE: any = req.sanitize.query.get("type");
+        if (TYPE !== null) Q.where("type", TYPE);
+
+        const KEYWORD: any = req.sanitize.query.get("search");
+        if (KEYWORD !== null) {
+            Q.where((queryBuilder: any) => {
+                queryBuilder.where("name", "LIKE", `%${KEYWORD}%`)
+                    .orWhere("slug", "LIKE", `%${KEYWORD}%`)
+                    .orWhere("value", "LIKE", `%${KEYWORD}%`)
+                    .orWhere("description", "LIKE", `%${KEYWORD}%`);
+            });
+        }
+
+        const PAGINATE = req.app.get("paginate");
+        const SETTINGS: SettingLegacy[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
+
+        res.status(200).json(SETTINGS);
+    });
+
+    values = catchAsync(async (req: Request, res: Response): Promise<any> => {
+        res.status(200).json((await SettingService.getCache()).pub);
+    });
+
+    view = catchAsync(async (req: Request, res: Response): Promise<any> => {
+        const ID = req.params.id;
+        const SETTING: SettingLegacy = await SettingModel().table()
+            .where("id", ID)
+            .first();
+
+        if (!SETTING) return res.status(404).send({
+            code: errors.DATA_NOT_FOUND.code,
+            message: errors.DATA_NOT_FOUND.message,
+        });
+
+        return res.status(200).json(SETTING);
     });
 
     delete = catchAsync(async (req: Request, res: Response): Promise<any> => {
