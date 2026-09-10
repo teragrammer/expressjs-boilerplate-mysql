@@ -1,7 +1,7 @@
 // src/modules/auth/services/auth.service.ts
 
 import {RoleService} from "../../role/role.service";
-import {UserService} from "../../users/user.service";
+import {UserService} from "../../users/services/user.service";
 import {TokenService} from "./auth-token.service";
 import {SecurityUtil} from "../../../common/utils/security.util";
 import {DateUtil} from "../../../common/utils/date.util";
@@ -48,7 +48,7 @@ export class AuthService {
         const hashedPassword = await this.securityUtil.hash(data.password);
         const createdAt = this.dateUtil.sql();
 
-        const newUser = await this.userService.createUser({
+        const newUser = await this.userService.registerUser({
             ...data,
             password: hashedPassword,
             role_id: role.id,
