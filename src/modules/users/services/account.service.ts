@@ -1,5 +1,5 @@
 // src/modules/users/services/account.service.ts
-import {SecurityUserDTO, UpdateUserDTO, User} from "../user.interface";
+import {SecurityAccountDTO, UpdateUserDTO, User} from "../user.interface";
 import {UserRepository} from "../user.repository";
 import {AppError} from "../../../common/utils/errors";
 import Messages from "../../../common/utils/messages";
@@ -31,7 +31,7 @@ export class AccountService {
         });
     }
 
-    async password(user: User, data: SecurityUserDTO) {
+    async password(user: User, data: SecurityAccountDTO) {
         // verify the current password
         if (!user.password || !await this.securityUtil.compare(user.password, data.current_password)) {
             throw new AppError(
