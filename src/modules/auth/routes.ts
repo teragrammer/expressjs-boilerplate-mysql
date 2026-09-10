@@ -1,5 +1,4 @@
 // src/modules/auth/account.routes.ts
-
 import {Router} from "express";
 
 import {loginSchema} from "./validations/login.schema";
