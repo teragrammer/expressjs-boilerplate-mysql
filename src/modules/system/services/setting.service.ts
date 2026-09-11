@@ -1,9 +1,16 @@
 // src/modules/system/services/setting.service.ts
-
-import {InitializerSetting, SettingRow} from "../interfaces/setting.interface";
+import {
+    BrowseSettingQuery,
+    CreateSettingDTO,
+    InitializerSetting,
+    Setting,
+    UpdateSettingDTO
+} from "../interfaces/setting.interface";
 import {SettingRepository} from "../repositories/setting.repository";
 import {RedisCache} from "../../../shared/redis/redis-cache";
 import {SettingKeyValue} from "../interfaces/setting-key-value.interface";
+import {AppError} from "../../../common/utils/errors";
+import Messages from "../../../common/utils/messages";
 
 export class SettingService {
     // Made CACHE_KEY public static so it is easily exportable/importable
@@ -74,7 +81,7 @@ export class SettingService {
     async initializer(): Promise<InitializerSetting> {
         const [privateSettings, publicSettings] = await Promise.all([
             this.value([], undefined), // Private settings
-            this.value([], 1)          // Public settings
+            this.value([], true)       // Public settings
         ]);
 
         return {
@@ -86,9 +93,9 @@ export class SettingService {
     /**
      * Fetches settings from the database and parses them safely.
      */
-    async value(slugs: string[] = [], is_public?: number): Promise<SettingKeyValue> {
+    async value(slugs: string[] = [], is_public?: boolean): Promise<SettingKeyValue> {
         try {
-            const settings = await this.settingRepository.findBySlug(slugs, is_public);
+            const settings: Setting[] = await this.settingRepository.findBySlug(slugs, is_public);
             return this.parser(settings);
         } catch (error) {
             console.error(`Database retrieval failed for is_public=${is_public}:`, error);
@@ -99,9 +106,7 @@ export class SettingService {
     /**
      * Safe runtime type parser. Prevents type confusion and guarantees clean fallbacks.
      */
-    // src/modules/system/services/setting.service.ts
-
-    parser(settings: SettingRow[] | undefined): SettingKeyValue {
+    parser(settings: Setting[] | undefined): SettingKeyValue {
         // 1. Declare parsedObj as Partial so keys can be omitted initially
         const parsedObj: Partial<SettingKeyValue> = {};
 
@@ -150,5 +155,81 @@ export class SettingService {
      */
     clearLocalCache(): void {
         this.localCache = null;
+    }
+
+    async createSetting(data: CreateSettingDTO): Promise<Setting> {
+        const setting: Setting = await this.settingRepository.create(data);
+
+        // update the local cache and publish newly created setting
+        await this.boot();
+
+        return setting;
+    }
+
+    async updateSetting(
+        id: number,
+        data: UpdateSettingDTO,
+    ): Promise<Setting> {
+        const setting: Setting | null = await this.settingRepository.update(id, data);
+
+        if (!setting) {
+            throw new AppError(
+                Messages.DATA_NOT_FOUND.message,
+                Messages.DATA_NOT_FOUND.code,
+                404,
+            );
+        }
+
+        // Update the local cache and publish the updated setting.
+        await this.boot();
+
+        return setting;
+    }
+
+    async browseSettings(
+        filters: BrowseSettingQuery,
+    ): Promise<Setting[]> {
+        const MAX_PER_PAGE = 100;
+
+        const page = Math.max(1, filters.page || 1);
+
+        const perPage = Math.min(
+            MAX_PER_PAGE,
+            Math.max(1, filters.perPage || 20),
+        );
+
+        const normalizedFilters: BrowseSettingQuery = {
+            ...filters,
+            page,
+            perPage,
+            search: filters.search?.trim() || undefined,
+        };
+
+        return this.settingRepository.browse(normalizedFilters);
+    }
+
+    async findById(id: number): Promise<Setting> {
+        const setting = await this.settingRepository.findById(id);
+        if (!setting) {
+            throw new AppError(
+                Messages.DATA_NOT_FOUND.message,
+                Messages.DATA_NOT_FOUND.code,
+                404,
+            );
+        }
+        return setting;
+    }
+
+    async hardDelete(id: number): Promise<void> {
+        if (!await this.settingRepository.hardDelete(id)) {
+            throw new AppError(
+                Messages.DATA_NOT_FOUND.message,
+                Messages.DATA_NOT_FOUND.code,
+                404
+            );
+        }
+
+        // Update the local cache and publish the updated setting.
+        await this.boot();
     }
 }
