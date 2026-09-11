@@ -1,151 +1,111 @@
+// src/modules/system/controllers/setting.controller.ts
 import {Request, Response} from "express";
-import Joi from "joi";
-import errors from "../../../common/utils/messages";
-import {logger} from "../../../config/logger";
-import {DATA_TYPES, SET_CACHE_SETTINGS, SettingModel} from "../models/setting.model";
-import {DateUtil} from "../../../common/utils/date.util";
-import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
-import {SettingLegacy} from "../interfaces/setting.legacy";
-import RedisPublisherService from "../../../shared/redis/redis-pub.service.legacy";
-import SettingService from "../services/setting.service.legacy";
+import {Messages} from "../../../common/utils/messages";
 import catchAsync from "../../../common/utils/catch-async";
+import {SettingService} from "../services/setting.service";
+import {
+    BrowseSettingQuery,
+    CreateSettingDTO,
+    Setting,
+    SettingDataType,
+    UpdateSettingDTO
+} from "../interfaces/setting.interface";
+import {AppError} from "../../../common/utils/errors";
 
-class Controller {
-    create = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const DATA = req.sanitize.body.only(["name", "slug", "value", "description", "type", "is_disabled", "is_public"]);
-        if (await ExtendJoiUtil().response(Joi.object({
+export class SettingController {
+    constructor(
+        private readonly settingService: SettingService,
+    ) {
+    }
 
-        }), DATA, res)) return;
-
-        try {
-            DATA.created_at = DateUtil.sql();
-            const RESULT = await SettingModel().table()
-                .returning("id")
-                .insert(DATA);
-
-            // update the local cache and publish newly created setting
-            const settings = await SettingService.initializer();
-            SettingService.setCache(settings);
-            if (RESULT.length) await RedisPublisherService.publishCache(SET_CACHE_SETTINGS, settings);
-
-            res.status(200).json({id: RESULT[0]});
-        } catch (e) {
-            logger.error(e);
-
-            res.status(500).json({
-                code: errors.SERVER_ERROR.code,
-                message: errors.SERVER_ERROR.message,
-            });
-        }
+    create = catchAsync(async (req: Request, res: Response): Promise<void> => {
+        const setting: Setting = await this.settingService.createSetting(req.sanitize.data as CreateSettingDTO)
+        res.status(201).json({id: setting.id});
     });
 
-    update = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const ID = req.params.id;
-        const DATA = req.body;
-        if (await ExtendJoiUtil().response(Joi.object({
-            name: Joi.string().min(1).max(50).required(),
-            slug: Joi.string().min(1).max(50).required().external(ExtendJoiUtil().unique("settings", "slug", ID)),
-            value: Joi.any(),
-            description: Joi.string().min(1).max(200),
-            type: Joi.string().valid(...DATA_TYPES).required(),
-            is_disabled: Joi.number().valid(0, 1).required(),
-            is_public: Joi.number().valid(0, 1).required(),
-        }), DATA, res)) return;
-
-        try {
-            DATA.updated_at = DateUtil.sql();
-            const RESULT = await SettingModel().table()
-                .where("id", ID)
-                .update(DATA);
-
-            if (RESULT !== 1) return res.status(500).json({
-                code: errors.UPDATE_FAILED.code,
-                message: errors.UPDATE_FAILED.message,
-            });
-
-            // update the local cache and publish newly updated setting
-            const settings = await SettingService.initializer();
-            SettingService.setCache(settings);
-            if (RESULT === 1) await RedisPublisherService.publishCache(SET_CACHE_SETTINGS, settings);
-
-            res.status(200).send();
-        } catch (e) {
-            logger.error(e);
-
-            res.status(500).json({
-                code: errors.SERVER_ERROR.code,
-                message: errors.SERVER_ERROR.message,
-            });
-        }
-    });
-
-    browse = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const Q = SettingModel().table();
-
-        const IS_DISABLED: any = req.sanitize.query.numeric("is_disabled", null);
-        if (IS_DISABLED !== null) Q.where("is_disabled", IS_DISABLED);
-
-        const IS_PUBLIC: any = req.sanitize.query.numeric("is_public", null);
-        if (IS_PUBLIC !== null) Q.where("is_public", IS_PUBLIC);
-
-        const TYPE: any = req.sanitize.query.get("type");
-        if (TYPE !== null) Q.where("type", TYPE);
-
-        const KEYWORD: any = req.sanitize.query.get("search");
-        if (KEYWORD !== null) {
-            Q.where((queryBuilder: any) => {
-                queryBuilder.where("name", "LIKE", `%${KEYWORD}%`)
-                    .orWhere("slug", "LIKE", `%${KEYWORD}%`)
-                    .orWhere("value", "LIKE", `%${KEYWORD}%`)
-                    .orWhere("description", "LIKE", `%${KEYWORD}%`);
-            });
+    update = catchAsync(async (req: Request, res: Response): Promise<void> => {
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            throw new AppError(
+                Messages.INVALID_PATH_PARAM.message,
+                Messages.INVALID_PATH_PARAM.code,
+                400,
+            );
         }
 
-        const PAGINATE = req.app.get("paginate");
-        const SETTINGS: SettingLegacy[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
-
-        res.status(200).json(SETTINGS);
+        const setting: Setting = await this.settingService.updateSetting(id, req.sanitize.data as UpdateSettingDTO)
+        res.status(200).json({id: setting.id});
     });
+
+    browse = catchAsync(async (req: Request, res: Response): Promise<void> => {
+        const isDisabled = req.sanitize.query.numeric("is_disabled",);
+        const isPublic = req.sanitize.query.numeric("is_public",);
+
+        const type = req.sanitize.query.get("type");
+        const search = req.sanitize.query.get("search");
+
+        const paginate = req.app.get("paginate");
+
+        const filters: BrowseSettingQuery = {
+            page: Math.max(
+                1,
+                Number(paginate.page ?? 1),
+            ),
+            perPage: Math.min(
+                100,
+                Math.max(
+                    1,
+                    Number(paginate.perPage ?? 20),
+                ),
+            ),
+            ...(isDisabled !== null && {
+                is_disabled: isDisabled === 1,
+            }),
+            ...(isPublic !== null && {
+                is_public: isPublic === 1,
+            }),
+            ...(type !== null && {
+                type: type as SettingDataType,
+            }),
+            ...(search !== null && {
+                search: search.trim(),
+            }),
+        };
+
+        const settings: Setting[] = await this.settingService.browseSettings(filters);
+        res.status(200).json(settings);
+    });
+
 
     values = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        res.status(200).json((await SettingService.getCache()).pub);
+        res.status(200).json((await this.settingService.initializer()).pub);
     });
 
-    view = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const ID = req.params.id;
-        const SETTING: SettingLegacy = await SettingModel().table()
-            .where("id", ID)
-            .first();
-
-        if (!SETTING) return res.status(404).send({
-            code: errors.DATA_NOT_FOUND.code,
-            message: errors.DATA_NOT_FOUND.message,
-        });
-
-        return res.status(200).json(SETTING);
-    });
-
-    delete = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const ID = req.params.id;
-        const RESULT = await SettingModel().table()
-            .where("id", ID)
-            .delete();
-
-        if (RESULT !== 1) {
-            return res.status(500).json({
-                code: errors.DELETE_FAILED.code,
-                message: errors.DELETE_FAILED.message,
-            });
-        } else {
-            // update the local cache and publish newly updated setting
-            const settings = await SettingService.initializer();
-            SettingService.setCache(settings);
-            await RedisPublisherService.publishCache(SET_CACHE_SETTINGS, settings);
+    view = catchAsync(async (req: Request, res: Response): Promise<void> => {
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            throw new AppError(
+                Messages.INVALID_PATH_PARAM.message,
+                Messages.INVALID_PATH_PARAM.code,
+                400,
+            );
         }
 
-        res.status(200).json({result: RESULT === 1});
+        const setting: Setting = await this.settingService.findById(id);
+        res.status(200).json(setting);
+    });
+
+    delete = catchAsync(async (req: Request, res: Response): Promise<void> => {
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            throw new AppError(
+                Messages.INVALID_PATH_PARAM.message,
+                Messages.INVALID_PATH_PARAM.code,
+                400,
+            );
+        }
+
+        await this.settingService.hardDelete(id);
+        res.status(200).send();
     });
 }
-
-const SettingController = new Controller();
-export default SettingController;
