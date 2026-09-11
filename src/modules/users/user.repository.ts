@@ -1,14 +1,7 @@
 // src/modules/users/user.repository.ts
 import {Knex} from "knex";
 import {DBKnex} from "../../config/knex";
-import {
-    BrowseUsersQuery,
-    BrowseUsersResult,
-    CreateUserDTO,
-    UpdateUserDTO,
-    User,
-    UserRow,
-} from "./user.interface";
+import {BrowseUsersQuery, BrowseUsersResult, CreateUserDTO, UpdateUserDTO, User, UserRow,} from "./user.interface";
 
 export const USER_TABLE = "users";
 
@@ -120,6 +113,15 @@ export class UserRepository {
         data: UpdateUserDTO,
         status?: string,
     ): Promise<User | null> {
+        const existingRow = await this.table
+            .select("id")
+            .where("id", id)
+            .first();
+
+        if (!existingRow) {
+            return null;
+        }
+
         const updatePayload: Partial<UserRow> = {
             ...(data.first_name !== undefined && {
                 first_name: data.first_name,
