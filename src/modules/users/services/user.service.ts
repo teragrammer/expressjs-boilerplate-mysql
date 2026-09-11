@@ -67,9 +67,9 @@ export class UserService {
 
         const user: User | null = await this.userRepository.update(id, data);
         if (!user) throw new AppError(
-            Messages.SERVER_ERROR.message,
-            Messages.SERVER_ERROR.code,
-            500
+            Messages.DATA_NOT_FOUND.message,
+            Messages.DATA_NOT_FOUND.code,
+            404
         );
 
         return user;
