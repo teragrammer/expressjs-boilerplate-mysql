@@ -6,7 +6,6 @@ import {AppError} from "../../../common/utils/errors";
 import Messages from "../../../common/utils/messages";
 import {TokenService} from "./auth-token.service";
 import {AuthenticationTokenRepository} from "../repositories/authentication-token.repository";
-import {__ENV} from "../../../config/environment";
 import {SettingService} from "../../system/services/setting.service";
 import {MailService} from "../../../common/interfaces/mail.interface";
 import {User} from "../../users/user.interface";
@@ -36,14 +35,11 @@ interface VerifyOtpInput {
 
 export class TwoFactorAuthenticationService {
     constructor(
-        private readonly securityUtil = new SecurityUtil({
-            bcryptSecret: __ENV.BCRYPT_SECRET,
-            bcryptSaltRounds: Number(__ENV.BCRYPT_SALT_ROUND || 10),
-        }),
-        private readonly tfaRepository = new TwoFactorAuthenticationRepository(),
-        private readonly authenticationTokenRepository = new AuthenticationTokenRepository(),
-        private readonly authTokenService = new TokenService(),
-        private readonly dateUtil = DateUtil,
+        private readonly securityUtil: SecurityUtil,
+        private readonly tfaRepository: TwoFactorAuthenticationRepository,
+        private readonly authenticationTokenRepository: AuthenticationTokenRepository,
+        private readonly authTokenService: TokenService,
+        private readonly dateUtil: DateUtil,
         private readonly settingService: SettingService,
         private readonly mailService: MailService,
     ) {
