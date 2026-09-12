@@ -15,20 +15,16 @@ import {AuthenticationTokenRepository} from "../repositories/authentication-toke
 import {JwtExtendedPayload} from "../interfaces/jwt.interface";
 import {AuthenticationToken} from "../interfaces/authentication.token";
 import {settingService} from "../../../config/container";
-import {__ENV} from "../../../config/environment";
 
 export class AuthService {
     constructor(
-        private readonly securityUtil: SecurityUtil = new SecurityUtil({
-            bcryptSecret: __ENV.BCRYPT_SECRET,
-            bcryptSaltRounds: Number(__ENV.BCRYPT_SALT_ROUND || 10),
-        }),
-        private readonly authenticationTokenRepository = new AuthenticationTokenRepository(),
-        private readonly roleService = new RoleService(),
-        private readonly userService = new UserService(),
-        private readonly userRepository = new UserRepository(),
-        private readonly tokenService = new TokenService(),
-        private readonly dateUtil = DateUtil
+        private readonly securityUtil: SecurityUtil,
+        private readonly authenticationTokenRepository: AuthenticationTokenRepository,
+        private readonly roleService: RoleService,
+        private readonly userService: UserService,
+        private readonly userRepository: UserRepository,
+        private readonly tokenService: TokenService,
+        private readonly dateUtil: DateUtil
     ) {
     }
 
