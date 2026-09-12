@@ -1,5 +1,4 @@
 // src/common/utils/date.util.ts
-
 import {DateTime, DurationUnit} from "luxon";
 
 export class DateUtil {
@@ -7,7 +6,7 @@ export class DateUtil {
      * Safely normalizes multiple inputs into a native JS Date object.
      * Keeps performance high by avoiding wrapper libraries where possible.
      */
-    private static normalize(date?: Date | string | number | null, fallback = new Date()): Date {
+    private normalize(date?: Date | string | number | null, fallback = new Date()): Date {
         if (date === null || date === undefined) return fallback;
         return date instanceof Date ? date : new Date(date);
     }
@@ -15,7 +14,7 @@ export class DateUtil {
     /**
      * Formats a date into an SQL compatible string.
      */
-    static sql(date: Date | string | null = null, dateOnly = false, now = new Date()): string {
+    sql(date: Date | string | null = null, dateOnly = false, now = new Date()): string {
         const jsDate = this.normalize(date, now);
         const format = dateOnly ? "yyyy-LL-dd" : "yyyy-LL-dd HH:mm:ss";
         return DateTime.fromJSDate(jsDate).toFormat(format);
@@ -24,7 +23,7 @@ export class DateUtil {
     /**
      * Calculates an expiration date by adding a duration unit.
      */
-    static expiredAt(
+    expiredAt(
         amount: number | string,
         unit: DurationUnit,
         dateTime: Date | string | null = null,
@@ -46,7 +45,7 @@ export class DateUtil {
     /**
      * Returns a millisecond-level UNIX timestamp using fast, native JS methods.
      */
-    static unix(dateTime?: Date | string | number, now = new Date()): number {
+    unix(dateTime?: Date | string | number, now = new Date()): number {
         return this.toMs(dateTime, now);
     }
 
@@ -54,14 +53,14 @@ export class DateUtil {
      * Converts date input safely to a millisecond timestamp using native JS.
      * This is roughly 10x faster than routing simple date-objects through Luxon.
      */
-    static toMs(date?: Date | string | number | null, now = new Date()): number {
+    toMs(date?: Date | string | number | null, now = new Date()): number {
         return this.normalize(date, now).getTime();
     }
 
     /**
      * Checks if a specific date has passed relative to 'now'
      */
-    static isPast(date: Date | string | number, now = new Date()): boolean {
+    isPast(date: Date | string | number, now = new Date()): boolean {
         return this.toMs(date, now) < this.toMs(undefined, now);
     }
 }
