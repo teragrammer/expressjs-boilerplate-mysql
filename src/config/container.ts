@@ -31,6 +31,7 @@ import {SendGridMailService} from "../infrastructure/mail/sendgrid-mail.service"
 import {PasswordRecoveryRepository} from "../modules/auth/repositories/password-recovery.repository";
 import {PasswordRecoveryService} from "../modules/auth/services/password-recovery.service";
 import {UserRepository} from "../modules/users/user.repository";
+import {RoleService} from "../modules/role/role.service";
 
 const securityUtil = new SecurityUtil({
     bcryptSecret: __ENV.BCRYPT_SECRET,
@@ -51,12 +52,16 @@ export const redisSubscriber = new RedisSubscriber(
 );
 
 // Repositories
+const userRepository = new UserRepository(DBKnex);
 const settingRepository = new SettingRepository(DBKnex);
 const routeGuardRepository = new RouteGuardRepository(DBKnex);
+const authenticationTokenRepository = new AuthenticationTokenRepository(DBKnex);
+const roleService = new RoleService();
+const dateUtil = new DateUtil();
 
-export const userService = new UserService();
-export const authService = new AuthService(securityUtil);
+export const userService = new UserService(userRepository, securityUtil);
 export const tokenService = new TokenService();
+export const authService = new AuthService(securityUtil, authenticationTokenRepository, roleService, userService, userRepository, tokenService, dateUtil);
 
 // Mail provider
 const mailService = new SendGridMailService(
@@ -80,9 +85,9 @@ export const routeGuardService = new RouteGuardService(
 export const twoFactorAuthenticationService = new TwoFactorAuthenticationService(
     securityUtil,
     new TwoFactorAuthenticationRepository(DBKnex),
-    new AuthenticationTokenRepository(DBKnex),
+    authenticationTokenRepository,
     tokenService,
-    DateUtil,
+    dateUtil,
     settingService,
     mailService,
 );
@@ -91,7 +96,7 @@ export const passwordRecoveryService =
     new PasswordRecoveryService(
         securityUtil,
         passwordRecoveryRepository,
-        new UserRepository(DBKnex),
+        userRepository,
         settingService,
         mailService,
     );
