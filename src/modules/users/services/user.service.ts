@@ -8,7 +8,7 @@ import {SecurityUtil} from "../../../common/utils/security.util";
 export class UserService {
     // Dependency injection allows passing a mock repository during testing
     constructor(
-        private userRepository = new UserRepository(),
+        private userRepository: UserRepository,
         private readonly securityUtil: SecurityUtil,
     ) {
     }
