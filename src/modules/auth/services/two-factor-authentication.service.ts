@@ -6,7 +6,7 @@ import {AppError} from "../../../common/utils/errors";
 import Messages from "../../../common/utils/messages";
 import {TokenService} from "./auth-token.service";
 import {AuthenticationTokenRepository} from "../repositories/authentication-token.repository";
-import {SettingService} from "../../system/services/setting.service";
+import {SettingService} from "../../system/settings/setting.service";
 import {MailService} from "../../../common/interfaces/mail.interface";
 import {User} from "../../users/user.interface";
 

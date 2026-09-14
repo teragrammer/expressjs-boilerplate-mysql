@@ -2,14 +2,14 @@
 import {Request, Response} from "express";
 import {Messages} from "../../../common/utils/messages";
 import catchAsync from "../../../common/utils/catch-async";
-import {SettingService} from "../services/setting.service";
+import {SettingService} from "./setting.service";
 import {
     BrowseSettingQuery,
     CreateSettingDTO,
     Setting,
     SettingDataType,
     UpdateSettingDTO
-} from "../interfaces/setting.interface";
+} from "./setting.interface";
 import {AppError} from "../../../common/utils/errors";
 
 export class SettingController {

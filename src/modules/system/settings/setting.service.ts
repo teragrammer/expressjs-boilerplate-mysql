@@ -5,10 +5,10 @@ import {
     InitializerSetting,
     Setting,
     UpdateSettingDTO
-} from "../interfaces/setting.interface";
-import {SettingRepository} from "../repositories/setting.repository";
+} from "./setting.interface";
+import {SettingRepository} from "./setting.repository";
 import {RedisCache} from "../../../shared/redis/redis-cache";
-import {SettingKeyValue} from "../interfaces/setting-key-value.interface";
+import {SettingKeyValue} from "./setting-key-value.interface";
 import {AppError} from "../../../common/utils/errors";
 import Messages from "../../../common/utils/messages";
 

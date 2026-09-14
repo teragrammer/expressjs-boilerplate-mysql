@@ -7,7 +7,7 @@ import {SecurityUtil} from "../../../common/utils/security.util";
 import {AppError} from "../../../common/utils/errors";
 import {__ENV} from "../../../config/environment";
 import Messages from "../../../common/utils/messages";
-import {SettingService} from "../../system/services/setting.service";
+import {SettingService} from "../../system/settings/setting.service";
 import {MailService} from "../../../common/interfaces/mail.interface";
 
 const CODE_LENGTH = 6;

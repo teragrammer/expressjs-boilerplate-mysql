@@ -8,7 +8,7 @@ import {SecurityUtil} from "../common/utils/security.util";
 import {DateUtil} from "../common/utils/date.util";
 
 // Repositories
-import {SettingRepository} from "../modules/system/repositories/setting.repository";
+import {SettingRepository} from "../modules/system/settings/setting.repository";
 import {RouteGuardRepository} from "../modules/system/repositories/route-guard.repository";
 import {TwoFactorAuthenticationRepository} from "../modules/auth/repositories/two-factor-authentication.repository";
 import {AuthenticationTokenRepository} from "../modules/auth/repositories/authentication-token.repository";
@@ -18,7 +18,7 @@ import {RedisCache} from "../shared/redis/redis-cache";
 import {RedisSubscriber} from "../shared/redis/redis-subscriber";
 
 // Services
-import {SettingService} from "../modules/system/services/setting.service";
+import {SettingService} from "../modules/system/settings/setting.service";
 import {RouteGuardService} from "../modules/system/services/route-guard.service";
 import {UserService} from "../modules/users/services/user.service";
 import {AuthService} from "../modules/auth/services/auth.service";
@@ -26,7 +26,7 @@ import {TokenService} from "../modules/auth/services/auth-token.service";
 import {TwoFactorAuthenticationService} from "../modules/auth/services/two-factor-authentication.service";
 
 // Event Handlers
-import {SystemEventHandler} from "../modules/system/events/system.event";
+import {SystemEventHandler} from "../modules/system/settings/system.event";
 import {SendGridMailService} from "../infrastructure/mail/sendgrid-mail.service";
 import {PasswordRecoveryRepository} from "../modules/auth/repositories/password-recovery.repository";
 import {PasswordRecoveryService} from "../modules/auth/services/password-recovery.service";

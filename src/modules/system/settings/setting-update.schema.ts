@@ -1,7 +1,7 @@
 // src/modules/users/validations/user-update.schema.ts
 import Joi from '../../../shared/validations/joi';
 import {validateCompositeUnique} from "../../../shared/validations/database/unique";
-import {DATA_TYPES} from "../models/setting.model";
+import {DATA_TYPES} from "./setting.model";
 
 export const settingUpdateSchema = (settingId: string | number) => Joi.object({
     name: Joi.string().min(1).max(50).required(),

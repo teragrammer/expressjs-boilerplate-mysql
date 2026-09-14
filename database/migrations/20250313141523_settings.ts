@@ -1,6 +1,6 @@
 // database/migrations/20250313141523_settings.ts
 import type { Knex } from "knex";
-import { DATA_TYPES } from "../../src/modules/system/models/setting.model";
+import { DATA_TYPES } from "../../src/modules/system/settings/setting.model";
 
 export async function up(knex: Knex): Promise<void> {
     return knex.schema.createTable("settings", table => {

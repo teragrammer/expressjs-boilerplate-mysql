@@ -9,7 +9,7 @@ import RouteGuardController from "../modules/system/controllers/route-guard.cont
 import authRoutes from "../modules/auth/routes"
 import accountRoutes from "../modules/users/account.routes"
 import userRoutes from "../modules/users/user.routes";
-import settingRoutes from "../modules/system/setting.routes";
+import settingRoutes from "../modules/system/settings/setting.routes";
 
 export default () => {
     const router = Router();

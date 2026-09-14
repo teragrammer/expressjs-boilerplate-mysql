@@ -1,5 +1,5 @@
 import {Knex} from "knex";
-import {SettingKeyValue} from "../interfaces/setting-key-value.interface";
+import {SettingKeyValue} from "./setting-key-value.interface";
 import {DBKnex} from "../../../config/knex";
 
 export const SETTING_TABLE = "settings";

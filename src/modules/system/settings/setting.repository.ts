@@ -7,7 +7,7 @@ import {
     Setting,
     SettingRow,
     UpdateSettingDTO,
-} from "../interfaces/setting.interface";
+} from "./setting.interface";
 
 export const SETTING_TABLE = "settings";
 

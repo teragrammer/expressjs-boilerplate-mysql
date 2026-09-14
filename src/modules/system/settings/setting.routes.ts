@@ -1,13 +1,13 @@
 import {Router} from "express";
-import {AuthenticationMiddleware} from "../../common/middleware/authentication.middleware";
-import {AuthorizationMiddleware} from "../../common/middleware/authorization.middleware";
-import {validate} from "../../common/middleware/validate.middleware";
-import {settingCreateSchema} from "./validations/setting-create.schema";
-import {settingUpdateSchema} from "./validations/setting-update.schema";
-import {SettingController} from "./controllers/setting.controller";
-import {SettingService} from "./services/setting.service";
-import {SettingRepository} from "./repositories/setting.repository";
-import {redisCache} from "../../config/container";
+import {AuthenticationMiddleware} from "../../../common/middleware/authentication.middleware";
+import {AuthorizationMiddleware} from "../../../common/middleware/authorization.middleware";
+import {validate} from "../../../common/middleware/validate.middleware";
+import {settingCreateSchema} from "./setting-create.schema";
+import {settingUpdateSchema} from "./setting-update.schema";
+import {SettingController} from "./setting.controller";
+import {SettingService} from "./setting.service";
+import {SettingRepository} from "./setting.repository";
+import {redisCache} from "../../../config/container";
 
 const settingController = new SettingController(new SettingService(
     new SettingRepository(),

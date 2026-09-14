@@ -4,7 +4,7 @@ import {SecurityUtil} from "../../../../src/common/utils/security.util";
 import {PasswordRecoveryRepository} from "../../../../src/modules/auth/repositories/password-recovery.repository";
 import {UserRepository} from "../../../../src/modules/users/user.repository";
 import {RECOVERY_EMAIL, RECOVERY_PHONE} from "../../../../src/modules/auth/interfaces/password.recovery.interface";
-import {SettingService} from "../../../../src/modules/system/services/setting.service";
+import {SettingService} from "../../../../src/modules/system/settings/setting.service";
 import {MailService} from "../../../../src/common/interfaces/mail.interface";
 
 describe("PasswordRecoveryService Unit Tests", () => {
