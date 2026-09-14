@@ -1,8 +1,8 @@
 // src/modules/role/role.service.ts
 import {RoleRepository} from "./role.repository";
 import {Role} from "./role.interface";
-import {AppError} from "../../common/utils/errors";
-import Messages from "../../common/utils/messages";
+import {AppError} from "../../../common/utils/errors";
+import Messages from "../../../common/utils/messages";
 
 export class RoleService {
     constructor(private roleRepository = new RoleRepository()) {

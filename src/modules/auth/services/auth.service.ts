@@ -1,6 +1,6 @@
 // src/modules/auth/services/auth.service.ts
 
-import {RoleService} from "../../role/role.service";
+import {RoleService} from "../../system/role/role.service";
 import {UserService} from "../../users/services/user.service";
 import {TokenService} from "./auth-token.service";
 import {SecurityUtil} from "../../../common/utils/security.util";

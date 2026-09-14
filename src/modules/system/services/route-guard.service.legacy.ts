@@ -1,5 +1,5 @@
-import {Role} from "../../role/role";
-import {RoleModel} from "../../role/role.model";
+import {Role} from "../role/role";
+import {RoleModel} from "../role/role.model";
 import {RouteGuard} from "../interfaces/route-guard.interface";
 import {RouteGuardModel} from "../models/route-guard.model";
 import RedisPublisherService from "../../../shared/redis/redis-pub.service.legacy";

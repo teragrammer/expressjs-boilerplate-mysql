@@ -31,7 +31,7 @@ import {SendGridMailService} from "../infrastructure/mail/sendgrid-mail.service"
 import {PasswordRecoveryRepository} from "../modules/auth/repositories/password-recovery.repository";
 import {PasswordRecoveryService} from "../modules/auth/services/password-recovery.service";
 import {UserRepository} from "../modules/users/user.repository";
-import {RoleService} from "../modules/role/role.service";
+import {RoleService} from "../modules/system/role/role.service";
 
 const securityUtil = new SecurityUtil({
     bcryptSecret: __ENV.BCRYPT_SECRET,

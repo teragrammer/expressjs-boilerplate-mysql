@@ -1,6 +1,6 @@
 // src/modules/role/role.model.ts
 import {Knex} from "knex";
-import {DBKnex} from "../../config/knex";
+import {DBKnex} from "../../../config/knex";
 
 export const ROLE_TABLE = "roles";
 

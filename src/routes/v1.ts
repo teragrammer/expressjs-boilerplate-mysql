@@ -3,7 +3,7 @@
 import {Router} from "express";
 import {AuthenticationMiddleware} from "../common/middleware/authentication.middleware";
 import {AuthorizationMiddleware} from "../common/middleware/authorization.middleware";
-import RoleController from "../modules/role/role.controller";
+import RoleController from "../modules/system/role/role.controller";
 import RouteGuardController from "../modules/system/controllers/route-guard.controller";
 
 import authRoutes from "../modules/auth/routes"
