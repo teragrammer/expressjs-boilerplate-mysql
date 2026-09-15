@@ -1,4 +1,4 @@
-// src/modules/system/controllers/setting.controller.ts
+// src/modules/system/settings/setting.controller.ts
 import {Request, Response} from "express";
 import {Messages} from "../../../common/utils/messages";
 import catchAsync from "../../../common/utils/catch-async";
