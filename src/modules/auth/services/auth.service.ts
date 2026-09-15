@@ -1,6 +1,6 @@
 // src/modules/auth/services/auth.service.ts
 
-import {RoleService} from "../../system/role/role.service";
+import {RoleService} from "../../system/roles/role.service";
 import {UserService} from "../../users/services/user.service";
 import {TokenService} from "./auth-token.service";
 import {SecurityUtil} from "../../../common/utils/security.util";
@@ -35,7 +35,7 @@ export class AuthService {
         const role = await this.roleService.getRoleBySlug("customer");
         if (!role) {
             throw new AppError(
-                "Default registration role 'customer' could not be resolved.",
+                "Default registration roles 'customer' could not be resolved.",
                 Messages.DATA_NOT_FOUND.code,
                 404
             );
