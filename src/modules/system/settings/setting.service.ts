@@ -1,4 +1,4 @@
-// src/modules/system/services/setting.service.ts
+// src/modules/system/settings/setting.service.ts
 import {
     BrowseSettingQuery,
     CreateSettingDTO,

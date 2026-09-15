@@ -3,7 +3,7 @@
 import {logger} from "../../../config/logger";
 import {RedisCache} from "../../../shared/redis/redis-cache";
 import {SettingService} from "./setting.service";
-import {RouteGuardService} from "../services/route-guard.service";
+import {RouteGuardService} from "../route-guards/route-guard.service";
 
 export class SystemEventHandler {
     constructor(
