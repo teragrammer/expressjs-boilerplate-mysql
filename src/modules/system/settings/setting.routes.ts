@@ -28,7 +28,7 @@ export default () => {
     router.put("/:id", [
         AuthenticationMiddleware(),
         AuthorizationMiddleware("settings:update"),
-        validate((req) => settingUpdateSchema(req.credentials.jwt.uid), [
+        validate((req) => settingUpdateSchema(Number(req.params.id)), [
             "name", "slug", "value", "description", "type", "is_disabled", "is_public"
         ])
     ], settingController.update);
