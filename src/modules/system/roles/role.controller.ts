@@ -1,123 +1,106 @@
+// src/modules/system/roles/role.controller.ts
 import {Request, Response} from "express";
-import Joi from "joi";
-import errors from "../../../common/utils/messages";
-import {logger} from "../../../config/logger";
-import {DateUtil} from "../../../common/utils/date.util";
-import {RoleModel} from "./role.model";
-import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
-import {Role} from "./role";
+import {Messages} from "../../../common/utils/messages";
 import catchAsync from "../../../common/utils/catch-async";
+import {RoleService} from "./role.service";
+import {
+    BrowseRoleQuery,
+    CreateRoleDTO,
+    Role,
+    UpdateRoleDTO,
+} from "./role.interface";
+import {AppError} from "../../../common/utils/errors";
 
-class Controller {
-    browse = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const Q = RoleModel().table();
+export class RoleController {
+    constructor(
+        private readonly roleService: RoleService,
+    ) {
+    }
 
-        const IS_PUBLIC: any = req.sanitize.query.numeric("is_public", null);
-        if (IS_PUBLIC !== null) Q.where("is_public", IS_PUBLIC);
+    create = catchAsync(async (req: Request, res: Response): Promise<void> => {
+        const role: Role = await this.roleService.createRole(
+            req.sanitize.data as CreateRoleDTO,
+        );
 
-        const KEYWORD: any = req.sanitize.query.get("search");
-        if (KEYWORD !== null) {
-            Q.where((queryBuilder: any) => {
-                queryBuilder.where("name", "LIKE", `%${KEYWORD}%`)
-                    .orWhere("slug", "LIKE", `%${KEYWORD}%`)
-                    .orWhere("description", "LIKE", `%${KEYWORD}%`);
-            });
+        res.status(201).json({id: role.id});
+    });
+
+    update = catchAsync(async (req: Request, res: Response): Promise<void> => {
+        const id = Number(req.params.id);
+
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            throw new AppError(
+                Messages.INVALID_PATH_PARAM.message,
+                Messages.INVALID_PATH_PARAM.code,
+                400,
+            );
         }
 
-        const PAGINATE = req.app.get("paginate");
-        const ROLES: Role[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
+        const role: Role = await this.roleService.updateRole(
+            id,
+            req.sanitize.data as UpdateRoleDTO,
+        );
 
-        res.status(200).json(ROLES);
+        res.status(200).json({id: role.id});
     });
 
-    view = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const ID = req.params.id;
-        const ROLE: Role = await RoleModel().table()
-            .where("id", ID)
-            .first();
+    browse = catchAsync(async (req: Request, res: Response): Promise<void> => {
+        const isPublic = req.sanitize.query.numeric("is_public");
+        const search = req.sanitize.query.get("search");
 
-        if (!ROLE) return res.status(404).send({
-            code: errors.DATA_NOT_FOUND.code,
-            message: errors.DATA_NOT_FOUND.message,
-        });
+        const paginate = req.app.get("paginate");
 
-        return res.status(200).json(ROLE);
+        const filters: BrowseRoleQuery = {
+            page: Math.max(
+                1,
+                Number(paginate.page ?? 1),
+            ),
+            perPage: Math.min(
+                100,
+                Math.max(
+                    1,
+                    Number(paginate.perPage ?? 20),
+                ),
+            ),
+            ...(isPublic !== null && {
+                is_public: isPublic === 1,
+            }),
+            ...(search !== null && {
+                search: search.trim(),
+            }),
+        };
+
+        const roles: Role[] = await this.roleService.browseRoles(filters);
+
+        res.status(200).json(roles);
     });
 
-    create = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const DATA = req.sanitize.body.only(["name", "slug", "description", "is_public", "is_bypass_authorization"]);
-        if (await ExtendJoiUtil().response(Joi.object({
-            name: Joi.string().min(1).max(50).required(),
-            slug: Joi.string().min(1).max(50).required().external(ExtendJoiUtil().unique("roles", "slug")),
-            description: Joi.string().max(100).allow(null, ""),
-            is_public: Joi.number().valid(0, 1).required(),
-            is_bypass_authorization: Joi.number().valid(0, 1).required(),
-        }), DATA, res)) return;
-
-        try {
-            DATA.created_at = DateUtil.sql();
-            const RESULT = await RoleModel().table()
-                .returning("id")
-                .insert(DATA);
-
-            res.status(200).json({id: RESULT[0]});
-        } catch (e) {
-            logger.error(e);
-
-            res.status(500).json({
-                code: errors.SERVER_ERROR.code,
-                message: errors.SERVER_ERROR.message,
-            });
+    view = catchAsync(async (req: Request, res: Response): Promise<void> => {
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            throw new AppError(
+                Messages.INVALID_PATH_PARAM.message,
+                Messages.INVALID_PATH_PARAM.code,
+                400,
+            );
         }
+
+        const role: Role = await this.roleService.findById(id);
+        res.status(200).json(role);
     });
 
-    update = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const ID = req.params.id;
-        const DATA = req.sanitize.body.only(["name", "slug", "description", "is_public", "is_bypass_authorization"]);
-        if (await ExtendJoiUtil().response(Joi.object({
-            name: Joi.string().min(1).max(50).required(),
-            slug: Joi.string().min(1).max(50).required().external(ExtendJoiUtil().unique("roles", "slug", ID)),
-            description: Joi.string().max(100).allow(null, ""),
-            is_public: Joi.number().valid(0, 1).required(),
-            is_bypass_authorization: Joi.number().valid(0, 1).required(),
-        }), DATA, res)) return;
-
-        try {
-            DATA.updated_at = DateUtil.sql();
-            const RESULT: number = await RoleModel().table()
-                .where("id", ID)
-                .update(DATA);
-
-            if (RESULT !== 1) return res.status(500).json({
-                code: errors.UPDATE_FAILED.code,
-                message: errors.UPDATE_FAILED.message,
-            });
-
-            res.status(200).send();
-        } catch (e) {
-            logger.error(e);
-
-            res.status(500).json({
-                code: errors.SERVER_ERROR.code,
-                message: errors.SERVER_ERROR.message,
-            });
+    delete = catchAsync(async (req: Request, res: Response): Promise<void> => {
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            throw new AppError(
+                Messages.INVALID_PATH_PARAM.message,
+                Messages.INVALID_PATH_PARAM.code,
+                400,
+            );
         }
-    });
 
-    delete = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const ID = req.params.id;
-        const RESULT: number = await RoleModel().table()
-            .where("id", ID)
-            .delete();
-
-        if (RESULT !== 1) return res.status(500).json({
-            code: errors.DELETE_FAILED.code,
-            message: errors.DELETE_FAILED.message,
-        });
+        await this.roleService.hardDelete(id);
 
         res.status(200).send();
     });
 }
-
-const RoleController = new Controller();
-export default RoleController;
