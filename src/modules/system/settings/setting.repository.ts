@@ -1,4 +1,4 @@
-// src/modules/system/repositories/setting.repository.ts
+// src/modules/system/settings/setting.repository.ts
 import {Knex} from "knex";
 import {DBKnex} from "../../../config/knex";
 import {
