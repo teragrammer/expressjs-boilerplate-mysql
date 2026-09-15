@@ -1,4 +1,4 @@
-// src/modules/system/interfaces/setting.interface.ts
+// src/modules/system/settings/setting.interface.ts
 import {SettingKeyValue} from "./setting-key-value.interface";
 
 /**
