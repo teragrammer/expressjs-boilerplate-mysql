@@ -18,7 +18,7 @@ import { errorHandler } from "./common/middleware/error.middleware";
 
 // Service & Event classes (for public static references like CACHE_KEY)
 import { SettingService } from "./modules/system/settings/setting.service";
-import { RouteGuardService } from "./modules/system/services/route-guard.service";
+import { RouteGuardService } from "./modules/system/route-guards/route-guard.service";
 
 // Import Singleton DI instances from the dedicated container
 import {
