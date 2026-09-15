@@ -1,90 +1,73 @@
+// src/modules/system/route-guards/route-guard.controller.ts
 import {Request, Response} from "express";
-import Joi from "joi";
-import errors from "../../../common/utils/messages";
-import {logger} from "../../../config/logger";
-import {ExtendJoiUtil} from "../../../common/utils/extend-joi.util";
-import {RouteGuard} from "../interfaces/route-guard.interface";
-import {RouteGuardModel, SET_CACHE_GUARDS} from "../models/route-guard.model";
-import RedisPublisherService from "../../../shared/redis/redis-pub.service.legacy";
-import RouteGuardService from "../services/route-guard.service.legacy";
+import {Messages} from "../../../common/utils/messages";
+import {CreateRouteGuardDTO, RouteGuard, RouteGuardRow} from "./route-guard.interface";
 import catchAsync from "../../../common/utils/catch-async";
+import {RouteGuardService} from "./route-guard.service";
+import {AppError} from "../../../common/utils/errors";
 
-class Controller {
-    browse = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const Q = RouteGuardModel().table();
+export class RouteGuardController {
+    constructor(
+        private readonly routeGuardService: RouteGuardService,
+    ) {
+    }
 
-        const ROLE_ID: any = req.sanitize.query.numeric("role_id", null);
-        if (ROLE_ID !== null) Q.where("role_id", ROLE_ID);
+    create = catchAsync(async (req: Request, res: Response): Promise<any> => {
+        const routeGuard: RouteGuard = await this.routeGuardService.createRouteGuard(req.sanitize.data as CreateRouteGuardDTO);
+        res.status(200).json({id: routeGuard.id});
+    });
 
-        const PAGINATE = req.app.get("paginate");
-        const ROUTE_GUARDS: RouteGuard[] = await Q.offset(PAGINATE.offset).limit(PAGINATE.perPage);
+    browse = catchAsync(async (req: Request, res: Response): Promise<void> => {
+        const roleId = req.sanitize.query.numeric("role_id");
+        const paginate = req.app.get("paginate");
 
-        res.status(200).json(ROUTE_GUARDS);
+        const filters = {
+            page: Math.max(
+                1,
+                Number(paginate.page ?? 1),
+            ),
+            perPage: Math.min(
+                100,
+                Math.max(
+                    1,
+                    Number(paginate.perPage ?? 20),
+                ),
+            ),
+            ...(roleId !== null && {
+                role_id: roleId,
+            }),
+        };
+
+        const routeGuards = await this.routeGuardService.browseRouteGuards(filters);
+
+        res.status(200).json(routeGuards);
     });
 
     view = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const ID = req.params.id;
-        const ROUTE_GUARD: RouteGuard = await RouteGuardModel().table()
-            .where("id", ID)
-            .first();
-
-        if (!ROUTE_GUARD) return res.status(404).send({
-            code: errors.DATA_NOT_FOUND.code,
-            message: errors.DATA_NOT_FOUND.message,
-        });
-
-        return res.status(200).json(ROUTE_GUARD);
-    });
-
-    create = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const DATA = req.sanitize.body.only(["role_id", "route"]);
-        if (await ExtendJoiUtil().response(Joi.object({
-            role_id: Joi.number().integer().required().external(ExtendJoiUtil().exists("roles")),
-            route: Joi.string().min(3).max(100).required(),
-        }), DATA, res)) return;
-
-        try {
-            const [ID] = await RouteGuardModel().table()
-                .returning("id")
-                .insert(DATA);
-
-            // update the local cache and publish newly updated setting
-            const routeGuards = await RouteGuardService.initializer();
-            RouteGuardService.setCache(routeGuards);
-            if (ID) await RedisPublisherService.publishCache(SET_CACHE_GUARDS, routeGuards);
-
-            res.status(200).json({id: ID});
-        } catch (e) {
-            logger.error(e);
-
-            res.status(500).json({
-                code: errors.SERVER_ERROR.code,
-                message: errors.SERVER_ERROR.message,
-            });
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            throw new AppError(
+                Messages.INVALID_PATH_PARAM.message,
+                Messages.INVALID_PATH_PARAM.code,
+                400,
+            );
         }
+
+        const routeGuard: RouteGuardRow = await this.routeGuardService.findById(id);
+        res.status(200).json(routeGuard);
     });
 
     delete = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const ID = req.params.id;
-        const RESULT = await RouteGuardModel().table()
-            .where("id", ID)
-            .delete();
-
-        if (RESULT !== 1) {
-            return res.status(500).json({
-                code: errors.DELETE_FAILED.code,
-                message: errors.DELETE_FAILED.message,
-            });
-        } else {
-            // update the local cache and publish newly updated setting
-            const routeGuards = await RouteGuardService.initializer();
-            RouteGuardService.setCache(routeGuards);
-            await RedisPublisherService.publishCache(SET_CACHE_GUARDS, routeGuards);
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            throw new AppError(
+                Messages.INVALID_PATH_PARAM.message,
+                Messages.INVALID_PATH_PARAM.code,
+                400,
+            );
         }
 
-        res.status(200).json({result: RESULT === 1});
+        await this.routeGuardService.hardDelete(id);
+        res.status(200).send();
     });
 }
-
-const RouteGuardController = new Controller();
-export default RouteGuardController;
