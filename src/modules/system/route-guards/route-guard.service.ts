@@ -1,8 +1,15 @@
-// src/modules/system/services/route-guard.service.ts
-
+// src/modules/system/route-guards/route-guard.service.ts
 import {RedisCache} from "../../../shared/redis/redis-cache";
-import {RouteGuardRepository} from "../repositories/route-guard.repository";
-import {RouteGuardCachePayload} from "../interfaces/route-guard.interface";
+import {RouteGuardRepository} from "./route-guard.repository";
+import {
+    BrowseRouteGuardQuery,
+    CreateRouteGuardDTO,
+    RouteGuard,
+    RouteGuardCachePayload,
+    RouteGuardRow
+} from "./route-guard.interface";
+import {AppError} from "../../../common/utils/errors";
+import Messages from "../../../common/utils/messages";
 
 export class RouteGuardService {
     // Made CACHE_KEY public static so it is easily exportable/importable
@@ -92,5 +99,66 @@ export class RouteGuardService {
      */
     clearLocalCache(): void {
         this.localCache = null;
+    }
+
+    async createRouteGuard(data: CreateRouteGuardDTO): Promise<RouteGuard> {
+        const routeGuard: RouteGuard = await this.routeGuardRepository.create(data);
+        await this.boot();
+        return routeGuard;
+    }
+
+    async findById(id: number): Promise<RouteGuardRow> {
+        const role = await this.routeGuardRepository.findById(id);
+
+        if (!role) {
+            throw new AppError(
+                Messages.DATA_NOT_FOUND.message,
+                Messages.DATA_NOT_FOUND.code,
+                404,
+            );
+        }
+
+        return role;
+    }
+
+    async browseRouteGuards(
+        filters: BrowseRouteGuardQuery,
+    ): Promise<RouteGuardRow[]> {
+        const MAX_PER_PAGE = 100;
+
+        const page = Math.max(
+            1,
+            filters.page || 1,
+        );
+
+        const perPage = Math.min(
+            MAX_PER_PAGE,
+            Math.max(
+                1,
+                filters.perPage || 20,
+            ),
+        );
+
+        const normalizedFilters: BrowseRouteGuardQuery = {
+            ...filters,
+            page,
+            perPage,
+        };
+
+        return this.routeGuardRepository.browse(normalizedFilters);
+    }
+
+    async hardDelete(id: number): Promise<void> {
+        const deleted = await this.routeGuardRepository.delete(id);
+
+        if (!deleted) {
+            throw new AppError(
+                Messages.DATA_NOT_FOUND.message,
+                Messages.DATA_NOT_FOUND.code,
+                404,
+            );
+        }
+
+        await this.boot();
     }
 }
