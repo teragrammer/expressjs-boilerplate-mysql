@@ -1,5 +1,4 @@
 // src/config/container.ts
-
 import {DBKnex} from "./knex";
 import {DBRedis} from "./redis";
 import {logger} from "./logger";
@@ -9,9 +8,12 @@ import {DateUtil} from "../common/utils/date.util";
 
 // Repositories
 import {SettingRepository} from "../modules/system/settings/setting.repository";
-import {RouteGuardRepository} from "../modules/system/repositories/route-guard.repository";
+import {RouteGuardRepository} from "../modules/system/route-guards/route-guard.repository";
 import {TwoFactorAuthenticationRepository} from "../modules/auth/repositories/two-factor-authentication.repository";
 import {AuthenticationTokenRepository} from "../modules/auth/repositories/authentication-token.repository";
+import {RoleRepository} from "../modules/system/roles/role.repository";
+import {UserRepository} from "../modules/users/user.repository";
+import {PasswordRecoveryRepository} from "../modules/auth/repositories/password-recovery.repository";
 
 // Shared Cache Elements
 import {RedisCache} from "../shared/redis/redis-cache";
@@ -19,19 +21,17 @@ import {RedisSubscriber} from "../shared/redis/redis-subscriber";
 
 // Services
 import {SettingService} from "../modules/system/settings/setting.service";
-import {RouteGuardService} from "../modules/system/services/route-guard.service";
+import {RouteGuardService} from "../modules/system/route-guards/route-guard.service";
 import {UserService} from "../modules/users/services/user.service";
 import {AuthService} from "../modules/auth/services/auth.service";
 import {TokenService} from "../modules/auth/services/auth-token.service";
 import {TwoFactorAuthenticationService} from "../modules/auth/services/two-factor-authentication.service";
+import {PasswordRecoveryService} from "../modules/auth/services/password-recovery.service";
+import {RoleService} from "../modules/system/roles/role.service";
 
 // Event Handlers
 import {SystemEventHandler} from "../modules/system/settings/system.event";
 import {SendGridMailService} from "../infrastructure/mail/sendgrid-mail.service";
-import {PasswordRecoveryRepository} from "../modules/auth/repositories/password-recovery.repository";
-import {PasswordRecoveryService} from "../modules/auth/services/password-recovery.service";
-import {UserRepository} from "../modules/users/user.repository";
-import {RoleService} from "../modules/system/role/role.service";
 
 const securityUtil = new SecurityUtil({
     bcryptSecret: __ENV.BCRYPT_SECRET,
@@ -56,7 +56,7 @@ const userRepository = new UserRepository(DBKnex);
 const settingRepository = new SettingRepository(DBKnex);
 const routeGuardRepository = new RouteGuardRepository(DBKnex);
 const authenticationTokenRepository = new AuthenticationTokenRepository(DBKnex);
-const roleService = new RoleService();
+const roleService = new RoleService(new RoleRepository());
 const dateUtil = new DateUtil();
 
 export const userService = new UserService(userRepository, securityUtil);
