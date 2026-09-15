@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response} from "express";
 import errors from "../utils/messages";
-import RouteGuardService from "../../modules/system/services/route-guard.service.legacy";
+import {routeGuardService} from "../../config/container";
 
 export function AuthorizationMiddleware(route: string, isHalt = true) {
     return async function (req: Request, res: Response, next: NextFunction) {
@@ -12,23 +12,23 @@ export function AuthorizationMiddleware(route: string, isHalt = true) {
         });
 
         if (credentials && isHalt) {
-            const BYPASS: number | undefined = credentials.jwt.bpa;
-            if (BYPASS === 1) return next();
+            const byPass: number | undefined = credentials.jwt.bpa;
+            if (byPass === 1) return next();
 
-            const GUARDS: Record<string, string[]> = await RouteGuardService.getCache();
-            const ROLE: string | undefined = credentials.jwt.rol;
+            const guards: Record<string, string[]> = await routeGuardService.getCache();
+            const role: string | undefined = credentials.jwt.rol;
 
-            if (!GUARDS || !ROLE) return res.status(403).json({
+            if (!guards || !role) return res.status(403).json({
                 code: "AUTH_PERM_CACHE",
                 message: errors.NO_PERMISSION.message,
             });
 
-            if (typeof GUARDS[ROLE] === "undefined") return res.status(403).json({
+            if (typeof guards[role] === "undefined") return res.status(403).json({
                 code: "AUTH_PERM_UNDEFINED",
                 message: errors.NO_PERMISSION.message,
             });
 
-            if (!GUARDS[ROLE].includes(route)) return res.status(403).json({
+            if (!guards[role].includes(route)) return res.status(403).json({
                 code: "AUTH_PERM_UNAUTHORIZED",
                 message: errors.NO_PERMISSION.message,
             });
