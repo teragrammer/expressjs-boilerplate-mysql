@@ -11,29 +11,45 @@ export interface RequestCredentials {
 }
 
 export interface SanitizerHelper {
-    get: <T = any>(key: string, defaults?: T) => T;
-    only: <T extends Record<string, any> = Record<string, any>>(
-        keys: string[],
-        defaults?: Partial<T>
+    get: <T = unknown>(
+        key: string,
+        defaults?: T,
     ) => T;
-    numeric: (key: string, defaults?: number) => number;
+
+    only: <
+        T extends Record<string, unknown> = Record<string, unknown>
+    >(
+        keys: string[],
+        defaults?: Partial<T>,
+    ) => T;
+
+    numeric: (
+        key: string,
+        defaults?: number,
+    ) => number;
 }
 
 export interface RequestSanitize {
     body: SanitizerHelper;
     query: SanitizerHelper;
-    data?: Record<any, any>;
+    data: Record<string, unknown>;
 }
 
 export interface ResponseFailed {
-    message: (status: number, message?: string, code?: string) => any;
-    fields: (status: number, errors: Record<string, any> | any) => any;
+    message: (
+        status: number,
+        message?: string,
+        code?: string,
+    ) => void;
+
+    fields: (
+        status: number,
+        errors: Record<string, unknown> | unknown[],
+    ) => void;
 }
 
 /**
  * Traditional page/offset pagination.
- *
- * Keep this because existing endpoints may already depend on it.
  */
 export interface RequestPagination {
     page: number;
@@ -43,8 +59,6 @@ export interface RequestPagination {
 
 /**
  * Cursor pagination for high-volume endpoints.
- *
- * Cursor is optional because the first request does not have one.
  */
 export interface RequestCursorPagination {
     cursor?: number;
@@ -53,8 +67,16 @@ export interface RequestCursorPagination {
 
 declare global {
     namespace Express {
-        export interface Request {
-            credentials: RequestCredentials;
+        interface Request {
+            /**
+             * Authentication credentials.
+             *
+             * Undefined when the request has no authenticated
+             * user or the authentication middleware has not
+             * populated the credentials.
+             */
+            credentials?: RequestCredentials;
+
             sanitize: RequestSanitize;
 
             /**
@@ -68,7 +90,7 @@ declare global {
             cursorPagination: RequestCursorPagination;
         }
 
-        export interface Response {
+        interface Response {
             failed: ResponseFailed;
         }
     }
