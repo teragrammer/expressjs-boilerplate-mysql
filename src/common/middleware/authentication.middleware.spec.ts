@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {Request, Response} from "express";
-import {AuthenticationMiddleware} from "../../../src/common/middleware/authentication.middleware";
-import {AppError} from "../../../src/common/utils/errors";
+import {AuthenticationMiddleware} from "./authentication.middleware";
+import {AppError} from "../utils/errors";
 
 const {mockVerifyToken, mockFindUser, mockFindAuthToken} = vi.hoisted(() => ({
     mockVerifyToken: vi.fn(),
