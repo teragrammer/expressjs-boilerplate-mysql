@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {NextFunction, Request, Response} from "express";
-import requestHandler from "../../../src/common/middleware/request.middleware";
+import requestHandler from "./request.middleware";
 
 describe("Request Middleware", () => {
     let mockRequest: Partial<Request>;
