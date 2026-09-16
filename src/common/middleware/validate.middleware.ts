@@ -1,5 +1,4 @@
 // src/common/middlewares/validate.ts
-
 import {NextFunction, Request, Response} from "express";
 import Joi from "../../shared/validations";
 import type {ObjectSchema} from "joi";
