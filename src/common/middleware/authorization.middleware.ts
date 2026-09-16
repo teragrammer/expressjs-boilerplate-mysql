@@ -1,3 +1,4 @@
+// src/common/middleware/authorization.middleware.ts
 import {NextFunction, Request, Response} from "express";
 import errors from "../utils/messages";
 import {routeGuardService} from "../../config/container";
