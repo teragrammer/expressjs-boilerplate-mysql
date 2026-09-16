@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {NextFunction, Request, Response} from "express";
 import Joi from "joi";
-import {validate} from "../../../src/common/middleware/validate.middleware";
+import {validate} from "./validate.middleware";
 
 describe("validate middleware", () => {
     let req: Partial<Request> & {
