@@ -84,6 +84,7 @@ const requestHandler = async (
     req.sanitize = {
         body: createSanitizer(req.body || {}),
         query: createSanitizer(req.query || {}),
+        data: {},
     };
 
     /*
