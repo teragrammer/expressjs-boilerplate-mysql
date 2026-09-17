@@ -27,8 +27,7 @@ export class PasswordRecoveryController {
             req: Request,
             res: Response,
         ): Promise<void> => {
-            const data =
-                req.sanitize.data as PasswordRecoverySendRequest;
+            const data = req.sanitize.data as unknown as PasswordRecoverySendRequest;
 
             const result =
                 await this.recoveryService.sendRecoveryCode(
@@ -55,7 +54,7 @@ export class PasswordRecoveryController {
             req: Request,
             res: Response,
         ): Promise<void> => {
-            const data = req.sanitize.data as PasswordRecoveryValidateRequest;
+            const data = req.sanitize.data as unknown as PasswordRecoveryValidateRequest;
 
             await this.recoveryService.resetPassword(
                 data.type,
