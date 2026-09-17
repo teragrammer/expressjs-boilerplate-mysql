@@ -1,7 +1,7 @@
 // __test__/security.util.spec.ts
 
 import {beforeEach, describe, expect, it} from "vitest";
-import {SecurityUtil} from "../../../src/common/utils/security.util";
+import {SecurityUtil} from "./security.util";
 
 describe("SecurityUtil Edge Cases & Functional Tests", () => {
     const VALID_32_BYTE_SECRET = "12345678901234567890123456789012"; // AES-256 key must be exactly 32 bytes
