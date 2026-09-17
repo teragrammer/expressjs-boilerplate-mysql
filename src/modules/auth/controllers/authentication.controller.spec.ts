@@ -1,8 +1,8 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {NextFunction, Request, Response} from "express";
 
-import {AuthenticationController} from "../../../../src/modules/auth/controllers/authentication.controller";
-import {AuthService} from "../../../../src/modules/auth/services/auth.service";
+import {AuthenticationController} from "./authentication.controller";
+import {AuthService} from "../services/auth.service";
 
 const {mockLogin, mockLogout} = vi.hoisted(() => ({
     mockLogin: vi.fn(),
@@ -165,7 +165,14 @@ describe("AuthenticationController", () => {
                 next,
             );
 
-            expect(next).toHaveBeenCalledWith(expect.any(TypeError));
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: "The provided authentication token is invalid or missing",
+                    errorCode: "INVALID_AUTH_TOKEN",
+                    statusCode: 401,
+                }),
+            );
+
             expect(res.sendStatus).not.toHaveBeenCalled();
             expect(mockLogout).not.toHaveBeenCalled();
         });
