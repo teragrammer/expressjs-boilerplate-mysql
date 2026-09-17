@@ -4,6 +4,7 @@ import {Request, Response} from "express";
 import catchAsync from "../../../common/utils/catch-async";
 import {AuthService} from "../services/auth.service";
 import {LoginInput} from "../interfaces/login-input.interface";
+import {assertCredentials} from "../../../common/utils/request-credentials";
 
 export class AuthenticationController {
     constructor(
@@ -20,6 +21,8 @@ export class AuthenticationController {
     });
 
     logout = catchAsync(async (req: Request, res: Response) => {
+        assertCredentials(req);
+
         await this.authService.logout(req.credentials.jwt.tid);
 
         res.sendStatus(204);
