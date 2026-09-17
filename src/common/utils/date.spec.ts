@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {DateUtil} from "../../../src/common/utils/date.util";
+import {DateUtil} from "./date.util";
 
 describe("DateUtil", () => {
     const dateUtil = new DateUtil();
