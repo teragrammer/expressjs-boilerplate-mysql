@@ -1,8 +1,8 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {NextFunction, Request, Response} from "express";
 
-import {RegisterController} from "../../../../src/modules/auth/controllers/register.controller";
-import {AuthService} from "../../../../src/modules/auth/services/auth.service";
+import {RegisterController} from "./register.controller";
+import {AuthService} from "../services/auth.service";
 
 const {mockRegister} = vi.hoisted(() => ({
     mockRegister: vi.fn(),
