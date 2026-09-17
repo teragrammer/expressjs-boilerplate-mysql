@@ -1,8 +1,8 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {NextFunction, Request, Response} from "express";
-import {PasswordRecoveryService} from "../../../../src/modules/auth/services/password-recovery.service";
-import {PasswordRecoveryController} from "../../../../src/modules/auth/controllers/password-recovery.controller";
-import {AppError} from "../../../../src/common/utils/errors";
+import {PasswordRecoveryService} from "../services/password-recovery.service";
+import {PasswordRecoveryController} from "./password-recovery.controller";
+import {AppError} from "../../../common/utils/errors";
 
 describe("PasswordRecoveryController Unit Tests", () => {
     let mockReq: Partial<Request>;
