@@ -1,5 +1,4 @@
 // src/common/interfaces/mail.interface.ts
-
 export interface SendMailInput {
     to: string | string[];
     from: string;
