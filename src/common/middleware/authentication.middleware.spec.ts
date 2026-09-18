@@ -2,6 +2,7 @@ import {beforeEach, describe, expect, it, vi} from "vitest";
 import {Request, Response} from "express";
 import {AuthenticationMiddleware} from "./authentication.middleware";
 import {AppError} from "../utils/errors";
+import Messages from "../utils/messages";
 
 const {mockVerifyToken, mockFindUser, mockFindAuthToken} = vi.hoisted(() => ({
     mockVerifyToken: vi.fn(),
@@ -33,7 +34,7 @@ describe("AuthenticationMiddleware Unit Tests", () => {
             await middleware(mockReq as Request, mockRes as Response, nextMock);
 
             expect(nextMock).toHaveBeenCalledWith(
-                new AppError("Authorization token missing or malformed", "UNAUTHORIZED", 401)
+                new AppError(Messages.UNAUTHORIZED, "Authorization token missing or malformed")
             );
         });
 
@@ -43,7 +44,7 @@ describe("AuthenticationMiddleware Unit Tests", () => {
             await middleware(mockReq as Request, mockRes as Response, nextMock);
 
             expect(nextMock).toHaveBeenCalledWith(
-                new AppError("Authorization token missing or malformed", "UNAUTHORIZED", 401)
+                new AppError(Messages.UNAUTHORIZED, "Authorization token missing or malformed")
             );
         });
 
@@ -53,7 +54,7 @@ describe("AuthenticationMiddleware Unit Tests", () => {
             await middleware(mockReq as Request, mockRes as Response, nextMock);
 
             expect(nextMock).toHaveBeenCalledWith(
-                new AppError("Authorization token missing or malformed", "UNAUTHORIZED", 401)
+                new AppError(Messages.UNAUTHORIZED, "Authorization token missing or malformed")
             );
         });
 
@@ -63,7 +64,7 @@ describe("AuthenticationMiddleware Unit Tests", () => {
             await middleware(mockReq as Request, mockRes as Response, nextMock);
 
             expect(nextMock).toHaveBeenCalledWith(
-                new AppError("Authorization token missing or malformed", "UNAUTHORIZED", 401)
+                new AppError(Messages.UNAUTHORIZED, "Authorization token missing or malformed")
             );
         });
 
@@ -77,7 +78,7 @@ describe("AuthenticationMiddleware Unit Tests", () => {
             await middleware(mockReq as Request, mockRes as Response, nextMock);
 
             expect(nextMock).toHaveBeenCalledWith(
-                new AppError("Invalid or expired authentication token", "INVALID_TOKEN", 401)
+                new AppError(Messages.UNAUTHORIZED, "Invalid or expired authentication token")
             );
         });
 
