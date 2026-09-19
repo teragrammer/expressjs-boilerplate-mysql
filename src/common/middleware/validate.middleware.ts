@@ -30,11 +30,7 @@ export const validate = (schemaOrFactory: ObjectSchema | SchemaFactory, fields: 
         } catch (error) {
             if (error instanceof Joi.ValidationError) {
                 next(
-                    new AppError(
-                        Messages.VALIDATION_FAILED.message,
-                        Messages.VALIDATION_FAILED.code,
-                        422,
-                    ),
+                    new AppError(Messages.VALIDATION_FAILED),
                 );
 
                 return;
