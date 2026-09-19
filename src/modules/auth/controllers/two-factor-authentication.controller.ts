@@ -2,6 +2,7 @@
 import {Request, Response} from "express";
 import catchAsync from "../../../common/utils/catch-async";
 import {TwoFactorAuthenticationService} from "../services/two-factor-authentication.service";
+import {assertCredentials} from "../../../common/utils/request-credentials";
 
 export class TwoFactorAuthenticationController {
     constructor(
@@ -10,6 +11,7 @@ export class TwoFactorAuthenticationController {
     }
 
     send = catchAsync(async (req: Request, res: Response): Promise<void> => {
+        assertCredentials(req);
         const {jwt} = req.credentials;
 
         const result = await this.tfaService.sendOtp({
@@ -25,6 +27,7 @@ export class TwoFactorAuthenticationController {
     });
 
     validate = catchAsync(async (req: Request, res: Response): Promise<void> => {
+        assertCredentials(req);
         const {jwt} = req.credentials;
 
         const user = await req.credentials.user();
