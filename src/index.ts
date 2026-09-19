@@ -1,95 +1,229 @@
 // src/server.ts
-
 import os from "node:os";
 import cluster from "node:cluster";
+
 import app, {bootstrap} from "./app";
 import {logger} from "./config/logger";
 import {__ENV} from "./config/environment";
-import {DBKnex} from "./config/knex";
+import {checkDbConnection, DBKnex} from "./config/knex";
 import {disconnectRedis} from "./config/redis";
 
-const CLUSTER_SIZE_WORKER = os.cpus().length;
+const DEFAULT_CLUSTER_WORKERS = Math.max(1, os.cpus().length);
 
-if (__ENV.CLUSTER && CLUSTER_SIZE_WORKER > 1) {
-    if (cluster.isPrimary) {
-        logger.info(`[Primary ${process.pid}] Main process active. Allocating ${CLUSTER_SIZE_WORKER} workers...`);
+const clusterWorkers = Math.max(
+    1,
+    Number(__ENV.CLUSTER_WORKERS ?? DEFAULT_CLUSTER_WORKERS),
+);
 
-        // Fork workers.
-        for (let i = 0; i < CLUSTER_SIZE_WORKER; i++) {
-            cluster.fork();
+const isClusterEnabled =
+    Boolean(__ENV.CLUSTER) && DEFAULT_CLUSTER_WORKERS > 1;
+
+/**
+ * Application entry point.
+ *
+ * In cluster mode:
+ * - Primary process manages workers.
+ * - Workers bootstrap the application and listen for HTTP traffic.
+ *
+ * In standalone mode:
+ * - The current process bootstraps and starts the HTTP server.
+ */
+async function main(): Promise<void> {
+    if (isClusterEnabled && cluster.isPrimary) {
+        startPrimary();
+        return;
+    }
+
+    await startWorker();
+}
+
+/**
+ * Starts the cluster primary process.
+ */
+function startPrimary(): void {
+    logger.info(
+        `[Primary ${process.pid}] Starting ${clusterWorkers} workers...`,
+    );
+
+    for (let index = 0; index < clusterWorkers; index += 1) {
+        spawnWorker();
+    }
+
+    cluster.on("exit", handleWorkerExit);
+}
+
+/**
+ * Creates a new cluster worker.
+ */
+function spawnWorker(): void {
+    const worker = cluster.fork();
+
+    logger.info(
+        `[Primary ${process.pid}] Worker ${worker.id} started ` +
+        `(PID: ${worker.process.pid})`,
+    );
+}
+
+/**
+ * Handles unexpected worker termination.
+ *
+ * The primary process replaces the worker so the configured
+ * worker capacity is maintained.
+ */
+function handleWorkerExit(
+    worker: cluster.Worker,
+    code: number | null,
+    signal: NodeJS.Signals | null,
+): void {
+    logger.warn(
+        `[Primary ${process.pid}] Worker ${worker.process.pid} exited ` +
+        `(code: ${code}, signal: ${signal}). Replacing worker...`,
+    );
+
+    spawnWorker();
+}
+
+/**
+ * Bootstraps dependencies and starts the HTTP server.
+ */
+async function startWorker(): Promise<void> {
+    try {
+        await bootstrap();
+
+        const dbConnected = await checkDbConnection();
+
+        if (!dbConnected) {
+            logger.error(
+                `[Worker ${process.pid}] Database connection check failed. ` +
+                "Worker will not start.",
+            );
+
+            process.exit(1);
         }
 
-        // Auto-resurrection: If a worker dies, spin up a new one to maintain capacity.
-        cluster.on("exit", (worker, code, signal) => {
-            logger.warn(`[Primary] Worker ${worker.process.pid} died (Code: ${code}, Signal: ${signal}). Reviving worker...`);
-            cluster.fork();
+        const server = app.listen(__ENV.PORT, () => {
+            logger.info(
+                `[Worker ${process.pid}] Server online on port ${__ENV.PORT}`,
+            );
         });
 
-    } else {
-        // Handle the promise returned by starting the worker server
-        startServer().catch((error) => {
-            logger.error(`[Worker ${process.pid}] Critical initialization failure: ${error.message}`);
-            process.exit(1);
-        });
-    }
-} else {
-    logger.info(`⚡️ Run mode: Standalone. Available CPU Cores: ${CLUSTER_SIZE_WORKER}`);
+        registerGracefulShutdown(server);
+    } catch (error) {
+        const message =
+            error instanceof Error
+                ? error.message
+                : "Unknown initialization error";
 
-    // Handle the promise returned by starting the standalone server
-    startServer().catch((error) => {
-        logger.error(`Critical standalone initialization failure: ${error.message}`);
+        logger.error(
+            `[Worker ${process.pid}] Critical initialization failure: ${message}`,
+        );
+
         process.exit(1);
+    }
+}
+
+/**
+ * Registers graceful shutdown handlers for the worker.
+ */
+function registerGracefulShutdown(
+    server: ReturnType<typeof app.listen>,
+): void {
+    let isShuttingDown = false;
+
+    const gracefulShutdown = async (
+        signal: NodeJS.Signals,
+    ): Promise<void> => {
+        if (isShuttingDown) {
+            return;
+        }
+
+        isShuttingDown = true;
+
+        logger.info(
+            `[Worker ${process.pid}] Received ${signal}. ` +
+            "Starting graceful shutdown...",
+        );
+
+        const forceShutdownTimer = setTimeout(() => {
+            logger.error(
+                `[Worker ${process.pid}] Shutdown timed out. ` +
+                "Forcing process termination.",
+            );
+
+            process.exit(1);
+        }, 10_000);
+
+        forceShutdownTimer.unref();
+
+        server.close(async (serverError?: Error) => {
+            if (serverError) {
+                logger.error(
+                    `[Worker ${process.pid}] Failed to close HTTP server: ` +
+                    serverError.message,
+                );
+
+                clearTimeout(forceShutdownTimer);
+                process.exit(1);
+            }
+
+            try {
+                logger.info(
+                    `[Worker ${process.pid}] HTTP server closed. ` +
+                    "Cleaning up dependencies...",
+                );
+
+                await closeDependencies();
+
+                clearTimeout(forceShutdownTimer);
+
+                logger.info(
+                    `[Worker ${process.pid}] Graceful shutdown completed.`,
+                );
+
+                process.exit(0);
+            } catch (error) {
+                const message =
+                    error instanceof Error
+                        ? error.message
+                        : "Unknown cleanup error";
+
+                logger.error(
+                    `[Worker ${process.pid}] Error during shutdown: ${message}`,
+                );
+
+                clearTimeout(forceShutdownTimer);
+
+                process.exit(1);
+            }
+        });
+    };
+
+    process.once("SIGINT", () => {
+        void gracefulShutdown("SIGINT");
+    });
+
+    process.once("SIGTERM", () => {
+        void gracefulShutdown("SIGTERM");
     });
 }
 
 /**
- * Handles dependency boot-up sequences and starts listening
+ * Closes application infrastructure connections.
  */
-async function startServer(): Promise<void> {
-    // Warm L1/L2 caches and establish listeners first
-    await bootstrap();
+async function closeDependencies(): Promise<void> {
+    if (DBKnex) {
+        await DBKnex.destroy();
 
-    const server = app.listen(__ENV.PORT, () => {
-        logger.info(`🚀 [Worker ${process.pid}] Server online: http://localhost:${__ENV.PORT}`);
-    });
+        logger.info(
+            `[Worker ${process.pid}] Database pool safely drained.`,
+        );
+    }
 
-    // Graceful Worker Shutdown (SIGINT / SIGTERM)
-    const gracefulShutdown = async (signal: string) => {
-        logger.info(`[Worker ${process.pid}] Received ${signal}. Starting safe termination...`);
+    await disconnectRedis();
 
-        server.close(async () => {
-            logger.info("Express engine closed. Cleaning up storage links...");
-            try {
-                if (DBKnex) {
-                    await DBKnex.destroy();
-                    logger.info("Database pool safely drained.");
-                }
-                await disconnectRedis();
-            } catch (err: any) {
-                logger.error(`Error during cleanup sequence: ${err.message}`);
-            } finally {
-                process.exit(0);
-            }
-        });
-
-        // Force close connections if graceful shutdown hangs
-        setTimeout(() => {
-            logger.error("Shutdown timed out. Forcing shutdown.");
-            process.exit(1);
-        }, 10000);
-    };
-
-    process.on("SIGINT", () => {
-        gracefulShutdown("SIGINT").catch((err) => {
-            logger.error(`Failed executing SIGINT cleanup: ${err.message}`);
-            process.exit(1);
-        });
-    });
-
-    process.on("SIGTERM", () => {
-        gracefulShutdown("SIGTERM").catch((err) => {
-            logger.error(`Failed executing SIGTERM cleanup: ${err.message}`);
-            process.exit(1);
-        });
-    });
+    logger.info(
+        `[Worker ${process.pid}] Redis connection closed.`,
+    );
 }
+
+void main();
