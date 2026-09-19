@@ -119,11 +119,7 @@ export class TwoFactorAuthenticationRepository {
                 existing.next_send_at &&
                 new Date(existing.next_send_at) > new Date()
             ) {
-                throw new AppError(
-                    Messages.RESEND_OTP_NOT_POSSIBLE.message,
-                    Messages.RESEND_OTP_NOT_POSSIBLE.code,
-                    403,
-                );
+                throw new AppError(Messages.RESEND_OTP_NOT_POSSIBLE);
             }
 
             const [updated] = await query()
