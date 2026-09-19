@@ -1,3 +1,4 @@
+// src/config/environment.ts
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -7,8 +8,12 @@ export const __ENV = Object.freeze({
 
     PORT: getInt("PORT", 4000),
     PORT_EXPOSE: getInt("PORT_EXPOSE", 4000),
-    CLUSTER: getBol("CLUSTER"),
     HAS_PROXY: getBol("HAS_PROXY"),
+
+    CORS_ORIGINS: getStr("CORS_ORIGINS"),
+
+    CLUSTER: getBol("CLUSTER"),
+    CLUSTER_WORKERS: getInt("CLUSTER_WORKERS"),
 
     DB_CLIENT: "mysql2",
     DB_HOST: getStr("DB_HOST"),
