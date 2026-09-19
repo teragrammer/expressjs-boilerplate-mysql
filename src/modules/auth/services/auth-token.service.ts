@@ -28,11 +28,7 @@ export class TokenService {
                 expiresIn: this.expiration as any,
             });
         } catch (error: any) {
-            throw new AppError(
-                Messages.SERVER_ERROR.message,
-                Messages.SERVER_ERROR.code,
-                500
-            );
+            throw new AppError(Messages.SERVER_ERROR);
         }
     }
 
@@ -50,18 +46,10 @@ export class TokenService {
             };
         } catch (error: any) {
             if (error instanceof jwt.TokenExpiredError) {
-                throw new AppError(
-                    Messages.EXPIRED_AUTH_TOKEN.message,
-                    Messages.EXPIRED_AUTH_TOKEN.code,
-                    401
-                );
+                throw new AppError(Messages.EXPIRED_AUTH_TOKEN);
             }
 
-            throw new AppError(
-                Messages.INVALID_AUTH_TOKEN.message,
-                Messages.INVALID_AUTH_TOKEN.code,
-                401
-            );
+            throw new AppError(Messages.INVALID_AUTH_TOKEN);
         }
     }
 }
