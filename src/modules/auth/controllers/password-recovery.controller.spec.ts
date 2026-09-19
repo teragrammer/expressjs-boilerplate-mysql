@@ -3,6 +3,7 @@ import {NextFunction, Request, Response} from "express";
 import {PasswordRecoveryService} from "../services/password-recovery.service";
 import {PasswordRecoveryController} from "./password-recovery.controller";
 import {AppError} from "../../../common/utils/errors";
+import Messages from "../../../common/utils/messages";
 
 describe("PasswordRecoveryController Unit Tests", () => {
     let mockReq: Partial<Request>;
@@ -123,9 +124,8 @@ describe("PasswordRecoveryController Unit Tests", () => {
 
         it("should pass service errors to next()", async () => {
             const error = new AppError(
+                Messages.TRY_RESEND,
                 "Rate limit",
-                "TRY_RESEND",
-                429,
             );
 
             mockRecoveryService.sendRecoveryCode.mockRejectedValue(error);
@@ -198,9 +198,8 @@ describe("PasswordRecoveryController Unit Tests", () => {
 
         it("should pass service errors to next()", async () => {
             const error = new AppError(
+                Messages.INVALID_CODE,
                 "Invalid recovery code.",
-                "INVALID_CODE",
-                400,
             );
 
             mockRecoveryService.resetPassword.mockRejectedValue(error);
