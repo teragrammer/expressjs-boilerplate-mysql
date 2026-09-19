@@ -1,10 +1,9 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {Response} from "express";
-import {
-    TwoFactorAuthenticationController,
-} from "../../../../src/modules/auth/controllers/two-factor-authentication.controller";
-import {AppError} from "../../../../src/common/utils/errors";
-import {TwoFactorAuthenticationService} from "../../../../src/modules/auth/services/two-factor-authentication.service";
+import {TwoFactorAuthenticationController,} from "./two-factor-authentication.controller";
+import {AppError} from "../../../common/utils/errors";
+import {TwoFactorAuthenticationService} from "../services/two-factor-authentication.service";
+import Messages from "../../../common/utils/messages";
 
 describe("TwoFactorAuthenticationController Unit Tests", () => {
     let mockReq: any;
@@ -130,9 +129,8 @@ describe("TwoFactorAuthenticationController Unit Tests", () => {
                 mockReq.credentials.jwt.tfa = true;
 
                 const serviceError = new AppError(
+                    Messages.OTP_NOT_NEEDED,
                     "No OTP is necessary for this process",
-                    "OTP_NOT_NEEDED",
-                    403,
                 );
 
                 tfaService.sendOtp.mockRejectedValueOnce(serviceError);
@@ -153,7 +151,7 @@ describe("TwoFactorAuthenticationController Unit Tests", () => {
                 expectNextAppError({
                     message: "No OTP is necessary for this process",
                     errorCode: "OTP_NOT_NEEDED",
-                    statusCode: 403,
+                    statusCode: 400,
                 });
 
                 expect(statusMock).not.toHaveBeenCalled();
@@ -166,9 +164,8 @@ describe("TwoFactorAuthenticationController Unit Tests", () => {
                 mockReq.credentials.jwt.eml = "   ";
 
                 const serviceError = new AppError(
+                    Messages.UN_CONFIGURED_EMAIL,
                     "There is an issue with your email configuration",
-                    "UN_CONFIGURED_EMAIL",
-                    403,
                 );
 
                 tfaService.sendOtp.mockRejectedValueOnce(serviceError);
@@ -189,7 +186,7 @@ describe("TwoFactorAuthenticationController Unit Tests", () => {
                 expectNextAppError({
                     message: "There is an issue with your email configuration",
                     errorCode: "UN_CONFIGURED_EMAIL",
-                    statusCode: 403,
+                    statusCode: 500,
                 });
 
                 expect(statusMock).not.toHaveBeenCalled();
@@ -234,9 +231,8 @@ describe("TwoFactorAuthenticationController Unit Tests", () => {
             "should forward email sender/service failures via next()",
             async () => {
                 const serviceError = new AppError(
+                    Messages.UNABLE_TO_SEND_EMAIL,
                     "There was an issue sending the email",
-                    "UNABLE_TO_SEND_EMAIL",
-                    500,
                 );
 
                 tfaService.sendOtp.mockRejectedValueOnce(serviceError);
@@ -263,9 +259,8 @@ describe("TwoFactorAuthenticationController Unit Tests", () => {
             "should forward internal service errors via next()",
             async () => {
                 const serviceError = new AppError(
+                    Messages.TOO_MANY_ATTEMPTS,
                     "Rate limit exceeded",
-                    "TOO_MANY_REQUESTS",
-                    429,
                 );
 
                 tfaService.sendOtp.mockRejectedValueOnce(serviceError);
@@ -290,9 +285,8 @@ describe("TwoFactorAuthenticationController Unit Tests", () => {
                 mockReq.credentials.jwt.tfa = true;
 
                 const serviceError = new AppError(
+                    Messages.OTP_NOT_NEEDED,
                     "No OTP is necessary for this process",
-                    "OTP_NOT_NEEDED",
-                    403,
                 );
 
                 tfaService.verifyOtp.mockRejectedValueOnce(serviceError);
@@ -363,9 +357,8 @@ describe("TwoFactorAuthenticationController Unit Tests", () => {
             "should forward verification failures via next()",
             async () => {
                 const validationError = new AppError(
+                    Messages.INVALID_CODE,
                     "Invalid verification code",
-                    "INVALID_CODE",
-                    401,
                 );
 
                 tfaService.verifyOtp.mockRejectedValueOnce(
