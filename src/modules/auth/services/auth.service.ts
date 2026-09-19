@@ -35,9 +35,8 @@ export class AuthService {
         const role = await this.roleService.getRoleBySlug("customer");
         if (!role) {
             throw new AppError(
+                Messages.DATA_NOT_FOUND,
                 "Default registration roles 'customer' could not be resolved.",
-                Messages.DATA_NOT_FOUND.code,
-                404
             );
         }
 
@@ -72,11 +71,7 @@ export class AuthService {
         }
 
         if (typeof user.password === "undefined" || user.password === null) {
-            throw new AppError(
-                Messages.INCORRECT_PASS_SETUP.message,
-                Messages.INCORRECT_PASS_SETUP.code,
-                400
-            );
+            throw new AppError(Messages.INCORRECT_PASS_SETUP);
         }
 
         // Account Lockout verification check
@@ -85,11 +80,7 @@ export class AuthService {
             const isLockoutActive = !this.dateUtil.isPast(expiredAt);
 
             if (isLockoutActive) {
-                throw new AppError(
-                    Messages.TOO_MANY_ATTEMPT.message,
-                    Messages.TOO_MANY_ATTEMPT.code,
-                    403
-                );
+                throw new AppError(Messages.TOO_MANY_ATTEMPTS);
             }
 
             // Lockout has expired: Reset tracking
@@ -112,11 +103,7 @@ export class AuthService {
                     failed_login_expired_at: this.dateUtil.expiredAt(settings.pri.lck_prd, "minutes"),
                 });
 
-                throw new AppError(
-                    Messages.LOCKED_ACCOUNT.message,
-                    Messages.LOCKED_ACCOUNT.code,
-                    403
-                );
+                throw new AppError(Messages.LOCKED_ACCOUNT);
             }
 
             this.handleFailedLogin();
@@ -142,11 +129,7 @@ export class AuthService {
         const isDeleted = await this.authenticationTokenRepository.deleteById(tid);
 
         if (!isDeleted) {
-            throw new AppError(
-                Messages.DELETE_FAILED.message,
-                Messages.DELETE_FAILED.code,
-                500
-            );
+            throw new AppError(Messages.DELETE_FAILED);
         }
     }
 
@@ -155,16 +138,15 @@ export class AuthService {
      */
     private handleFailedLogin(): never {
         throw new AppError(
+            Messages.CREDENTIAL_DO_NOT_MATCH,
             "Invalid username or password details.",
-            Messages.CREDENTIAL_DO_NOT_MATCH.code,
-            401 // Standardized Unauthorized HTTP Status Code
         );
     }
 
     async findAuthenticationToken(payload: JwtExtendedPayload): Promise<AuthenticationToken> {
         const session = await this.authenticationTokenRepository.findById(payload.tid);
         if (!session) {
-            throw new AppError("Active token session not found.", "SESSION_EXPIRED", 401);
+            throw new AppError(Messages.SESSION_EXPIRED, "Active token session not found.");
         }
         return session;
     }
