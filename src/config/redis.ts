@@ -1,5 +1,4 @@
 // src/config/redis.ts
-
 import Redis, {RedisOptions} from "ioredis";
 import * as fs from "fs";
 import {__ENV} from "./environment";
