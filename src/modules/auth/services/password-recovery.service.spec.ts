@@ -1,11 +1,11 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
-import {PasswordRecoveryService} from "../../../../src/modules/auth/services/password-recovery.service";
-import {SecurityUtil} from "../../../../src/common/utils/security.util";
-import {PasswordRecoveryRepository} from "../../../../src/modules/auth/repositories/password-recovery.repository";
-import {UserRepository} from "../../../../src/modules/users/user.repository";
-import {RECOVERY_EMAIL, RECOVERY_PHONE} from "../../../../src/modules/auth/interfaces/password.recovery.interface";
-import {SettingService} from "../../../../src/modules/system/settings/setting.service";
-import {MailService} from "../../../../src/common/interfaces/mail.interface";
+import {PasswordRecoveryService} from "./password-recovery.service";
+import {SecurityUtil} from "../../../common/utils/security.util";
+import {PasswordRecoveryRepository} from "../repositories/password-recovery.repository";
+import {UserRepository} from "../../users/user.repository";
+import {RECOVERY_EMAIL, RECOVERY_PHONE} from "../interfaces/password.recovery.interface";
+import {SettingService} from "../../system/settings/setting.service";
+import {MailService} from "../../../common/interfaces/mail.interface";
 
 describe("PasswordRecoveryService Unit Tests", () => {
     let service: PasswordRecoveryService;
@@ -222,7 +222,7 @@ describe("PasswordRecoveryService Unit Tests", () => {
                     "newPass123",
                 ),
             ).rejects.toMatchObject({
-                statusCode: 400,
+                statusCode: 401,
                 errorCode: "INVALID_TOKEN",
             });
 
@@ -250,7 +250,7 @@ describe("PasswordRecoveryService Unit Tests", () => {
                     "newPass123",
                 ),
             ).rejects.toMatchObject({
-                statusCode: 400,
+                statusCode: 401,
                 errorCode: "EXPIRED_TOKEN",
             });
 
