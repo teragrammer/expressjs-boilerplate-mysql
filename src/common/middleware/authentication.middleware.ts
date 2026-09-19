@@ -6,6 +6,7 @@ import {AppError} from "../utils/errors";
 
 // 🧠 IMPORT from your isolated container instead of hardcoding instantiations here!
 import {authService, tokenService, userService} from "../../config/container";
+import Messages from "../utils/messages";
 
 export function AuthenticationMiddleware(isHalt = true): any {
     return async function (req: Request, res: Response, next: NextFunction) {
@@ -14,7 +15,7 @@ export function AuthenticationMiddleware(isHalt = true): any {
             const authHeader = req.headers.authorization;
             if (!authHeader || !authHeader.startsWith("Bearer ")) {
                 if (isHalt) {
-                    return next(new AppError("Authorization token missing or malformed", "UNAUTHORIZED", 401));
+                    return next(new AppError(Messages.UNAUTHORIZED, "Authorization token missing or malformed"));
                 }
                 return next(); // Keeps req.credentials clean/undefined instead of crashing on null
             }
@@ -27,7 +28,7 @@ export function AuthenticationMiddleware(isHalt = true): any {
                 payload = tokenService.verifyToken(token) as JwtExtendedPayload;
             } catch (error) {
                 if (isHalt) {
-                    return next(new AppError("Invalid or expired authentication token", "INVALID_TOKEN", 401));
+                    return next(new AppError(Messages.UNAUTHORIZED, "Invalid or expired authentication token"));
                 }
                 return next();
             }
