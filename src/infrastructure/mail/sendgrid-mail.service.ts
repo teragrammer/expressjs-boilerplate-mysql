@@ -1,5 +1,4 @@
 // src/infrastructure/mail/sendgrid-mail.service.ts
-
 import sgMail, {MailDataRequired} from "@sendgrid/mail";
 import {logger} from "../../config/logger";
 import {AppError} from "../../common/utils/errors";
@@ -35,11 +34,7 @@ export class SendGridMailService implements MailService {
                 "Failed to send email",
             );
 
-            throw new AppError(
-                Messages.UNABLE_TO_SEND_EMAIL.message,
-                Messages.UNABLE_TO_SEND_EMAIL.code,
-                500,
-            );
+            throw new AppError(Messages.UNABLE_TO_SEND_EMAIL);
         }
     }
 }
