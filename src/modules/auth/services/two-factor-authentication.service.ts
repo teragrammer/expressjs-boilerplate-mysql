@@ -66,19 +66,11 @@ export class TwoFactorAuthenticationService {
         const tfa = await this.tfaRepository.findByTokenId(input.tokenId);
 
         if (!tfa) {
-            throw new AppError(
-                Messages.DATA_NOT_FOUND.message,
-                Messages.DATA_NOT_FOUND.code,
-                404,
-            );
+            throw new AppError(Messages.DATA_NOT_FOUND);
         }
 
         if (!tfa.expired_at) {
-            throw new AppError(
-                Messages.UN_CONFIGURED_EXPIRATION.message,
-                Messages.UN_CONFIGURED_EXPIRATION.code,
-                404,
-            );
+            throw new AppError(Messages.UN_CONFIGURED_EXPIRATION);
         }
 
         const currentTime = this.dateUtil.unix();
@@ -87,11 +79,7 @@ export class TwoFactorAuthenticationService {
         );
 
         if (currentTime > expiredAt) {
-            throw new AppError(
-                Messages.RESOURCE_EXPIRED.message,
-                Messages.RESOURCE_EXPIRED.code,
-                419,
-            );
+            throw new AppError(Messages.RESOURCE_EXPIRED);
         }
 
         if (tfa.expired_tries_at) {
@@ -100,11 +88,7 @@ export class TwoFactorAuthenticationService {
             );
 
             if (expiredTriesAt > currentTime) {
-                throw new AppError(
-                    Messages.TOO_MANY_ATTEMPT.message,
-                    Messages.TOO_MANY_ATTEMPT.code,
-                    403,
-                );
+                throw new AppError(Messages.TOO_MANY_ATTEMPTS);
             }
 
             await this.tfaRepository.resetTries(tfa.id);
@@ -112,11 +96,7 @@ export class TwoFactorAuthenticationService {
         }
 
         if (tfa.tries >= 5) {
-            throw new AppError(
-                Messages.TOO_MANY_ATTEMPT.message,
-                Messages.TOO_MANY_ATTEMPT.code,
-                403,
-            );
+            throw new AppError(Messages.TOO_MANY_ATTEMPTS,);
         }
 
         const isCodeMatch = await this.securityUtil.compare(
@@ -127,11 +107,7 @@ export class TwoFactorAuthenticationService {
         if (!isCodeMatch) {
             await this.tfaRepository.incrementTries(tfa.id);
 
-            throw new AppError(
-                Messages.OTP_NO_MATCH.message,
-                Messages.OTP_NO_MATCH.code,
-                400,
-            );
+            throw new AppError(Messages.OTP_NO_MATCH);
         }
 
         await this.tfaRepository.deleteById(tfa.id);
@@ -193,21 +169,13 @@ export class TwoFactorAuthenticationService {
 
     private assertOtpRequired(tfaCleared: boolean): void {
         if (tfaCleared) {
-            throw new AppError(
-                Messages.OTP_NOT_NEEDED.message,
-                Messages.OTP_NOT_NEEDED.code,
-                403,
-            );
+            throw new AppError(Messages.OTP_NOT_NEEDED);
         }
     }
 
     private assertEmailConfigured(email?: string): asserts email is string {
         if (!email || email.trim() === "") {
-            throw new AppError(
-                Messages.UN_CONFIGURED_EMAIL.message,
-                Messages.UN_CONFIGURED_EMAIL.code,
-                403,
-            );
+            throw new AppError(Messages.UN_CONFIGURED_EMAIL);
         }
     }
 }
