@@ -13,7 +13,7 @@ export class RouteGuardController {
     }
 
     create = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const routeGuard: RouteGuard = await this.routeGuardService.createRouteGuard(req.sanitize.data as CreateRouteGuardDTO);
+        const routeGuard: RouteGuard = await this.routeGuardService.createRouteGuard(req.sanitize.data as unknown as CreateRouteGuardDTO);
         res.status(200).json({id: routeGuard.id});
     });
 
@@ -46,11 +46,7 @@ export class RouteGuardController {
     view = catchAsync(async (req: Request, res: Response): Promise<any> => {
         const id = Number(req.params.id);
         if (!Number.isSafeInteger(id) || id <= 0) {
-            throw new AppError(
-                Messages.INVALID_PATH_PARAM.message,
-                Messages.INVALID_PATH_PARAM.code,
-                400,
-            );
+            throw new AppError(Messages.INVALID_PATH_PARAM);
         }
 
         const routeGuard: RouteGuardRow = await this.routeGuardService.findById(id);
@@ -60,11 +56,7 @@ export class RouteGuardController {
     delete = catchAsync(async (req: Request, res: Response): Promise<any> => {
         const id = Number(req.params.id);
         if (!Number.isSafeInteger(id) || id <= 0) {
-            throw new AppError(
-                Messages.INVALID_PATH_PARAM.message,
-                Messages.INVALID_PATH_PARAM.code,
-                400,
-            );
+            throw new AppError(Messages.INVALID_PATH_PARAM);
         }
 
         await this.routeGuardService.hardDelete(id);
