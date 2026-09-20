@@ -23,9 +23,8 @@ export class RoleService {
 
         if (!role) {
             throw new AppError(
+                Messages.DATA_NOT_FOUND,
                 `Role with slug '${slug}' not found`,
-                Messages.DATA_NOT_FOUND.code,
-                404,
             );
         }
 
@@ -43,11 +42,7 @@ export class RoleService {
         const role: Role | null = await this.roleRepository.update(id, data);
 
         if (!role) {
-            throw new AppError(
-                Messages.DATA_NOT_FOUND.message,
-                Messages.DATA_NOT_FOUND.code,
-                404,
-            );
+            throw new AppError(Messages.DATA_NOT_FOUND);
         }
 
         return role;
@@ -85,11 +80,7 @@ export class RoleService {
         const role = await this.roleRepository.findById(id);
 
         if (!role) {
-            throw new AppError(
-                Messages.DATA_NOT_FOUND.message,
-                Messages.DATA_NOT_FOUND.code,
-                404,
-            );
+            throw new AppError(Messages.DATA_NOT_FOUND);
         }
 
         return role;
@@ -99,11 +90,7 @@ export class RoleService {
         const deleted = await this.roleRepository.delete(id);
 
         if (!deleted) {
-            throw new AppError(
-                Messages.DATA_NOT_FOUND.message,
-                Messages.DATA_NOT_FOUND.code,
-                404,
-            );
+            throw new AppError(Messages.DATA_NOT_FOUND);
         }
     }
 }
