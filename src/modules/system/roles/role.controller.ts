@@ -19,7 +19,7 @@ export class RoleController {
 
     create = catchAsync(async (req: Request, res: Response): Promise<void> => {
         const role: Role = await this.roleService.createRole(
-            req.sanitize.data as CreateRoleDTO,
+            req.sanitize.data as unknown as CreateRoleDTO,
         );
 
         res.status(201).json({id: role.id});
@@ -29,11 +29,7 @@ export class RoleController {
         const id = Number(req.params.id);
 
         if (!Number.isSafeInteger(id) || id <= 0) {
-            throw new AppError(
-                Messages.INVALID_PATH_PARAM.message,
-                Messages.INVALID_PATH_PARAM.code,
-                400,
-            );
+            throw new AppError(Messages.INVALID_PATH_PARAM);
         }
 
         const role: Role = await this.roleService.updateRole(
@@ -46,7 +42,7 @@ export class RoleController {
 
     browse = catchAsync(async (req: Request, res: Response): Promise<void> => {
         const isPublic = req.sanitize.query.numeric("is_public");
-        const search = req.sanitize.query.get("search");
+        const search: string = req.sanitize.query.get("search");
 
         const paginate = req.app.get("paginate");
 
@@ -78,11 +74,7 @@ export class RoleController {
     view = catchAsync(async (req: Request, res: Response): Promise<void> => {
         const id = Number(req.params.id);
         if (!Number.isSafeInteger(id) || id <= 0) {
-            throw new AppError(
-                Messages.INVALID_PATH_PARAM.message,
-                Messages.INVALID_PATH_PARAM.code,
-                400,
-            );
+            throw new AppError(Messages.INVALID_PATH_PARAM);
         }
 
         const role: Role = await this.roleService.findById(id);
@@ -92,11 +84,7 @@ export class RoleController {
     delete = catchAsync(async (req: Request, res: Response): Promise<void> => {
         const id = Number(req.params.id);
         if (!Number.isSafeInteger(id) || id <= 0) {
-            throw new AppError(
-                Messages.INVALID_PATH_PARAM.message,
-                Messages.INVALID_PATH_PARAM.code,
-                400,
-            );
+            throw new AppError(Messages.INVALID_PATH_PARAM);
         }
 
         await this.roleService.hardDelete(id);
