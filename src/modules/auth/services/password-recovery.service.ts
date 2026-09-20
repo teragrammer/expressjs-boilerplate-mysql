@@ -149,9 +149,8 @@ export class PasswordRecoveryService {
             await this.recoveryRepository.deleteById(recovery.id);
 
             throw new AppError(
+                Messages.EXPIRED_TOKEN,
                 "Recovery code has expired. Please request a new one.",
-                "EXPIRED_TOKEN",
-                400,
             );
         }
 
@@ -170,9 +169,8 @@ export class PasswordRecoveryService {
             );
 
             throw new AppError(
+                Messages.INVALID_CODE,
                 "Invalid recovery code.",
-                "INVALID_CODE",
-                400,
             );
         }
 
@@ -188,9 +186,8 @@ export class PasswordRecoveryService {
             await this.recoveryRepository.deleteById(recovery.id);
 
             throw new AppError(
+                Messages.USER_NOT_FOUND,
                 "User account no longer exists.",
-                "USER_NOT_FOUND",
-                404,
             );
         }
 
@@ -217,9 +214,8 @@ export class PasswordRecoveryService {
              * two operations into a shared transaction/unit-of-work.
              */
             throw new AppError(
+                Messages.RECOVERY_COMPLETION_FAILED,
                 "Unable to complete password recovery.",
-                "RECOVERY_COMPLETION_FAILED",
-                500,
             );
         }
     }
@@ -237,9 +233,8 @@ export class PasswordRecoveryService {
         }
 
         throw new AppError(
+            Messages.INVALID_RECOVERY_TYPE,
             "Unsupported recovery type.",
-            "INVALID_RECOVERY_TYPE",
-            400,
         );
     }
 
@@ -255,9 +250,8 @@ export class PasswordRecoveryService {
             now.getTime()
         ) {
             throw new AppError(
+                Messages.TRY_RESEND,
                 "Please wait before requesting another recovery code.",
-                Messages.TRY_RESEND.code,
-                429,
             );
         }
     }
@@ -269,9 +263,8 @@ export class PasswordRecoveryService {
     ): asserts recovery is NonNullable<typeof recovery> {
         if (!recovery) {
             throw new AppError(
+                Messages.INVALID_TOKEN,
                 "Invalid or expired recovery session.",
-                "INVALID_TOKEN",
-                400,
             );
         }
     }
@@ -285,9 +278,8 @@ export class PasswordRecoveryService {
             new Date(nextTryAt).getTime() > now.getTime()
         ) {
             throw new AppError(
+                Messages.TOO_MANY_ATTEMPTS,
                 "Too many failed attempts. Please wait a few minutes before trying again.",
-                "TOO_MANY_ATTEMPTS",
-                429,
             );
         }
     }
