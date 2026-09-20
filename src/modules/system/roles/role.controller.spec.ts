@@ -1,15 +1,15 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {NextFunction, Request, Response} from "express";
 
-import {RoleController} from "../../../../src/modules/system/roles/role.controller";
-import {RoleService} from "../../../../src/modules/system/roles/role.service";
+import {RoleController} from "./role.controller";
+import {RoleService} from "./role.service";
 import {
     BrowseRoleQuery,
     CreateRoleDTO,
     Role,
     UpdateRoleDTO,
-} from "../../../../src/modules/system/roles/role.interface";
-import {AppError} from "../../../../src/common/utils/errors";
+} from "./role.interface";
+import {AppError} from "../../../common/utils/errors";
 
 const {
     mockCreateRole,
