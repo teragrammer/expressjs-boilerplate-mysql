@@ -111,11 +111,7 @@ export class RouteGuardService {
         const role = await this.routeGuardRepository.findById(id);
 
         if (!role) {
-            throw new AppError(
-                Messages.DATA_NOT_FOUND.message,
-                Messages.DATA_NOT_FOUND.code,
-                404,
-            );
+            throw new AppError(Messages.DATA_NOT_FOUND);
         }
 
         return role;
@@ -152,11 +148,7 @@ export class RouteGuardService {
         const deleted = await this.routeGuardRepository.delete(id);
 
         if (!deleted) {
-            throw new AppError(
-                Messages.DATA_NOT_FOUND.message,
-                Messages.DATA_NOT_FOUND.code,
-                404,
-            );
+            throw new AppError(Messages.DATA_NOT_FOUND);
         }
 
         await this.boot();
