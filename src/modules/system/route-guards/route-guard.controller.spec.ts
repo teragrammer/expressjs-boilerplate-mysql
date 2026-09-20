@@ -2,15 +2,15 @@
 import {beforeEach, describe, expect, it, vi,} from "vitest";
 import {NextFunction, Request, Response,} from "express";
 
-import {RouteGuardController} from "../../../../src/modules/system/route-guards/route-guard.controller";
-import {RouteGuardService} from "../../../../src/modules/system/route-guards/route-guard.service";
+import {RouteGuardController} from "./route-guard.controller";
+import {RouteGuardService} from "./route-guard.service";
 import {
     BrowseRouteGuardQuery,
     CreateRouteGuardDTO,
     RouteGuard,
     RouteGuardRow,
-} from "../../../../src/modules/system/route-guards/route-guard.interface";
-import {AppError} from "../../../../src/common/utils/errors";
+} from "./route-guard.interface";
+import {AppError} from "../../../common/utils/errors";
 
 const {
     mockCreateRouteGuard,
