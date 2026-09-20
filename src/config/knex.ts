@@ -1,5 +1,6 @@
 // src/config/knex.ts
 import fs from "fs";
+import path from "node:path";
 import knex, {Knex} from "knex";
 import {__ENV} from "./environment";
 import {logger} from "./logger";
@@ -38,6 +39,15 @@ export function buildKnexConfig(): Knex.Config {
         pool: {
             min: Number(__ENV.DB_POOL_MIN || 2),
             max: Number(__ENV.DB_POOL_MAX || 10),
+        },
+        // ADD THESE LINES so Knex knows where your migrations and seeds live:
+        migrations: {
+            directory: path.resolve(process.cwd(), "database", "migrations"),
+            extension: "ts",
+        },
+        seeds: {
+            directory: path.resolve(process.cwd(), "database", "seeds"),
+            extension: "ts",
         },
     };
 }
