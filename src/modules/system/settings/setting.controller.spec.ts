@@ -3,14 +3,14 @@
 import {beforeEach, describe, expect, it, vi,} from "vitest";
 import {NextFunction, Request, Response,} from "express";
 
-import {SettingController} from "../../../../src/modules/system/settings/setting.controller";
-import {SettingService} from "../../../../src/modules/system/settings/setting.service";
+import {SettingController} from "./setting.controller";
+import {SettingService} from "./setting.service";
 import {
     CreateSettingDTO,
     Setting,
     UpdateSettingDTO,
-} from "../../../../src/modules/system/settings/setting.interface";
-import {AppError} from "../../../../src/common/utils/errors";
+} from "./setting.interface";
+import {AppError} from "../../../common/utils/errors";
 
 const {
     mockCreateSetting,
