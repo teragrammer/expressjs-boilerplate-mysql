@@ -20,11 +20,11 @@ export default () => {
         ])
     ], roleController.create);
 
-    router.get("/route/guards", [AuthenticationMiddleware(), AuthorizationMiddleware("route-guards:browse")], roleController.browse);
+    router.get("/", [AuthenticationMiddleware(), AuthorizationMiddleware("route-guards:browse")], roleController.browse);
 
-    router.get("/route/guards/:id", [AuthenticationMiddleware(), AuthorizationMiddleware("route-guards:view")], roleController.view);
+    router.get("/:id", [AuthenticationMiddleware(), AuthorizationMiddleware("route-guards:view")], roleController.view);
 
-    router.delete("/route/guards/:id", [AuthenticationMiddleware(), AuthorizationMiddleware("route-guards:delete")], roleController.delete);
+    router.delete("/:id", [AuthenticationMiddleware(), AuthorizationMiddleware("route-guards:delete")], roleController.delete);
 
     return router;
 }
