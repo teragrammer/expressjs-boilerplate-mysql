@@ -22,9 +22,8 @@ export class UserService {
             const existingEmail = await this.userRepository.findByEmail(data.email);
             if (existingEmail) {
                 throw new AppError(
-                    "Duplicate email already exists",
-                    Messages.DUPLICATE_DATA.code,
-                    409
+                    Messages.DUPLICATE_DATA,
+                    "Duplicate email already exists"
                 );
             }
         }
@@ -34,9 +33,8 @@ export class UserService {
             const existingPhone = await this.userRepository.findByPhone(data.phone);
             if (existingPhone) {
                 throw new AppError(
+                    Messages.DUPLICATE_DATA,
                     "Duplicate phone number already exists",
-                    Messages.DUPLICATE_DATA.code,
-                    409
                 );
             }
         }
@@ -51,11 +49,7 @@ export class UserService {
         }
 
         const user: User | null = await this.userRepository.create(data);
-        if (!user) throw new AppError(
-            Messages.SERVER_ERROR.message,
-            Messages.SERVER_ERROR.code,
-            500
-        );
+        if (!user) throw new AppError(Messages.SERVER_ERROR);
 
         return user;
     }
@@ -66,11 +60,7 @@ export class UserService {
         }
 
         const user: User | null = await this.userRepository.update(id, data);
-        if (!user) throw new AppError(
-            Messages.DATA_NOT_FOUND.message,
-            Messages.DATA_NOT_FOUND.code,
-            404
-        );
+        if (!user) throw new AppError(Messages.DATA_NOT_FOUND);
 
         return user;
     }
@@ -87,22 +77,14 @@ export class UserService {
     async findById(id: number): Promise<User> {
         const user: User | null = await this.userRepository.findById(id);
         if (!user) {
-            throw new AppError(
-                Messages.DATA_NOT_FOUND.message,
-                Messages.DATA_NOT_FOUND.code,
-                404
-            );
+            throw new AppError(Messages.DATA_NOT_FOUND);
         }
         return user;
     }
 
     async hardDelete(id: number): Promise<void> {
         if (!await this.userRepository.hardDelete(id)) {
-            throw new AppError(
-                Messages.DELETE_FAILED.message,
-                Messages.DELETE_FAILED.code,
-                500
-            );
+            throw new AppError(Messages.DELETE_FAILED);
         }
     }
 }
