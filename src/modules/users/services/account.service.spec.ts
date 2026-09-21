@@ -1,15 +1,15 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 
-import {AccountService} from "../../../../src/modules/users/services/account.service";
-import {UserRepository} from "../../../../src/modules/users/user.repository";
-import {TokenService} from "../../../../src/modules/auth/services/auth-token.service";
-import {SecurityUtil} from "../../../../src/common/utils/security.util";
+import {AccountService} from "./account.service";
+import {UserRepository} from "../user.repository";
+import {TokenService} from "../../auth/services/auth-token.service";
+import {SecurityUtil} from "../../../common/utils/security.util";
 import {
     SecurityAccountDTO,
     UpdateUserDTO,
     User,
-} from "../../../../src/modules/users/user.interface";
-import Messages from "../../../../src/common/utils/messages";
+} from "../user.interface";
+import Messages from "../../../common/utils/messages";
 
 describe("AccountService", () => {
     let service: AccountService;
@@ -321,7 +321,7 @@ describe("AccountService", () => {
             ).rejects.toMatchObject({
                 message: Messages.CREDENTIAL_DO_NOT_MATCH.message,
                 errorCode: Messages.CREDENTIAL_DO_NOT_MATCH.code,
-                statusCode: 403,
+                statusCode: 401,
             });
 
             expect(mockSecurityUtil.compare).not.toHaveBeenCalled();
@@ -343,7 +343,7 @@ describe("AccountService", () => {
             ).rejects.toMatchObject({
                 message: Messages.CREDENTIAL_DO_NOT_MATCH.message,
                 errorCode: Messages.CREDENTIAL_DO_NOT_MATCH.code,
-                statusCode: 403,
+                statusCode: 401,
             });
 
             expect(mockSecurityUtil.compare).toHaveBeenCalledTimes(1);
