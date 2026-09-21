@@ -19,18 +19,14 @@ export class SettingController {
     }
 
     create = catchAsync(async (req: Request, res: Response): Promise<void> => {
-        const setting: Setting = await this.settingService.createSetting(req.sanitize.data as CreateSettingDTO)
+        const setting: Setting = await this.settingService.createSetting(req.sanitize.data as unknown as CreateSettingDTO)
         res.status(201).json({id: setting.id});
     });
 
     update = catchAsync(async (req: Request, res: Response): Promise<void> => {
         const id = Number(req.params.id);
         if (!Number.isSafeInteger(id) || id <= 0) {
-            throw new AppError(
-                Messages.INVALID_PATH_PARAM.message,
-                Messages.INVALID_PATH_PARAM.code,
-                400,
-            );
+            throw new AppError(Messages.INVALID_PATH_PARAM);
         }
 
         const setting: Setting = await this.settingService.updateSetting(id, req.sanitize.data as UpdateSettingDTO)
@@ -42,7 +38,7 @@ export class SettingController {
         const isPublic = req.sanitize.query.numeric("is_public",);
 
         const type = req.sanitize.query.get("type");
-        const search = req.sanitize.query.get("search");
+        const search: string = req.sanitize.query.get("search");
 
         const paginate = req.app.get("paginate");
 
@@ -84,11 +80,7 @@ export class SettingController {
     view = catchAsync(async (req: Request, res: Response): Promise<void> => {
         const id = Number(req.params.id);
         if (!Number.isSafeInteger(id) || id <= 0) {
-            throw new AppError(
-                Messages.INVALID_PATH_PARAM.message,
-                Messages.INVALID_PATH_PARAM.code,
-                400,
-            );
+            throw new AppError(Messages.INVALID_PATH_PARAM);
         }
 
         const setting: Setting = await this.settingService.findById(id);
@@ -98,11 +90,7 @@ export class SettingController {
     delete = catchAsync(async (req: Request, res: Response): Promise<void> => {
         const id = Number(req.params.id);
         if (!Number.isSafeInteger(id) || id <= 0) {
-            throw new AppError(
-                Messages.INVALID_PATH_PARAM.message,
-                Messages.INVALID_PATH_PARAM.code,
-                400,
-            );
+            throw new AppError(Messages.INVALID_PATH_PARAM);
         }
 
         await this.settingService.hardDelete(id);
