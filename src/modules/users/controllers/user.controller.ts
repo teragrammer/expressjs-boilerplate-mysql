@@ -13,7 +13,7 @@ export class UserController {
     }
 
     create = catchAsync(async (req: Request, res: Response): Promise<any> => {
-        const user: User = await this.userService.createUser(req.sanitize.data as CreateUserDTO);
+        const user: User = await this.userService.createUser(req.sanitize.data as unknown as CreateUserDTO);
         res.status(200).json({id: user.id});
     });
 
@@ -74,11 +74,7 @@ export class UserController {
     view = catchAsync(async (req: Request, res: Response): Promise<any> => {
         const id = Number(req.params.id);
         if (!Number.isSafeInteger(id) || id <= 0) {
-            throw new AppError(
-                Messages.INVALID_PATH_PARAM.message,
-                Messages.INVALID_PATH_PARAM.code,
-                400,
-            );
+            throw new AppError(Messages.INVALID_PATH_PARAM);
         }
 
         const user: User = await this.userService.findById(id);
@@ -88,11 +84,7 @@ export class UserController {
     delete = catchAsync(async (req: Request, res: Response): Promise<any> => {
         const id = Number(req.params.id);
         if (!Number.isSafeInteger(id) || id <= 0) {
-            throw new AppError(
-                Messages.INVALID_PATH_PARAM.message,
-                Messages.INVALID_PATH_PARAM.code,
-                400,
-            );
+            throw new AppError(Messages.INVALID_PATH_PARAM);
         }
 
         await this.userService.hardDelete(id);
