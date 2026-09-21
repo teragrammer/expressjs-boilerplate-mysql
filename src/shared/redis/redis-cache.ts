@@ -1,7 +1,7 @@
 // src/shared/redis/redis-cache.ts
-
 import {DBRedisInterface} from "../../config/redis";
 import Redis from "ioredis";
+import {SecurityUtil} from "../../common/utils/security.util";
 
 export class RedisCache {
     private readonly publisher?: Redis;
@@ -9,10 +9,7 @@ export class RedisCache {
 
     constructor(
         dbRedis: DBRedisInterface,
-        private readonly securityUtil: {
-            shield: (data: string) => Promise<string>;
-            unshield: (data: string) => Promise<string>;
-        },
+        private readonly securityUtil: SecurityUtil,
         private readonly logger: { info: (msg: string) => void; error: (msg: string) => void }
     ) {
         this.publisher = dbRedis.publisher;
