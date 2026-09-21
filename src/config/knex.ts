@@ -37,16 +37,24 @@ export function buildKnexConfig(): Knex.Config {
         client: __ENV.DB_CLIENT,
         connection,
         pool: {
-            min: Number(__ENV.DB_POOL_MIN || 2),
-            max: Number(__ENV.DB_POOL_MAX || 10),
+            min: Number(__ENV.DB_POOL_MIN || 1),
+            max: Number(__ENV.DB_POOL_MAX || 5),
         },
         // ADD THESE LINES so Knex knows where your migrations and seeds live:
         migrations: {
-            directory: path.resolve(process.cwd(), "database", "migrations"),
+            directory: path.resolve(
+                process.cwd(),
+                "database",
+                "migrations",
+            ),
             extension: "ts",
         },
         seeds: {
-            directory: path.resolve(process.cwd(), "database", "seeds"),
+            directory: path.resolve(
+                process.cwd(),
+                "database",
+                "seeds",
+            ),
             extension: "ts",
         },
     };
