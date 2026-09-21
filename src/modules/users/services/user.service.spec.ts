@@ -1,16 +1,16 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 
-import {UserRepository} from "../../../../src/modules/users/user.repository";
+import {UserRepository} from "../user.repository";
 import {
     BrowseUsersQuery,
     BrowseUsersResult,
     CreateUserDTO,
     UpdateUserDTO,
     User,
-} from "../../../../src/modules/users/user.interface";
-import {SecurityUtil} from "../../../../src/common/utils/security.util";
-import Messages from "../../../../src/common/utils/messages";
-import {UserService} from "../../../../src/modules/users/services/user.service";
+} from "../user.interface";
+import {SecurityUtil} from "../../../common/utils/security.util";
+import Messages from "../../../common/utils/messages";
+import {UserService} from "./user.service";
 
 describe("UserService", () => {
     let service: UserService;
