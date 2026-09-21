@@ -17,11 +17,7 @@ export class AccountService {
     async information(id: number, data: UpdateUserDTO): Promise<string> {
         const user: User | null = await this.userRepository.update(id, data, "Activated");
 
-        if (!user) throw new AppError(
-            Messages.SERVER_ERROR.message,
-            Messages.SERVER_ERROR.code,
-            500
-        );
+        if (!user) throw new AppError(Messages.SERVER_ERROR);
 
         // generate a JWT token
         return this.tokenService.generateToken({
@@ -34,11 +30,7 @@ export class AccountService {
     async password(user: User, data: SecurityAccountDTO) {
         // verify the current password
         if (!user.password || !await this.securityUtil.compare(user.password, data.current_password)) {
-            throw new AppError(
-                Messages.CREDENTIAL_DO_NOT_MATCH.message,
-                Messages.CREDENTIAL_DO_NOT_MATCH.code,
-                403
-            );
+            throw new AppError(Messages.CREDENTIAL_DO_NOT_MATCH);
         }
 
         // hashed if new password
@@ -48,11 +40,7 @@ export class AccountService {
 
         // update the security details
         if (!await this.userRepository.update(user.id, data, "Activated")) {
-            throw new AppError(
-                Messages.UPDATE_FAILED.message,
-                Messages.UPDATE_FAILED.code,
-                500
-            );
+            throw new AppError(Messages.UPDATE_FAILED);
         }
 
         // generate a JWT token
