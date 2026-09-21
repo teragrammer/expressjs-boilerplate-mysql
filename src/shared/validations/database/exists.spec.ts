@@ -2,7 +2,7 @@
 import {describe, expect, it, vi} from 'vitest';
 import Joi from 'joi';
 import {Knex} from 'knex';
-import {validateExists} from "../../../../src/shared/validations/database/exists";
+import {validateExists} from "./exists";
 
 describe('validateExists validation', () => {
     // Create a lightweight mock of Knex using Vitest's vi.fn()
