@@ -1,32 +1,32 @@
+// src/common/middleware/validate.middleware.spec.ts
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {NextFunction, Request, Response} from "express";
 import Joi from "joi";
 import {validate} from "./validate.middleware";
 
-describe("validate middleware", () => {
-    let req: Partial<Request> & {
-        sanitize: any;
-    };
+type MockSanitizerHelper = {
+    get: ReturnType<typeof vi.fn>;
+    only: ReturnType<typeof vi.fn>;
+    numeric: ReturnType<typeof vi.fn>;
+};
 
+type TestRequest = Omit<Partial<Request>, "sanitize"> & {
+    sanitize: {
+        body: MockSanitizerHelper;
+        query: MockSanitizerHelper;
+        data: Record<string, unknown> | undefined;
+    };
+};
+
+describe("validate middleware", () => {
+    let req: TestRequest;
     let res: Partial<Response>;
     let next: NextFunction;
 
     const getNextError = (): unknown => {
         const mock = next as unknown as ReturnType<typeof vi.fn>;
+
         return mock.mock.calls[0]?.[0];
-    };
-
-    const expectValidationError = (): void => {
-        expect(next).toHaveBeenCalledOnce();
-
-        const error = getNextError();
-
-        expect(error).toBeInstanceOf(Error);
-        expect(error).toMatchObject({
-            statusCode: 422,
-        });
-
-        expect(req.sanitize.data).toBeUndefined();
     };
 
     beforeEach(() => {
@@ -120,6 +120,7 @@ describe("validate middleware", () => {
             });
 
             expect(req.sanitize.data).not.toBe(input);
+
             expect(next).toHaveBeenCalledOnce();
             expect(next).toHaveBeenCalledWith();
         });
@@ -156,11 +157,12 @@ describe("validate middleware", () => {
 
             expect(req.sanitize.data).toEqual(sanitizedData);
             expect(next).toHaveBeenCalledOnce();
+            expect(next).toHaveBeenCalledWith();
         });
     });
 
     describe("validation failures", () => {
-        it("should convert Joi validation errors into a 422 AppError", async () => {
+        it("should forward Joi validation errors to next", async () => {
             const schema = Joi.object({
                 username: Joi.string().required(),
                 password: Joi.string().required(),
@@ -181,7 +183,17 @@ describe("validate middleware", () => {
                 next,
             );
 
-            expectValidationError();
+            expect(next).toHaveBeenCalledOnce();
+
+            const error = getNextError();
+
+            expect(error).toBeInstanceOf(Joi.ValidationError);
+
+            expect(error).toMatchObject({
+                message: '"password" is required',
+            });
+
+            expect(req.sanitize.data).toBeUndefined();
         });
 
         it("should forward sanitization errors to next", async () => {
@@ -249,7 +261,129 @@ describe("validate middleware", () => {
                 },
             );
 
-            expectValidationError();
+            expect(next).toHaveBeenCalledOnce();
+
+            const error = getNextError();
+
+            expect(error).toBeInstanceOf(Joi.ValidationError);
+
+            expect(error).toMatchObject({
+                details: expect.arrayContaining([
+                    expect.objectContaining({
+                        path: ["username"],
+                        type: "any.required",
+                    }),
+                    expect.objectContaining({
+                        path: ["password"],
+                        type: "any.required",
+                    }),
+                ]),
+            });
+
+            expect(req.sanitize.data).toBeUndefined();
+        });
+    });
+
+    describe("schema factory", () => {
+        it("should resolve the schema from the request", async () => {
+            const schema = Joi.object({
+                username: Joi.string().required(),
+            });
+
+            const schemaFactory = vi.fn().mockReturnValue(schema);
+
+            const input = {
+                username: "testuser",
+            };
+
+            req.sanitize.body.only.mockReturnValue(input);
+
+            const middleware = validate(
+                schemaFactory,
+                ["username"],
+            );
+
+            await middleware(
+                req as Request,
+                res as Response,
+                next,
+            );
+
+            expect(schemaFactory).toHaveBeenCalledOnce();
+            expect(schemaFactory).toHaveBeenCalledWith(req);
+
+            expect(req.sanitize.data).toEqual(input);
+
+            expect(next).toHaveBeenCalledOnce();
+            expect(next).toHaveBeenCalledWith();
+        });
+
+        it("should forward errors thrown by the schema factory", async () => {
+            const factoryError = new Error(
+                "Failed to create schema",
+            );
+
+            const schemaFactory = vi.fn().mockImplementation(() => {
+                throw factoryError;
+            });
+
+            const middleware = validate(
+                schemaFactory,
+                ["username"],
+            );
+
+            await middleware(
+                req as Request,
+                res as Response,
+                next,
+            );
+
+            expect(schemaFactory).toHaveBeenCalledOnce();
+
+            expect(next).toHaveBeenCalledOnce();
+            expect(next).toHaveBeenCalledWith(factoryError);
+
+            expect(req.sanitize.data).toBeUndefined();
+        });
+    });
+
+    describe("unknown fields", () => {
+        it("should strip unknown fields from the validated result", async () => {
+            const schema = Joi.object({
+                username: Joi.string().required(),
+                password: Joi.string().required(),
+            });
+
+            const input = {
+                username: "testuser",
+                password: "password123",
+                unexpected: "should be removed",
+            };
+
+            req.sanitize.body.only.mockReturnValue(input);
+
+            const middleware = validate(
+                schema,
+                ["username", "password", "unexpected"],
+            );
+
+            await middleware(
+                req as Request,
+                res as Response,
+                next,
+            );
+
+            expect(req.sanitize.data).toEqual({
+                username: "testuser",
+                password: "password123",
+            });
+
+            expect(req.sanitize.data).not.toHaveProperty(
+                "unexpected",
+            );
+
+            expect(next).toHaveBeenCalledOnce();
+            expect(next).toHaveBeenCalledWith();
         });
     });
 });
