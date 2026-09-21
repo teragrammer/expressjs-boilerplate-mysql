@@ -2,7 +2,7 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import Joi from 'joi';
 import {Knex} from 'knex';
-import {validateCompositeUnique} from "../../../../src/shared/validations/database/unique";
+import {validateCompositeUnique} from "./unique";
 
 describe('validateCompositeUnique validation', () => {
     let mockQuery: any;
