@@ -173,11 +173,7 @@ export class SettingService {
         const setting: Setting | null = await this.settingRepository.update(id, data);
 
         if (!setting) {
-            throw new AppError(
-                Messages.DATA_NOT_FOUND.message,
-                Messages.DATA_NOT_FOUND.code,
-                404,
-            );
+            throw new AppError(Messages.DATA_NOT_FOUND);
         }
 
         // Update the local cache and publish the updated setting.
@@ -211,22 +207,14 @@ export class SettingService {
     async findById(id: number): Promise<Setting> {
         const setting = await this.settingRepository.findById(id);
         if (!setting) {
-            throw new AppError(
-                Messages.DATA_NOT_FOUND.message,
-                Messages.DATA_NOT_FOUND.code,
-                404,
-            );
+            throw new AppError(Messages.DATA_NOT_FOUND);
         }
         return setting;
     }
 
     async hardDelete(id: number): Promise<void> {
         if (!await this.settingRepository.hardDelete(id)) {
-            throw new AppError(
-                Messages.DATA_NOT_FOUND.message,
-                Messages.DATA_NOT_FOUND.code,
-                404
-            );
+            throw new AppError(Messages.DATA_NOT_FOUND);
         }
 
         // Update the local cache and publish the updated setting.
