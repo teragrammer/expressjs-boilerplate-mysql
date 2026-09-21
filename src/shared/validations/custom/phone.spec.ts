@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {phoneValidator} from '../../../../src/shared/validations/custom/phone.js';
+import {phoneValidator} from './phone';
 
 describe('phoneValidator()', () => {
     const mockHelpers = {
