@@ -1,6 +1,6 @@
 // src/shared/redis/redis-subscriber.ts
 
-import {MessageHandler} from "./interfaces/redis-subscriber.interface";
+import {MessageHandler} from "./redis-subscriber.interface";
 import {DBRedisInterface} from "../../config/redis";
 import Redis from "ioredis";
 
