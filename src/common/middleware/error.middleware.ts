@@ -7,9 +7,9 @@ import {AppError} from "../utils/errors";
 
 export const errorHandler = (
     err: any,
-    req: Request,
+    _req: Request,
     res: Response,
-    next: NextFunction,
+    _next: NextFunction,
 ): void => {
     // Handle Joi validation failures cleanly.
     if (err instanceof Joi.ValidationError) {
