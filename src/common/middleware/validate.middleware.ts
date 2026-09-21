@@ -1,9 +1,6 @@
 // src/common/middlewares/validate.ts
 import {NextFunction, Request, Response} from "express";
-import Joi from "../../shared/validations";
 import type {ObjectSchema} from "joi";
-import Messages from "../utils/messages";
-import {AppError} from "../utils/errors";
 
 type SchemaFactory = (req: Request) => ObjectSchema;
 
@@ -28,14 +25,6 @@ export const validate = (schemaOrFactory: ObjectSchema | SchemaFactory, fields: 
 
             next();
         } catch (error) {
-            if (error instanceof Joi.ValidationError) {
-                next(
-                    new AppError(Messages.VALIDATION_FAILED),
-                );
-
-                return;
-            }
-
             next(error);
         }
     };
