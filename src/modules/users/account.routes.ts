@@ -34,7 +34,7 @@ export default () => {
         AuthenticationMiddleware(),
         TwoFactorAuthenticationMiddleware(),
         validate(
-            (req) => accountPasswordSchema(req.credentials.jwt.uid),
+            (req) => accountPasswordSchema(req.credentials!.jwt.uid),
             ["current_password", "new_password", "username", "email", "phone"]
         ),
     ], accountController.password);
