@@ -1,10 +1,9 @@
 // src/modules/users/controllers/account.controller.ts
 import {Request, Response} from "express";
-import errors from "../../../common/utils/messages";
-import {logger} from "../../../config/logger";
 import catchAsync from "../../../common/utils/catch-async";
 import {SecurityAccountDTO, UpdateUserDTO} from "../user.interface";
 import {AccountService} from "../services/account.service";
+import {assertCredentials} from "../../../common/utils/request-credentials";
 
 export class AccountController {
     constructor(
@@ -13,6 +12,7 @@ export class AccountController {
     }
 
     information = catchAsync(async (req: Request, res: Response): Promise<any> => {
+        assertCredentials(req);
         const token = await this.accountService.information(
             req.credentials.jwt.uid,
             req.sanitize.data as UpdateUserDTO
@@ -22,9 +22,10 @@ export class AccountController {
     });
 
     password = catchAsync(async (req: Request, res: Response): Promise<any> => {
+        assertCredentials(req);
         const token: string = await this.accountService.password(
             await req.credentials.user(),
-            req.sanitize.data as SecurityAccountDTO
+            req.sanitize.data as unknown as SecurityAccountDTO
         );
 
         res.status(200).json(token);
