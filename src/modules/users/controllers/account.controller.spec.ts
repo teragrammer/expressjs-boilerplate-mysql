@@ -1,9 +1,9 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {NextFunction, Request, Response} from "express";
 
-import {AccountController} from "../../../../src/modules/users/controllers/account.controller";
-import {AccountService} from "../../../../src/modules/users/services/account.service";
-import {User} from "../../../../src/modules/users/user.interface";
+import {AccountController} from "./account.controller";
+import {AccountService} from "../services/account.service";
+import {User} from "../user.interface";
 
 const {mockInformation, mockPassword} = vi.hoisted(() => ({
     mockInformation: vi.fn(),
@@ -99,9 +99,12 @@ describe("AccountController", () => {
         req = {
             credentials: {
                 jwt: {
+                    tid: 45,
                     uid: 1,
+                    tfa: false,
                 },
                 user: vi.fn().mockResolvedValue(user),
+                authentication: vi.fn(),
             },
 
             sanitize: {
@@ -212,11 +215,21 @@ describe("AccountController", () => {
         it("should forward an error when credentials are missing", async () => {
             delete req.credentials;
 
-            await invoke("information");
+            await invoke("password");
 
-            expect(mockInformation).not.toHaveBeenCalled();
+            expect(mockPassword).not.toHaveBeenCalled();
 
-            expectErrorForwarded(expect.any(TypeError));
+            expect(next).toHaveBeenCalledTimes(1);
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: "The provided authentication token is invalid or missing",
+                    errorCode: "INVALID_AUTH_TOKEN",
+                    statusCode: 401,
+                }),
+            );
+
+            expect(res.status).not.toHaveBeenCalled();
+            expect(res.json).not.toHaveBeenCalled();
         });
 
         it("should forward an error when sanitize context is missing", async () => {
@@ -354,11 +367,21 @@ describe("AccountController", () => {
         it("should forward an error when credentials are missing", async () => {
             delete req.credentials;
 
-            await invoke("password");
+            await invoke("information");
 
-            expect(mockPassword).not.toHaveBeenCalled();
+            expect(mockInformation).not.toHaveBeenCalled();
 
-            expectErrorForwarded(expect.any(TypeError));
+            expect(next).toHaveBeenCalledTimes(1);
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: "The provided authentication token is invalid or missing",
+                    errorCode: "INVALID_AUTH_TOKEN",
+                    statusCode: 401,
+                }),
+            );
+
+            expect(res.status).not.toHaveBeenCalled();
+            expect(res.json).not.toHaveBeenCalled();
         });
 
         it("should forward an error when sanitize context is missing", async () => {
