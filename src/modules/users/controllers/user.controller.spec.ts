@@ -2,9 +2,9 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {NextFunction, Request, Response} from "express";
 
-import {UserController} from "../../../../src/modules/users/controllers/user.controller";
-import {UserService} from "../../../../src/modules/users/services/user.service";
-import {BrowseUsersResult, CreateUserDTO, UpdateUserDTO, User,} from "../../../../src/modules/users/user.interface";
+import {UserController} from "./user.controller";
+import {UserService} from "../services/user.service";
+import {BrowseUsersResult, CreateUserDTO, UpdateUserDTO, User,} from "../user.interface";
 
 const {
     mockCreateUser,
