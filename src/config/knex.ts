@@ -1,9 +1,9 @@
 // src/config/knex.ts
 import fs from "fs";
 import path from "node:path";
-import knex, {Knex} from "knex";
-import {__ENV} from "./environment";
-import {logger} from "./logger";
+import knex, { Knex } from "knex";
+import { __ENV } from "./environment";
+import { logger } from "./logger";
 
 export function buildKnexConfig(): Knex.Config {
     const connection: Knex.StaticConnectionConfig = {
@@ -12,16 +12,16 @@ export function buildKnexConfig(): Knex.Config {
         user: __ENV.DB_USER,
         password: __ENV.DB_PASS,
         database: __ENV.DB_NAME,
-        charset: __ENV.DB_CHARSET,
-        dateStrings: __ENV.DB_DATE_STRING,
+        // charset and dateStrings removed as they are MySQL specific
     };
 
     if (__ENV.DB_SSL) {
         try {
             connection.ssl = {
-                ca: fs.readFileSync(__ENV.DB_SSL_CA, "utf8"),
+                ca: __ENV.DB_SSL_CA ? fs.readFileSync(__ENV.DB_SSL_CA, "utf8") : undefined,
                 cert: fs.readFileSync(__ENV.DB_SSL_CERT, "utf8"),
                 key: fs.readFileSync(__ENV.DB_SSL_KEY, "utf8"),
+                rejectUnauthorized: false, // Recommended for production SSL setups
             };
         } catch (error) {
             const message =
@@ -37,10 +37,9 @@ export function buildKnexConfig(): Knex.Config {
         client: __ENV.DB_CLIENT,
         connection,
         pool: {
-            min: Number(__ENV.DB_POOL_MIN || 1),
-            max: Number(__ENV.DB_POOL_MAX || 5),
+            min: Number(__ENV.DB_POOL_MIN || 2),
+            max: Number(__ENV.DB_POOL_MAX || 10),
         },
-        // ADD THESE LINES so Knex knows where your migrations and seeds live:
         migrations: {
             directory: path.resolve(
                 process.cwd(),
@@ -75,14 +74,13 @@ function createKnexInstance(): Knex {
     return instance;
 }
 
-// Initialize Knex instance
 export const DBKnex = createKnexInstance();
 
-// Connection checker function for startup safety
 export async function checkDbConnection(): Promise<boolean> {
     try {
-        await DBKnex.raw("SELECT 1+1 AS result");
-        logger.info("🤝 Connected to the database (KNEX)");
+        // Note: PostgreSQL requires AS clause or simple syntax for dual-less queries
+        await DBKnex.raw("SELECT 1 + 1 AS result");
+        logger.info("🤝 Connected to the database (KNEX/PostgreSQL)");
         return true;
     } catch (error) {
         logger.error(`Knex failed to connect to the database: ${error}`);
