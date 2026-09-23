@@ -33,7 +33,7 @@ import {RoleService} from "../modules/system/roles/role.service";
 import {SystemEventHandler} from "../modules/system/settings/system.event";
 import {SendGridMailService} from "../infrastructure/mail/sendgrid-mail.service";
 
-const securityUtil = new SecurityUtil({
+export const securityUtil = new SecurityUtil({
     bcryptSecret: __ENV.BCRYPT_SECRET,
     bcryptSaltRounds: Number(__ENV.BCRYPT_SALT_ROUND || 10),
     cryptoSecret: __ENV.CRYPT0_SECRET,
