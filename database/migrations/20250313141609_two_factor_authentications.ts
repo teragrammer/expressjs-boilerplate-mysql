@@ -1,5 +1,4 @@
 // database/migrations/20250313141609_two_factor_authentications.ts
-
 import type {Knex} from "knex";
 
 export async function up(knex: Knex): Promise<void> {

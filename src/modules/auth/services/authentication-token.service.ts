@@ -1,5 +1,4 @@
 // src/services/token.service.ts
-
 import jwt from "jsonwebtoken";
 import {__ENV} from "../../../config/environment";
 import {AppError} from "../../../common/utils/errors";
