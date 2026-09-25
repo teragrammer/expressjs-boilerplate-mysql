@@ -1,5 +1,4 @@
 // __test__/security.util.spec.ts
-
 import {beforeEach, describe, expect, it} from "vitest";
 import {SecurityUtil} from "./security.util";
 
@@ -25,13 +24,13 @@ describe("SecurityUtil Edge Cases & Functional Tests", () => {
     // 1. STATELESS UTIL METHODS (No Config Required)
     // ==========================================
     describe("randomString()", () => {
-        it("should return correct hexadecimal length matching input size", () => {
-            expect(secureUtilWithoutConfig.randomString(16)).toHaveLength(32); // 16 bytes = 32 hex chars
-            expect(secureUtilWithoutConfig.randomString(32)).toHaveLength(64);
+        it("should return exactly the requested character length", () => {
+            expect(secureUtilWithoutConfig.randomString(16)).toHaveLength(16);
+            expect(secureUtilWithoutConfig.randomString(32)).toHaveLength(32);
         });
 
-        it("should fallback to 32 bytes if no size parameter is passed", () => {
-            expect(secureUtilWithoutConfig.randomString()).toHaveLength(64);
+        it("should fallback to exactly 32 characters if no size parameter is passed", () => {
+            expect(secureUtilWithoutConfig.randomString()).toHaveLength(32);
         });
 
         it("should handle boundary size of 0 safely", () => {
