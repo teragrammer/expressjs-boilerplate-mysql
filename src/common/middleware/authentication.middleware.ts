@@ -1,5 +1,4 @@
 // src/common/middleware/authentication.middleware.ts
-
 import {NextFunction, Request, Response} from "express";
 import {JwtExtendedPayload} from "../../modules/auth/interfaces/jwt.interface";
 import {AppError} from "../utils/errors";
